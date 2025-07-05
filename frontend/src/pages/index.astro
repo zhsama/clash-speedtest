@@ -1,0 +1,18 @@
+---
+import Layout from '../layouts/Layout.astro';
+import SpeedTest from '../components/SpeedTestV2';
+import { Toaster } from '../components/ui/sonner';
+---
+
+<Layout title="Clash SpeedTest">
+	<main>
+		<SpeedTest client:load />
+		<Toaster client:load position="top-center" theme="dark" />
+	</main>
+</Layout>
+
+<style>
+	main {
+		min-height: 100vh;
+	}
+</style>

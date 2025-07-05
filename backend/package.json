@@ -1,0 +1,16 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "go run main.go -interactive",
+    "api:dev": "go run api-server/main.go",
+    "build": "go build -ldflags=\"-s -w\" -o dist/clash-speedtest .",
+    "build:api": "go build -ldflags=\"-s -w\" -o dist/api-server ./api-server",
+    "build:download": "go build -ldflags=\"-s -w\" -o dist/download-server ./download-server",
+    "test": "go test ./...",
+    "lint": "go vet ./...",
+    "format": "go fmt ./...",
+    "clean": "rm -rf dist"
+  }
+}

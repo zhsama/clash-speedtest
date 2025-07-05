@@ -67,6 +67,17 @@ func (st *SpeedTester) LoadProxies(stashCompatible bool) (map[string]*CProxy, er
 	allProxies := make(map[string]*CProxy)
 
 	for _, configPath := range strings.Split(st.config.ConfigPaths, ",") {
+		// Trim空格并移除可能的引号
+		configPath = strings.TrimSpace(configPath)
+		if (strings.HasPrefix(configPath, "\"") && strings.HasSuffix(configPath, "\"")) ||
+			(strings.HasPrefix(configPath, "'") && strings.HasSuffix(configPath, "'")) {
+			configPath = configPath[1 : len(configPath)-1]
+		}
+		
+		if configPath == "" {
+			continue
+		}
+
 		var body []byte
 		var err error
 		if strings.HasPrefix(configPath, "http") {

@@ -55,6 +55,20 @@
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
     font-feature-settings: "rlig" 1, "calt" 1;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
+      sans-serif;
+  }
+
+  /* 确保暗色主题下的基本样式 */
+  .dark body {
+    background: linear-gradient(
+      180deg,
+      rgb(15, 23, 42) 0%,
+      rgb(30, 41, 59) 50%,
+      rgb(15, 23, 42) 100%
+    );
+    color: rgb(248, 250, 252);
+    min-height: 100vh;
   }
 }
 
@@ -64,20 +78,35 @@
     background: linear-gradient(
       180deg,
       rgb(15, 23, 42) 0%,
-      rgb(30, 41, 59) 100%
+      rgb(30, 41, 59) 50%,
+      rgb(15, 23, 42) 100%
     );
+    min-height: 100vh;
   }
 
   .bg-card-dark {
-    background: rgba(30, 41, 59, 0.5);
-    backdrop-filter: blur(10px);
+    background: rgba(30, 41, 59, 0.6);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(148, 163, 184, 0.1);
   }
 
   .text-gradient {
-    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #06b6d4 100%);
     -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
     background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-size: 200% 200%;
+    animation: gradient-shift 3s ease-in-out infinite;
+  }
+
+  @keyframes gradient-shift {
+    0%,
+    100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
   }
 
   .animate-pulse-slow {
@@ -85,21 +114,169 @@
   }
 
   .glass-morphism {
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(30, 41, 59, 0.4);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+      0 2px 4px -1px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.1);
   }
 
   .metric-card {
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(30, 41, 59, 0.6);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(148, 163, 184, 0.2);
     border-radius: 0.75rem; /* rounded-xl */
     padding: 1.5rem; /* p-6 */
-    transition: all 0.15s ease-in-out;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+      0 2px 4px -1px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.1);
   }
 
   .metric-card:hover {
-    transform: scale(1.05);
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+      0 10px 10px -5px rgba(0, 0, 0, 0.04),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    border-color: rgba(148, 163, 184, 0.3);
   }
+
+  /* 按钮增强样式 */
+  .button-gradient {
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    border: none;
+    transition: all 0.3s ease;
+  }
+
+  .button-gradient:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+  }
+
+  /* 输入框样式增强 */
+  .input-dark {
+    background: rgba(30, 41, 59, 0.8);
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    backdrop-filter: blur(8px);
+  }
+
+  .input-dark:focus {
+    border-color: rgba(59, 130, 246, 0.5);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+
+  /* 表格样式增强 */
+  .table-dark {
+    background: rgba(30, 41, 59, 0.3);
+  }
+
+  .table-row-dark {
+    border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+    transition: background-color 0.2s ease;
+  }
+
+  .table-row-dark:hover {
+    background: rgba(59, 130, 246, 0.1);
+  }
+
+  /* 进度条样式 */
+  .progress-bar {
+    background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 50%, #06b6d4 100%);
+    background-size: 200% 100%;
+    animation: progress-shimmer 2s linear infinite;
+  }
+
+  @keyframes progress-shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  /* 徽章样式 */
+  .badge-dark {
+    background: rgba(30, 41, 59, 0.8);
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    backdrop-filter: blur(8px);
+  }
+
+  /* 滑块样式 */
+  .slider-dark [data-slot="slider-track"] {
+    background: rgba(55, 65, 81, 1) !important; /* gray-700 */
+  }
+
+  .slider-dark [data-slot="slider-range"] {
+    background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%) !important;
+  }
+
+  .slider-dark [data-slot="slider-thumb"] {
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%) !important;
+    border: 2px solid white !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  }
+
+  .slider-dark [data-slot="slider-thumb"]:hover {
+    transform: scale(1.1) !important;
+    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3) !important;
+  }
+
+  /* 开关样式 */
+  .switch-dark[data-state="unchecked"] {
+    background: rgba(75, 85, 99, 1) !important; /* gray-600 */
+  }
+
+  .switch-dark[data-state="checked"] {
+    background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%) !important;
+  }
+
+  .switch-dark [data-slot="switch-thumb"] {
+    background: white !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+  }
+
+  /* 复选框样式 */
+  .checkbox-dark {
+    border-color: rgba(148, 163, 184, 0.5) !important;
+    background: rgba(30, 41, 59, 0.8) !important;
+  }
+
+  .checkbox-dark[data-state="checked"] {
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%) !important;
+    border-color: transparent !important;
+  }
+
+  .checkbox-dark[data-state="checked"] svg {
+    color: white !important;
+  }
+}
+
+/* 响应式优化 */
+@media (max-width: 768px) {
+  .metric-card {
+    padding: 1rem;
+  }
+
+  .glass-morphism {
+    margin: 0.5rem;
+  }
+}
+
+/* 深色模式下的滚动条样式 */
+.dark ::-webkit-scrollbar {
+  width: 8px;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: rgba(30, 41, 59, 0.3);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.5);
+  border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.7);
 }

@@ -24,9 +24,57 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// VlessTestError 代表 vless 测试过程中的详细错误信息
+type VlessTestError struct {
+	Stage   string `json:"stage"`   // "dns", "connect", "handshake", "transfer"
+	Code    string `json:"code"`    // 错误代码
+	Message string `json:"message"` // 详细错误信息
+	ProxyName string `json:"proxy_name"` // 代理名称
+}
+
+// 错误阶段常量
+const (
+	StageValidation = "validation"
+	StageDNS        = "dns"
+	StageConnect    = "connect"
+	StageHandshake  = "handshake"
+	StageTransfer   = "transfer"
+)
+
+// 错误代码常量
+const (
+	ErrorInvalidConfig     = "INVALID_CONFIG"
+	ErrorDNSResolution     = "DNS_RESOLUTION_FAILED"
+	ErrorConnectionRefused = "CONNECTION_REFUSED"
+	ErrorConnectionTimeout = "CONNECTION_TIMEOUT"
+	ErrorHandshakeTimeout  = "HANDSHAKE_TIMEOUT"
+	ErrorProtocolError     = "PROTOCOL_ERROR"
+	ErrorAuthFailed        = "AUTHENTICATION_FAILED"
+	ErrorTransferTimeout   = "TRANSFER_TIMEOUT"
+	ErrorUnknown          = "UNKNOWN_ERROR"
+)
+
+// NewVlessTestError 创建新的 vless 测试错误
+func NewVlessTestError(stage, code, message, proxyName string) *VlessTestError {
+	return &VlessTestError{
+		Stage:     stage,
+		Code:      code,
+		Message:   message,
+		ProxyName: proxyName,
+	}
+}
+
+// Error 实现 error 接口
+func (e *VlessTestError) Error() string {
+	return fmt.Sprintf("[%s:%s] %s - %s", e.Stage, e.Code, e.ProxyName, e.Message)
+}
+
 type Config struct {
 	ConfigPaths      string
 	FilterRegex      string
+	IncludeNodes     []string
+	ExcludeNodes     []string
+	ProtocolFilter   []string
 	ServerURL        string
 	DownloadSize     int
 	UploadSize       int
@@ -294,11 +342,69 @@ func (st *SpeedTester) LoadProxies(stashCompatible bool) (map[string]*CProxy, er
 	filterRegexp := regexp.MustCompile(st.config.FilterRegex)
 	filteredProxies := make(map[string]*CProxy)
 	matchedCount := 0
+	
 	for name := range allProxies {
-		if filterRegexp.MatchString(name) {
-			filteredProxies[name] = allProxies[name]
-			matchedCount++
+		proxy := allProxies[name]
+		
+		// Apply regex filter
+		if !filterRegexp.MatchString(name) {
+			continue
 		}
+		
+		// Apply include nodes filter
+		if len(st.config.IncludeNodes) > 0 {
+			includeMatch := false
+			for _, include := range st.config.IncludeNodes {
+				if strings.TrimSpace(include) == "" {
+					continue
+				}
+				if strings.Contains(strings.ToLower(name), strings.ToLower(strings.TrimSpace(include))) {
+					includeMatch = true
+					break
+				}
+			}
+			if !includeMatch {
+				continue
+			}
+		}
+		
+		// Apply exclude nodes filter
+		if len(st.config.ExcludeNodes) > 0 {
+			excludeMatch := false
+			for _, exclude := range st.config.ExcludeNodes {
+				if strings.TrimSpace(exclude) == "" {
+					continue
+				}
+				if strings.Contains(strings.ToLower(name), strings.ToLower(strings.TrimSpace(exclude))) {
+					excludeMatch = true
+					break
+				}
+			}
+			if excludeMatch {
+				continue
+			}
+		}
+		
+		// Apply protocol filter
+		if len(st.config.ProtocolFilter) > 0 {
+			protocolMatch := false
+			proxyType := proxy.Type().String()
+			for _, protocol := range st.config.ProtocolFilter {
+				if strings.TrimSpace(protocol) == "" {
+					continue
+				}
+				if strings.EqualFold(proxyType, strings.TrimSpace(protocol)) {
+					protocolMatch = true
+					break
+				}
+			}
+			if !protocolMatch {
+				continue
+			}
+		}
+		
+		filteredProxies[name] = proxy
+		matchedCount++
 	}
 	
 	logger.Logger.Info("Proxy loading completed",
@@ -309,6 +415,21 @@ func (st *SpeedTester) LoadProxies(stashCompatible bool) (map[string]*CProxy, er
 	)
 	
 	return filteredProxies, nil
+}
+
+// GetAvailableProtocols returns all unique protocols from loaded proxies
+func (st *SpeedTester) GetAvailableProtocols(proxies map[string]*CProxy) []string {
+	protocolSet := make(map[string]bool)
+	for _, proxy := range proxies {
+		protocolSet[proxy.Type().String()] = true
+	}
+	
+	protocols := make([]string, 0, len(protocolSet))
+	for protocol := range protocolSet {
+		protocols = append(protocols, protocol)
+	}
+	
+	return protocols
 }
 
 func isStashCompatible(proxy *CProxy) bool {
@@ -409,6 +530,23 @@ func (st *SpeedTester) TestProxiesWithCallback(proxies map[string]*CProxy, callb
 	st.TestProxies(proxies, callback)
 }
 
+// TestProxiesWithContext tests proxies with context cancellation support
+func (st *SpeedTester) TestProxiesWithContext(ctx context.Context, proxies map[string]*CProxy, callback func(result *Result)) error {
+	for name, proxy := range proxies {
+		// Check if context is cancelled
+		select {
+		case <-ctx.Done():
+			logger.Logger.Info("Proxy testing cancelled", slog.String("reason", ctx.Err().Error()))
+			return ctx.Err()
+		default:
+			// Continue with the test
+		}
+		
+		callback(st.testProxy(name, proxy))
+	}
+	return nil
+}
+
 type testJob struct {
 	name  string
 	proxy *CProxy
@@ -427,10 +565,57 @@ type Result struct {
 	UploadSize    float64        `json:"upload_size"`
 	UploadTime    time.Duration  `json:"upload_time"`
 	UploadSpeed   float64        `json:"upload_speed"`
+	// 新增错误诊断字段
+	TestError     *VlessTestError `json:"test_error,omitempty"` // 测试错误详情
+	FailureStage  string          `json:"failure_stage,omitempty"` // 失败阶段
+	FailureReason string          `json:"failure_reason,omitempty"` // 失败原因
 }
 
 func (r *Result) FormatDownloadSpeed() string {
 	return formatSpeed(r.DownloadSpeed)
+}
+
+// AnalyzeError 分析错误信息并创建 VlessTestError
+func AnalyzeError(err error, proxyName string, defaultStage string) *VlessTestError {
+	if err == nil {
+		return nil
+	}
+
+	errorMsg := err.Error()
+	stage := defaultStage
+	code := ErrorUnknown
+	
+	// 根据错误信息确定错误类型和阶段
+	switch {
+	case strings.Contains(errorMsg, "no such host") || strings.Contains(errorMsg, "dns"):
+		stage = StageDNS
+		code = ErrorDNSResolution
+	case strings.Contains(errorMsg, "connection refused"):
+		stage = StageConnect
+		code = ErrorConnectionRefused
+	case strings.Contains(errorMsg, "connect: connection timed out") || strings.Contains(errorMsg, "i/o timeout"):
+		stage = StageConnect
+		code = ErrorConnectionTimeout
+	case strings.Contains(errorMsg, "handshake") || strings.Contains(errorMsg, "tls"):
+		stage = StageHandshake
+		code = ErrorHandshakeTimeout
+	case strings.Contains(errorMsg, "authentication") || strings.Contains(errorMsg, "auth"):
+		stage = StageHandshake
+		code = ErrorAuthFailed
+	case strings.Contains(errorMsg, "protocol") || strings.Contains(errorMsg, "unexpected"):
+		stage = StageHandshake
+		code = ErrorProtocolError
+	case strings.Contains(errorMsg, "read") || strings.Contains(errorMsg, "write") || strings.Contains(errorMsg, "transfer"):
+		stage = StageTransfer
+		code = ErrorTransferTimeout
+	}
+	
+	return NewVlessTestError(stage, code, errorMsg, proxyName)
+}
+
+// IsVlessProtocol 检查是否为 vless 协议
+func IsVlessProtocol(proxyType constant.AdapterType) bool {
+	return proxyType == constant.Vless
 }
 
 func (r *Result) FormatLatency() string {
@@ -478,12 +663,51 @@ func (st *SpeedTester) testProxy(name string, proxy *CProxy) *Result {
 		ProxyConfig: proxy.Config,
 	}
 
+	// 检查是否为 vless 协议，如果是则启用详细错误诊断
+	isVless := IsVlessProtocol(proxy.Type())
+	if isVless {
+		logger.Logger.Debug("Detected vless protocol, enabling enhanced error diagnostics", 
+			slog.String("proxy_name", name),
+		)
+	}
+
 	// 1. 首先进行延迟测试
 	logger.Logger.Debug("Testing proxy latency", slog.String("proxy_name", name))
-	latencyResult := st.testLatency(proxy, st.config.MaxLatency)
+	
+	// For VLESS proxies, use a longer timeout for latency testing
+	latencyTimeout := st.config.MaxLatency
+	if isVless {
+		// Use the general timeout setting for VLESS, but ensure it's at least 10 seconds
+		if st.config.Timeout > latencyTimeout {
+			latencyTimeout = st.config.Timeout
+		}
+		if latencyTimeout < 10*time.Second {
+			latencyTimeout = 10 * time.Second
+		}
+		logger.Logger.Debug("Using extended timeout for VLESS latency test", 
+			slog.String("proxy_name", name),
+			slog.String("timeout", latencyTimeout.String()),
+		)
+	}
+	
+	latencyResult := st.testLatencyWithErrors(proxy, latencyTimeout, isVless)
 	result.Latency = latencyResult.avgLatency
 	result.Jitter = latencyResult.jitter
 	result.PacketLoss = latencyResult.packetLoss
+	
+	// 如果是 vless 协议且有错误，记录错误详情
+	if isVless && latencyResult.lastError != nil {
+		result.TestError = AnalyzeError(latencyResult.lastError, name, StageDNS)
+		result.FailureStage = result.TestError.Stage
+		result.FailureReason = result.TestError.Message
+		
+		logger.Logger.Info("Vless latency test failed with detailed error", 
+			slog.String("proxy_name", name),
+			slog.String("error_stage", result.TestError.Stage),
+			slog.String("error_code", result.TestError.Code),
+			slog.String("error_message", result.TestError.Message),
+		)
+	}
 
 	logger.Logger.Debug("Latency test completed", 
 		slog.String("proxy_name", name),
@@ -631,6 +855,7 @@ type latencyResult struct {
 	avgLatency time.Duration
 	jitter     time.Duration
 	packetLoss float64
+	lastError  error // 添加最后一次错误信息
 }
 
 func (st *SpeedTester) testLatency(proxy constant.Proxy, minLatency time.Duration) *latencyResult {
@@ -644,6 +869,12 @@ func (st *SpeedTester) testLatency(proxy constant.Proxy, minLatency time.Duratio
 		start := time.Now()
 		resp, err := client.Get(fmt.Sprintf("%s/__down?bytes=0", st.config.ServerURL))
 		if err != nil {
+			logger.Logger.Debug("Latency test failed", 
+				slog.String("proxy_name", proxy.Name()),
+				slog.String("proxy_type", proxy.Type().String()),
+				slog.Int("attempt", i+1),
+				slog.String("error", err.Error()),
+			)
 			failedPings++
 			continue
 		}
@@ -651,11 +882,84 @@ func (st *SpeedTester) testLatency(proxy constant.Proxy, minLatency time.Duratio
 		if resp.StatusCode == http.StatusOK {
 			latencies = append(latencies, time.Since(start))
 		} else {
+			logger.Logger.Debug("Latency test received bad status", 
+				slog.String("proxy_name", proxy.Name()),
+				slog.String("proxy_type", proxy.Type().String()),
+				slog.Int("attempt", i+1),
+				slog.Int("status_code", resp.StatusCode),
+			)
 			failedPings++
 		}
 	}
 
 	return calculateLatencyStats(latencies, failedPings)
+}
+
+// testLatencyWithErrors 增强版延迟测试，包含详细错误信息
+func (st *SpeedTester) testLatencyWithErrors(proxy constant.Proxy, minLatency time.Duration, captureErrors bool) *latencyResult {
+	client := st.createClient(proxy, minLatency)
+	latencies := make([]time.Duration, 0, 6)
+	failedPings := 0
+	var lastError error
+	
+	// For VLESS proxies, reduce the number of ping attempts to avoid overwhelming slow connections
+	pingAttempts := 6
+	if captureErrors && proxy.Type() == constant.Vless {
+		pingAttempts = 3 // Reduce to 3 attempts for VLESS
+		logger.Logger.Debug("Using reduced ping attempts for VLESS", 
+			slog.String("proxy_name", proxy.Name()),
+			slog.Int("attempts", pingAttempts),
+		)
+	}
+
+	for i := 0; i < pingAttempts; i++ {
+		time.Sleep(100 * time.Millisecond)
+
+		start := time.Now()
+		resp, err := client.Get(fmt.Sprintf("%s/__down?bytes=0", st.config.ServerURL))
+		if err != nil {
+			if captureErrors {
+				lastError = err // 保存最后一次错误用于详细分析
+				logger.Logger.Debug("Enhanced latency test failed", 
+					slog.String("proxy_name", proxy.Name()),
+					slog.String("proxy_type", proxy.Type().String()),
+					slog.Int("attempt", i+1),
+					slog.String("error", err.Error()),
+					slog.String("error_type", fmt.Sprintf("%T", err)),
+				)
+			} else {
+				logger.Logger.Debug("Latency test failed", 
+					slog.String("proxy_name", proxy.Name()),
+					slog.String("proxy_type", proxy.Type().String()),
+					slog.Int("attempt", i+1),
+					slog.String("error", err.Error()),
+				)
+			}
+			failedPings++
+			continue
+		}
+		resp.Body.Close()
+		if resp.StatusCode == http.StatusOK {
+			latencies = append(latencies, time.Since(start))
+		} else {
+			if captureErrors && lastError == nil {
+				lastError = fmt.Errorf("HTTP status %d", resp.StatusCode)
+			}
+			logger.Logger.Debug("Latency test received bad status", 
+				slog.String("proxy_name", proxy.Name()),
+				slog.String("proxy_type", proxy.Type().String()),
+				slog.Int("attempt", i+1),
+				slog.Int("status_code", resp.StatusCode),
+			)
+			failedPings++
+		}
+	}
+
+	result := calculateLatencyStats(latencies, failedPings, pingAttempts)
+	if captureErrors {
+		result.lastError = lastError
+	}
+	return result
 }
 
 type downloadResult struct {
@@ -761,16 +1065,50 @@ func (st *SpeedTester) createClient(proxy constant.Proxy, timeout time.Duration)
 			DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
 				host, port, err := net.SplitHostPort(addr)
 				if err != nil {
+					logger.Logger.Debug("Failed to parse address", 
+						slog.String("proxy_name", proxy.Name()),
+						slog.String("proxy_type", proxy.Type().String()),
+						slog.String("addr", addr),
+						slog.String("error", err.Error()),
+					)
 					return nil, err
 				}
 				var u16Port uint16
 				if port, err := strconv.ParseUint(port, 10, 16); err == nil {
 					u16Port = uint16(port)
 				}
-				return proxy.DialContext(ctx, &constant.Metadata{
+				
+				logger.Logger.Debug("Attempting connection via proxy", 
+					slog.String("proxy_name", proxy.Name()),
+					slog.String("proxy_type", proxy.Type().String()),
+					slog.String("target_host", host),
+					slog.Int("target_port", int(u16Port)),
+				)
+				
+				conn, err := proxy.DialContext(ctx, &constant.Metadata{
 					Host:    host,
 					DstPort: u16Port,
 				})
+				
+				if err != nil {
+					logger.Logger.Debug("Connection failed via proxy", 
+						slog.String("proxy_name", proxy.Name()),
+						slog.String("proxy_type", proxy.Type().String()),
+						slog.String("target_host", host),
+						slog.Int("target_port", int(u16Port)),
+						slog.String("error", err.Error()),
+					)
+					return nil, err
+				}
+				
+				logger.Logger.Debug("Connection successful via proxy", 
+					slog.String("proxy_name", proxy.Name()),
+					slog.String("proxy_type", proxy.Type().String()),
+					slog.String("target_host", host),
+					slog.Int("target_port", int(u16Port)),
+				)
+				
+				return conn, nil
 			},
 		},
 	}

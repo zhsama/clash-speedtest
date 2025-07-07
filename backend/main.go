@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"sort"
+	"sync"
 	"syscall"
 	"time"
 
@@ -19,17 +20,20 @@ import (
 )
 
 type TestRequest struct {
-	ConfigPaths      string  `json:"configPaths"`
-	FilterRegex      string  `json:"filterRegex"`
-	ServerURL        string  `json:"serverUrl"`
-	DownloadSize     int     `json:"downloadSize"`
-	UploadSize       int     `json:"uploadSize"`
-	Timeout          int     `json:"timeout"`
-	Concurrent       int     `json:"concurrent"`
-	MaxLatency       int     `json:"maxLatency"`
-	MinDownloadSpeed float64 `json:"minDownloadSpeed"`
-	MinUploadSpeed   float64 `json:"minUploadSpeed"`
-	StashCompatible  bool    `json:"stashCompatible"`
+	ConfigPaths      string   `json:"configPaths"`
+	FilterRegex      string   `json:"filterRegex"`
+	IncludeNodes     []string `json:"includeNodes"`
+	ExcludeNodes     []string `json:"excludeNodes"`
+	ProtocolFilter   []string `json:"protocolFilter"`
+	ServerURL        string   `json:"serverUrl"`
+	DownloadSize     int      `json:"downloadSize"`
+	UploadSize       int      `json:"uploadSize"`
+	Timeout          int      `json:"timeout"`
+	Concurrent       int      `json:"concurrent"`
+	MaxLatency       int      `json:"maxLatency"`
+	MinDownloadSpeed float64  `json:"minDownloadSpeed"`
+	MinUploadSpeed   float64  `json:"minUploadSpeed"`
+	StashCompatible  bool     `json:"stashCompatible"`
 }
 
 type TestResponse struct {
@@ -39,10 +43,12 @@ type TestResponse struct {
 }
 
 var wsHub *websocket.Hub
+var testCancelFunc context.CancelFunc
+var testCancelMutex sync.RWMutex
 
 func main() {
-	// Keep mihomo logs silent but enable our own logging
-	log.SetLevel(log.SILENT)
+	// Enable mihomo logs for debugging
+	log.SetLevel(log.DEBUG)
 	
 	logger.Logger.Info("Starting Clash SpeedTest API Server",
 		slog.String("version", "2.0.0"),
@@ -51,9 +57,12 @@ func main() {
 
 	// Initialize WebSocket hub
 	wsHub = websocket.NewHub()
+	// Set message handler for stop test
+	wsHub.SetMessageHandler(handleWebSocketMessage)
 	go wsHub.Run()
 
 	http.HandleFunc("/api/test", loggingMiddleware(handleTestWithWebSocket))
+	http.HandleFunc("/api/protocols", loggingMiddleware(handleGetProtocols))
 	http.HandleFunc("/api/health", loggingMiddleware(handleHealth))
 	http.HandleFunc("/ws", loggingMiddleware(wsHub.HandleWebSocket))
 
@@ -207,6 +216,9 @@ func handleTest(w http.ResponseWriter, r *http.Request) {
 	speedTester := speedtester.New(&speedtester.Config{
 		ConfigPaths:      req.ConfigPaths,
 		FilterRegex:      req.FilterRegex,
+		IncludeNodes:     req.IncludeNodes,
+		ExcludeNodes:     req.ExcludeNodes,
+		ProtocolFilter:   req.ProtocolFilter,
 		ServerURL:        req.ServerURL,
 		DownloadSize:     req.DownloadSize * 1024 * 1024,
 		UploadSize:       req.UploadSize * 1024 * 1024,
@@ -359,6 +371,9 @@ func handleTestWithWebSocket(w http.ResponseWriter, r *http.Request) {
 	speedTester := speedtester.New(&speedtester.Config{
 		ConfigPaths:      req.ConfigPaths,
 		FilterRegex:      req.FilterRegex,
+		IncludeNodes:     req.IncludeNodes,
+		ExcludeNodes:     req.ExcludeNodes,
+		ProtocolFilter:   req.ProtocolFilter,
 		ServerURL:        req.ServerURL,
 		DownloadSize:     req.DownloadSize * 1024 * 1024,
 		UploadSize:       req.UploadSize * 1024 * 1024,
@@ -417,6 +432,19 @@ func handleTestWithWebSocket(w http.ResponseWriter, r *http.Request) {
 
 	wsHub.BroadcastMessage(websocket.MessageTypeTestStart, testStartData)
 
+	// Create cancellable context for the test
+	ctx, cancel := context.WithCancel(context.Background())
+	testCancelMutex.Lock()
+	testCancelFunc = cancel
+	testCancelMutex.Unlock()
+
+	// Clean up the cancel function when done
+	defer func() {
+		testCancelMutex.Lock()
+		testCancelFunc = nil
+		testCancelMutex.Unlock()
+	}()
+
 	logger.Logger.Info("Starting speed tests", slog.Int("proxy_count", len(allProxies)))
 	startTime := time.Now()
 	
@@ -425,8 +453,8 @@ func handleTestWithWebSocket(w http.ResponseWriter, r *http.Request) {
 	successful := 0
 	failed := 0
 	
-	// Test proxies with WebSocket updates
-	speedTester.TestProxiesWithCallback(allProxies, func(result *speedtester.Result) {
+	// Test proxies with WebSocket updates and context cancellation
+	err = speedTester.TestProxiesWithContext(ctx, allProxies, func(result *speedtester.Result) {
 		results = append(results, result)
 		completed++
 		
@@ -465,6 +493,17 @@ func handleTestWithWebSocket(w http.ResponseWriter, r *http.Request) {
 			UploadSpeedMbps:   result.UploadSpeed / (1024 * 1024),
 			Status:            status,
 		}
+		
+		// 如果有错误详情，添加到WebSocket消息中
+		if result.TestError != nil {
+			resultData.ErrorStage = result.TestError.Stage
+			resultData.ErrorCode = result.TestError.Code
+			resultData.ErrorMessage = result.TestError.Message
+		} else if result.FailureStage != "" {
+			resultData.ErrorStage = result.FailureStage
+			resultData.ErrorMessage = result.FailureReason
+		}
+		
 		wsHub.BroadcastMessage(websocket.MessageTypeTestResult, resultData)
 
 		logger.Logger.Debug("Proxy test completed",
@@ -478,6 +517,43 @@ func handleTestWithWebSocket(w http.ResponseWriter, r *http.Request) {
 	})
 
 	testDuration := time.Since(startTime)
+	
+	// Check if the test was cancelled
+	if err != nil && err == context.Canceled {
+		logger.Logger.Info("Speed tests cancelled",
+			slog.Int("completed_tests", completed),
+			slog.Int("total_tests", len(allProxies)),
+			slog.String("duration", testDuration.String()),
+		)
+		
+		// Update the cancellation data with actual progress
+		cancelData := websocket.TestCancelledData{
+			Message:         "测试已被用户取消",
+			CompletedTests:  completed,
+			TotalTests:      len(allProxies),
+			PartialDuration: testDuration.String(),
+		}
+		wsHub.BroadcastMessage(websocket.MessageTypeTestCancelled, cancelData)
+		
+		// Still return filtered results for the completed tests
+		filteredResults := make([]*speedtester.Result, 0)
+		for _, result := range results {
+			if req.MaxLatency > 0 && result.Latency > time.Duration(req.MaxLatency)*time.Millisecond {
+				continue
+			}
+			if req.MinDownloadSpeed > 0 && result.DownloadSpeed < req.MinDownloadSpeed*1024*1024 {
+				continue
+			}
+			if req.MinUploadSpeed > 0 && result.UploadSpeed < req.MinUploadSpeed*1024*1024 {
+				continue
+			}
+			filteredResults = append(filteredResults, result)
+		}
+		
+		sendSuccess(w, filteredResults)
+		return
+	}
+
 	logger.Logger.Info("Speed tests completed",
 		slog.Int("total_results", len(results)),
 		slog.Int("successful", successful),
@@ -553,4 +629,95 @@ func handleTestWithWebSocket(w http.ResponseWriter, r *http.Request) {
 	})
 
 	sendSuccess(w, filteredResults)
+}
+
+type ProtocolsResponse struct {
+	Success   bool     `json:"success"`
+	Error     string   `json:"error,omitempty"`
+	Protocols []string `json:"protocols,omitempty"`
+}
+
+func handleGetProtocols(w http.ResponseWriter, r *http.Request) {
+	logger.Logger.Info("Get protocols request received")
+	
+	if r.Method != http.MethodPost {
+		logger.Logger.Warn("Invalid method for get protocols", slog.String("method", r.Method))
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req struct {
+		ConfigPaths string `json:"configPaths"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		logger.LogError("Failed to decode request body", err)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(ProtocolsResponse{
+			Success: false,
+			Error:   "Invalid request body: " + err.Error(),
+		})
+		return
+	}
+
+	if req.ConfigPaths == "" {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(ProtocolsResponse{
+			Success: false,
+			Error:   "Config paths are required",
+		})
+		return
+	}
+
+	speedTester := speedtester.New(&speedtester.Config{
+		ConfigPaths: req.ConfigPaths,
+		FilterRegex: ".+",
+	})
+
+	logger.Logger.Info("Loading proxies for protocol discovery", slog.String("config_paths", req.ConfigPaths))
+	allProxies, err := speedTester.LoadProxies(false)
+	if err != nil {
+		logger.LogError("Failed to load proxies", err, slog.String("config_paths", req.ConfigPaths))
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(ProtocolsResponse{
+			Success: false,
+			Error:   "Failed to load proxies: " + err.Error(),
+		})
+		return
+	}
+
+	protocols := speedTester.GetAvailableProtocols(allProxies)
+	logger.Logger.Info("Protocols discovered", slog.Int("protocol_count", len(protocols)))
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(ProtocolsResponse{
+		Success:   true,
+		Protocols: protocols,
+	})
+}
+
+// handleWebSocketMessage handles incoming WebSocket messages
+func handleWebSocketMessage(msgType string, data []byte) {
+	logger.Logger.Debug("Received WebSocket message", 
+		slog.String("type", msgType),
+		slog.String("data", string(data)),
+	)
+	
+	switch msgType {
+	case "stop_test":
+		testCancelMutex.RLock()
+		if testCancelFunc != nil {
+			logger.Logger.Info("Stopping test via WebSocket command")
+			testCancelFunc()
+			
+			// Send cancellation message to all WebSocket clients
+			cancelData := websocket.TestCancelledData{
+				Message: "测试已被用户取消",
+			}
+			wsHub.BroadcastMessage(websocket.MessageTypeTestCancelled, cancelData)
+		}
+		testCancelMutex.RUnlock()
+	}
 }

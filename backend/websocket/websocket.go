@@ -17,11 +17,13 @@ import (
 type MessageType string
 
 const (
-	MessageTypeTestStart    MessageType = "test_start"
-	MessageTypeTestProgress MessageType = "test_progress"
-	MessageTypeTestResult   MessageType = "test_result"
-	MessageTypeTestComplete MessageType = "test_complete"
-	MessageTypeError        MessageType = "error"
+	MessageTypeTestStart     MessageType = "test_start"
+	MessageTypeTestProgress  MessageType = "test_progress"
+	MessageTypeTestResult    MessageType = "test_result"
+	MessageTypeTestComplete  MessageType = "test_complete"
+	MessageTypeTestCancelled MessageType = "test_cancelled"
+	MessageTypeError         MessageType = "error"
+	MessageTypeStopTest      MessageType = "stop_test"
 )
 
 // WebSocketMessage represents a message sent via WebSocket
@@ -70,6 +72,10 @@ type TestResultData struct {
 	DownloadSpeedMbps float64 `json:"download_speed_mbps"`
 	UploadSpeedMbps   float64 `json:"upload_speed_mbps"`
 	Status            string  `json:"status"` // "success", "failed", "timeout"
+	// 新增错误诊断字段
+	ErrorStage        string  `json:"error_stage,omitempty"`   // 错误阶段
+	ErrorCode         string  `json:"error_code,omitempty"`    // 错误代码  
+	ErrorMessage      string  `json:"error_message,omitempty"` // 错误消息
 }
 
 // TestCompleteData contains summary information when all tests are done
@@ -83,6 +89,14 @@ type TestCompleteData struct {
 	AverageUpload     float64 `json:"average_upload_mbps"`
 	BestProxy         string  `json:"best_proxy"`
 	BestDownloadSpeed float64 `json:"best_download_speed_mbps"`
+}
+
+// TestCancelledData contains information when tests are cancelled
+type TestCancelledData struct {
+	Message         string `json:"message"`
+	CompletedTests  int    `json:"completed_tests"`
+	TotalTests      int    `json:"total_tests"`
+	PartialDuration string `json:"partial_duration"`
 }
 
 // ErrorData contains error information
@@ -101,11 +115,12 @@ type Client struct {
 
 // Hub manages WebSocket connections
 type Hub struct {
-	clients    map[string]*Client
-	register   chan *Client
-	unregister chan *Client
-	broadcast  chan []byte
-	mu         sync.RWMutex
+	clients        map[string]*Client
+	register       chan *Client
+	unregister     chan *Client
+	broadcast      chan []byte
+	messageHandler func(string, []byte)
+	mu             sync.RWMutex
 }
 
 // NewHub creates a new WebSocket hub
@@ -116,6 +131,11 @@ func NewHub() *Hub {
 		unregister: make(chan *Client),
 		broadcast:  make(chan []byte, 256),
 	}
+}
+
+// SetMessageHandler sets the message handler function
+func (h *Hub) SetMessageHandler(handler func(string, []byte)) {
+	h.messageHandler = handler
 }
 
 // Run starts the hub's main loop
@@ -232,21 +252,31 @@ func (h *Hub) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 	h.register <- client
 
-	// Start a goroutine to handle client disconnection
+	// Start a goroutine to handle client disconnection and messages
 	go func() {
 		defer func() {
 			h.unregister <- client
 		}()
 
-		// Read messages from client (mainly to detect disconnection)
+		// Read messages from client
 		for {
-			_, _, err := wsutil.ReadClientData(conn)
+			msgData, _, err := wsutil.ReadClientData(conn)
 			if err != nil {
 				logger.Logger.Debug("WebSocket client disconnected", 
 					slog.String("client_id", clientID),
 					slog.String("error", err.Error()),
 				)
 				break
+			}
+
+			// Try to parse and handle the message
+			if h.messageHandler != nil && len(msgData) > 0 {
+				var msg struct {
+					Type string `json:"type"`
+				}
+				if err := json.Unmarshal(msgData, &msg); err == nil {
+					h.messageHandler(msg.Type, msgData)
+				}
 			}
 		}
 	}()

@@ -1,4 +1,3 @@
-import React from "react"
 import {
   Table,
   TableBody,
@@ -13,7 +12,6 @@ import {
   Activity, 
   Download, 
   Upload, 
-  Clock, 
   Zap,
   CheckCircle,
   XCircle,
@@ -21,12 +19,13 @@ import {
   TrendingUp
 } from "lucide-react"
 import ClientIcon from "./ClientIcon"
-import type { TestResultData, TestProgressData, TestCompleteData } from "../hooks/useWebSocket"
+import type { TestResultData, TestProgressData, TestCompleteData, TestCancelledData } from "../hooks/useWebSocket"
 
 interface RealTimeProgressTableProps {
   results: TestResultData[]
   progress: TestProgressData | null
   completeData: TestCompleteData | null
+  cancelledData: TestCancelledData | null
   isConnected: boolean
 }
 
@@ -34,6 +33,7 @@ export default function RealTimeProgressTable({
   results, 
   progress, 
   completeData,
+  cancelledData,
   isConnected 
 }: RealTimeProgressTableProps) {
   const formatLatency = (latencyMs: number) => {
@@ -116,7 +116,7 @@ export default function RealTimeProgressTable({
 
           <div className="w-full bg-gray-800 rounded-full h-3 overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-blue-600 to-purple-600 transition-all duration-300 ease-out"
+              className="h-full progress-bar transition-all duration-300 ease-out"
               style={{ width: `${progress.progress_percent}%` }}
             />
           </div>
@@ -167,6 +167,36 @@ export default function RealTimeProgressTable({
         </Card>
       )}
 
+      {/* Cancellation Summary */}
+      {cancelledData && (
+        <Card className="glass-morphism border-gray-800 p-6">
+          <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            <ClientIcon icon={XCircle} className="h-5 w-5 text-orange-400" />
+            测试已取消
+          </h3>
+          
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+            <div className="text-center">
+              <div className="text-xl font-bold text-orange-400">{cancelledData.completed_tests}</div>
+              <div className="text-xs text-gray-400">已完成</div>
+            </div>
+            <div className="text-center">
+              <div className="text-xl font-bold text-gray-400">{cancelledData.total_tests}</div>
+              <div className="text-xs text-gray-400">总数</div>
+            </div>
+            <div className="text-center">
+              <div className="text-xl font-bold text-blue-400">{cancelledData.partial_duration}</div>
+              <div className="text-xs text-gray-400">用时</div>
+            </div>
+          </div>
+
+          <div className="text-center text-sm">
+            <span className="text-gray-400">取消原因: </span>
+            <span className="text-orange-400 font-medium">{cancelledData.message}</span>
+          </div>
+        </Card>
+      )}
+
       {/* Results Table */}
       {results.length > 0 && (
         <Card className="glass-morphism border-gray-800">
@@ -179,7 +209,7 @@ export default function RealTimeProgressTable({
             </div>
 
             <div className="overflow-x-auto">
-              <Table>
+              <Table className="table-dark">
                 <TableHeader>
                   <TableRow className="border-gray-800">
                     <TableHead className="text-gray-400">状态</TableHead>
@@ -204,13 +234,14 @@ export default function RealTimeProgressTable({
                       </div>
                     </TableHead>
                     <TableHead className="text-gray-400">丢包率</TableHead>
+                    <TableHead className="text-gray-400">错误详情</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {results.map((result, index) => (
                     <TableRow 
                       key={`${result.proxy_name}-${index}`} 
-                      className="border-gray-800 animate-in slide-in-from-bottom-1 duration-300"
+                      className="table-row-dark animate-in slide-in-from-bottom-1 duration-300"
                     >
                       <TableCell>
                         <div className="flex items-center gap-2">
@@ -224,7 +255,7 @@ export default function RealTimeProgressTable({
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="secondary" className="bg-gray-800 text-gray-300 text-xs">
+                        <Badge variant="secondary" className="badge-dark text-xs">
                           {result.proxy_type}
                         </Badge>
                       </TableCell>
@@ -239,6 +270,29 @@ export default function RealTimeProgressTable({
                       </TableCell>
                       <TableCell className="text-gray-400">
                         {result.packet_loss.toFixed(1)}%
+                      </TableCell>
+                      <TableCell className="text-gray-400 max-w-xs">
+                        {result.error_message ? (
+                          <div className="space-y-1">
+                            <div className="text-xs text-red-400">
+                              {result.error_stage && (
+                                <Badge variant="outline" className="border-red-500 text-red-400 mr-1">
+                                  {result.error_stage}
+                                </Badge>
+                              )}
+                              {result.error_code && (
+                                <Badge variant="outline" className="border-orange-500 text-orange-400">
+                                  {result.error_code}
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="text-xs text-gray-500 truncate" title={result.error_message}>
+                              {result.error_message}
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-green-400 text-xs">-</span>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}

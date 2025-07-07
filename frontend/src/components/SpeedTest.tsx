@@ -65,9 +65,9 @@ export default function SpeedTestWithWebSocket() {
     serverUrl: "https://speed.cloudflare.com",
     downloadSize: 50,
     uploadSize: 20,
-    timeout: 5,
+    timeout: 10,
     concurrent: 4,
-    maxLatency: 800,
+    maxLatency: 3000,
     minDownloadSpeed: 5,
     minUploadSpeed: 2,
     stashCompatible: false,
@@ -460,7 +460,7 @@ export default function SpeedTestWithWebSocket() {
 
               {showAdvanced && (
                 <div className="mt-6 space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <div>
                       <Label className="text-gray-300 mb-2 block">
                         下载测试大小: {config.downloadSize} MB
@@ -496,9 +496,23 @@ export default function SpeedTestWithWebSocket() {
                       <Slider
                         value={[config.maxLatency]}
                         onValueChange={(v) => updateConfig({ maxLatency: v[0] })}
-                        max={2000}
-                        min={100}
-                        step={100}
+                        max={10000}
+                        min={500}
+                        step={500}
+                        className="slider-dark"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label className="text-gray-300 mb-2 block">
+                        连接超时: {config.timeout} 秒
+                      </Label>
+                      <Slider
+                        value={[config.timeout]}
+                        onValueChange={(v) => updateConfig({ timeout: v[0] })}
+                        max={30}
+                        min={5}
+                        step={5}
                         className="slider-dark"
                       />
                     </div>

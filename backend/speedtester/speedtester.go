@@ -892,7 +892,7 @@ func (st *SpeedTester) testLatency(proxy constant.Proxy, minLatency time.Duratio
 		}
 	}
 
-	return calculateLatencyStats(latencies, failedPings)
+	return calculateLatencyStats(latencies, failedPings, 6)
 }
 
 // testLatencyWithErrors 增强版延迟测试，包含详细错误信息
@@ -1059,64 +1059,79 @@ func (st *SpeedTester) testUpload(proxy constant.Proxy, size int, timeout time.D
 }
 
 func (st *SpeedTester) createClient(proxy constant.Proxy, timeout time.Duration) *http.Client {
-	return &http.Client{
-		Timeout: timeout,
-		Transport: &http.Transport{
-			DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
-				host, port, err := net.SplitHostPort(addr)
-				if err != nil {
-					logger.Logger.Debug("Failed to parse address", 
-						slog.String("proxy_name", proxy.Name()),
-						slog.String("proxy_type", proxy.Type().String()),
-						slog.String("addr", addr),
-						slog.String("error", err.Error()),
-					)
-					return nil, err
-				}
-				var u16Port uint16
-				if port, err := strconv.ParseUint(port, 10, 16); err == nil {
-					u16Port = uint16(port)
-				}
-				
-				logger.Logger.Debug("Attempting connection via proxy", 
+	// For VLESS proxies, configure more conservative connection settings
+	transport := &http.Transport{
+		DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
+			host, port, err := net.SplitHostPort(addr)
+			if err != nil {
+				logger.Logger.Debug("Failed to parse address", 
+					slog.String("proxy_name", proxy.Name()),
+					slog.String("proxy_type", proxy.Type().String()),
+					slog.String("addr", addr),
+					slog.String("error", err.Error()),
+				)
+				return nil, err
+			}
+			var u16Port uint16
+			if port, err := strconv.ParseUint(port, 10, 16); err == nil {
+				u16Port = uint16(port)
+			}
+			
+			logger.Logger.Debug("Attempting connection via proxy", 
+				slog.String("proxy_name", proxy.Name()),
+				slog.String("proxy_type", proxy.Type().String()),
+				slog.String("target_host", host),
+				slog.Int("target_port", int(u16Port)),
+			)
+			
+			conn, err := proxy.DialContext(ctx, &constant.Metadata{
+				Host:    host,
+				DstPort: u16Port,
+			})
+			
+			if err != nil {
+				logger.Logger.Debug("Connection failed via proxy", 
 					slog.String("proxy_name", proxy.Name()),
 					slog.String("proxy_type", proxy.Type().String()),
 					slog.String("target_host", host),
 					slog.Int("target_port", int(u16Port)),
+					slog.String("error", err.Error()),
 				)
-				
-				conn, err := proxy.DialContext(ctx, &constant.Metadata{
-					Host:    host,
-					DstPort: u16Port,
-				})
-				
-				if err != nil {
-					logger.Logger.Debug("Connection failed via proxy", 
-						slog.String("proxy_name", proxy.Name()),
-						slog.String("proxy_type", proxy.Type().String()),
-						slog.String("target_host", host),
-						slog.Int("target_port", int(u16Port)),
-						slog.String("error", err.Error()),
-					)
-					return nil, err
-				}
-				
-				logger.Logger.Debug("Connection successful via proxy", 
-					slog.String("proxy_name", proxy.Name()),
-					slog.String("proxy_type", proxy.Type().String()),
-					slog.String("target_host", host),
-					slog.Int("target_port", int(u16Port)),
-				)
-				
-				return conn, nil
-			},
+				return nil, err
+			}
+			
+			logger.Logger.Debug("Connection successful via proxy", 
+				slog.String("proxy_name", proxy.Name()),
+				slog.String("proxy_type", proxy.Type().String()),
+				slog.String("target_host", host),
+				slog.Int("target_port", int(u16Port)),
+			)
+			
+			return conn, nil
 		},
+	}
+	
+	// For VLESS proxies, use more conservative timeouts
+	if proxy.Type() == constant.Vless {
+		transport.TLSHandshakeTimeout = timeout
+		transport.ResponseHeaderTimeout = timeout
+		transport.ExpectContinueTimeout = timeout / 2
+		
+		logger.Logger.Debug("Using VLESS-optimized transport settings", 
+			slog.String("proxy_name", proxy.Name()),
+			slog.String("timeout", timeout.String()),
+		)
+	}
+
+	return &http.Client{
+		Timeout:   timeout,
+		Transport: transport,
 	}
 }
 
-func calculateLatencyStats(latencies []time.Duration, failedPings int) *latencyResult {
+func calculateLatencyStats(latencies []time.Duration, failedPings int, totalAttempts int) *latencyResult {
 	result := &latencyResult{
-		packetLoss: float64(failedPings) / 6.0 * 100,
+		packetLoss: float64(failedPings) / float64(totalAttempts) * 100,
 	}
 
 	if len(latencies) == 0 {

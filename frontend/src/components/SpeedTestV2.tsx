@@ -29,6 +29,7 @@ import {
   Wifi,
   Globe,
 } from "lucide-react"
+import ClientIcon from "./ClientIcon"
 
 interface TestRequest {
   configPaths: string
@@ -82,6 +83,34 @@ export default function SpeedTest() {
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [progress, setProgress] = useState(0)
   const [currentNode, setCurrentNode] = useState("")
+
+  // LocalStorage key for config persistence
+  const CONFIG_STORAGE_KEY = "clash-speedtest-config"
+
+  // Load config from localStorage on component mount
+  useEffect(() => {
+    const savedConfig = localStorage.getItem(CONFIG_STORAGE_KEY)
+    if (savedConfig) {
+      try {
+        const parsedConfig = JSON.parse(savedConfig)
+        setConfig(parsedConfig)
+        // toast.success("已加载上次的配置参数")
+      } catch (error) {
+        console.error("Failed to parse saved config:", error)
+        // toast.error("配置参数解析失败，使用默认配置")
+      }
+    }
+  }, [])
+
+  // Save config to localStorage whenever config changes
+  useEffect(() => {
+    localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(config))
+  }, [config])
+
+  // Helper function to update config and save to localStorage
+  const updateConfig = (newConfig: Partial<TestRequest>) => {
+    setConfig(prev => ({ ...prev, ...newConfig }))
+  }
 
   // 模拟测试进度
   useEffect(() => {
@@ -169,7 +198,7 @@ export default function SpeedTest() {
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
     a.href = url
-    a.download = `speedtest-results-${new Date().toISOString()}.json`
+    a.download = `speedtest-results-${Date.now()}.json`
     a.click()
     URL.revokeObjectURL(url)
   }
@@ -206,7 +235,7 @@ export default function SpeedTest() {
                 <Input
                   placeholder="输入配置文件路径或订阅链接..."
                   value={config.configPaths}
-                  onChange={(e) => setConfig({ ...config, configPaths: e.target.value })}
+                  onChange={(e) => updateConfig({ configPaths: e.target.value })}
                   className="flex-1 bg-gray-900/50 border-gray-700 text-white placeholder:text-gray-500"
                 />
                 <Button
@@ -221,12 +250,12 @@ export default function SpeedTest() {
                 >
                   {testing ? (
                     <>
-                      <Pause className="mr-2 h-4 w-4" />
+                      <ClientIcon icon={Pause} className="mr-2 h-4 w-4" />
                       测试中
                     </>
                   ) : (
                     <>
-                      <Play className="mr-2 h-4 w-4" />
+                      <ClientIcon icon={Play} className="mr-2 h-4 w-4" />
                       开始测试
                     </>
                   )}
@@ -255,7 +284,7 @@ export default function SpeedTest() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div className="metric-card">
                   <div className="flex items-center justify-between mb-4">
-                    <Download className="h-8 w-8 text-blue-400" />
+                    <ClientIcon icon={Download} className="h-8 w-8 text-blue-400" />
                     <span className="text-sm text-gray-400">下载</span>
                   </div>
                   <div className="text-3xl font-bold text-white">
@@ -266,7 +295,7 @@ export default function SpeedTest() {
 
                 <div className="metric-card">
                   <div className="flex items-center justify-between mb-4">
-                    <Upload className="h-8 w-8 text-purple-400" />
+                    <ClientIcon icon={Upload} className="h-8 w-8 text-purple-400" />
                     <span className="text-sm text-gray-400">上传</span>
                   </div>
                   <div className="text-3xl font-bold text-white">
@@ -277,7 +306,7 @@ export default function SpeedTest() {
 
                 <div className="metric-card">
                   <div className="flex items-center justify-between mb-4">
-                    <Activity className="h-8 w-8 text-green-400" />
+                    <ClientIcon icon={Activity} className="h-8 w-8 text-green-400" />
                     <span className="text-sm text-gray-400">延迟</span>
                   </div>
                   <div className="text-3xl font-bold text-white">
@@ -294,12 +323,12 @@ export default function SpeedTest() {
                 onClick={() => setShowAdvanced(!showAdvanced)}
                 className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
               >
-                <Settings className="h-4 w-4" />
+                <ClientIcon icon={Settings} className="h-4 w-4" />
                 高级设置
                 {showAdvanced ? (
-                  <ChevronUp className="h-4 w-4" />
+                  <ClientIcon icon={ChevronUp} className="h-4 w-4" />
                 ) : (
-                  <ChevronDown className="h-4 w-4" />
+                  <ClientIcon icon={ChevronDown} className="h-4 w-4" />
                 )}
               </button>
 
@@ -312,7 +341,7 @@ export default function SpeedTest() {
                       </Label>
                       <Slider
                         value={[config.downloadSize]}
-                        onValueChange={(v) => setConfig({ ...config, downloadSize: v[0] })}
+                        onValueChange={(v) => updateConfig({ downloadSize: v[0] })}
                         max={100}
                         min={10}
                         step={10}
@@ -326,7 +355,7 @@ export default function SpeedTest() {
                       </Label>
                       <Slider
                         value={[config.concurrent]}
-                        onValueChange={(v) => setConfig({ ...config, concurrent: v[0] })}
+                        onValueChange={(v) => updateConfig({ concurrent: v[0] })}
                         max={16}
                         min={1}
                         step={1}
@@ -340,7 +369,7 @@ export default function SpeedTest() {
                       </Label>
                       <Slider
                         value={[config.maxLatency]}
-                        onValueChange={(v) => setConfig({ ...config, maxLatency: v[0] })}
+                        onValueChange={(v) => updateConfig({ maxLatency: v[0] })}
                         max={2000}
                         min={100}
                         step={100}
@@ -389,7 +418,7 @@ export default function SpeedTest() {
                   variant="outline"
                   className="border-gray-700 text-gray-300 hover:text-white"
                 >
-                  <Download className="mr-2 h-4 w-4" />
+                  <ClientIcon icon={Download} className="mr-2 h-4 w-4" />
                   导出结果
                 </Button>
               </div>
@@ -402,19 +431,19 @@ export default function SpeedTest() {
                       <TableHead className="text-gray-400">类型</TableHead>
                       <TableHead className="text-gray-400">
                         <div className="flex items-center gap-1">
-                          <Activity className="h-4 w-4" />
+                          <ClientIcon icon={Activity} className="h-4 w-4" />
                           延迟
                         </div>
                       </TableHead>
                       <TableHead className="text-gray-400">
                         <div className="flex items-center gap-1">
-                          <Download className="h-4 w-4" />
+                          <ClientIcon icon={Download} className="h-4 w-4" />
                           下载
                         </div>
                       </TableHead>
                       <TableHead className="text-gray-400">
                         <div className="flex items-center gap-1">
-                          <Upload className="h-4 w-4" />
+                          <ClientIcon icon={Upload} className="h-4 w-4" />
                           上传
                         </div>
                       </TableHead>

@@ -1,12 +1,12 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import SpeedTest from '../components/SpeedTestV2';
+import SpeedTestWithWebSocket from '../components/SpeedTestWithWebSocket';
 import { Toaster } from '../components/ui/sonner';
 ---
 
 <Layout title="Clash SpeedTest">
 	<main>
-		<SpeedTest client:load />
+		<SpeedTestWithWebSocket client:load />
 		<Toaster client:load position="top-center" theme="dark" />
 	</main>
 </Layout>

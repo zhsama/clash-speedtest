@@ -49,10 +49,11 @@
 
 @layer base {
   * {
-    @apply border-border;
+    border-color: hsl(var(--border));
   }
   body {
-    @apply bg-background text-foreground;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
@@ -60,32 +61,45 @@
 /* Custom styles inspired by Cloudflare Speed Test */
 @layer utilities {
   .bg-gradient-dark {
-    background: linear-gradient(180deg, rgb(15, 23, 42) 0%, rgb(30, 41, 59) 100%);
+    background: linear-gradient(
+      180deg,
+      rgb(15, 23, 42) 0%,
+      rgb(30, 41, 59) 100%
+    );
   }
-  
+
   .bg-card-dark {
     background: rgba(30, 41, 59, 0.5);
     backdrop-filter: blur(10px);
   }
-  
+
   .text-gradient {
     background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
-  
+
   .animate-pulse-slow {
     animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
-  
+
   .glass-morphism {
     background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.1);
   }
-  
+
   .metric-card {
-    @apply glass-morphism rounded-xl p-6 transition-all hover:scale-105;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.75rem; /* rounded-xl */
+    padding: 1.5rem; /* p-6 */
+    transition: all 0.15s ease-in-out;
+  }
+
+  .metric-card:hover {
+    transform: scale(1.05);
   }
 }

@@ -2,10 +2,6 @@
   "name": "clash-speedtest",
   "version": "1.0.0",
   "private": true,
-  "workspaces": [
-    "frontend",
-    "backend"
-  ],
   "scripts": {
     "dev": "turbo run dev api:dev --parallel",
     "dev:frontend": "turbo run dev --filter=frontend",
@@ -24,7 +20,7 @@
   "devDependencies": {
     "turbo": "^2.3.3"
   },
-  "packageManager": "npm@10.8.2",
+  "packageManager": "pnpm@9.0.0",
   "engines": {
     "node": ">=18.0.0"
   }

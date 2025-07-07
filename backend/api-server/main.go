@@ -1,10 +1,14 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/faceair/clash-speedtest/speedtester"
@@ -44,10 +48,32 @@ func main() {
 	// Enable CORS
 	handler := corsMiddleware(http.DefaultServeMux)
 
-	fmt.Printf("API Server running on port %s\n", *port)
-	if err := http.ListenAndServe(":"+*port, handler); err != nil {
-		log.Fatalln("Failed to start server: %v", err)
+	server := &http.Server{
+		Addr:    ":" + *port,
+		Handler: handler,
 	}
+
+	// 设置优雅关闭
+	go func() {
+		fmt.Printf("API Server running on port %s\n", *port)
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalln("Failed to start server: %v", err)
+		}
+	}()
+
+	// 等待中断信号
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	fmt.Println("Shutting down server...")
+
+	// 优雅关闭服务器
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := server.Shutdown(ctx); err != nil {
+		log.Fatalln("Server forced to shutdown:", err)
+	}
+	fmt.Println("Server exited")
 }
 
 func corsMiddleware(next http.Handler) http.Handler {

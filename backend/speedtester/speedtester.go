@@ -2,8 +2,10 @@ package speedtester
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"io"
+	"log/slog"
 	"math"
 	"net"
 	"net/http"
@@ -14,6 +16,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/faceair/clash-speedtest/logger"
 	"github.com/metacubex/mihomo/adapter"
 	"github.com/metacubex/mihomo/adapter/provider"
 	"github.com/metacubex/mihomo/constant"
@@ -64,9 +67,17 @@ type RawConfig struct {
 }
 
 func (st *SpeedTester) LoadProxies(stashCompatible bool) (map[string]*CProxy, error) {
+	logger.Logger.Info("Starting proxy loading", 
+		slog.String("config_paths", st.config.ConfigPaths),
+		slog.Bool("stash_compatible", stashCompatible),
+	)
+	
 	allProxies := make(map[string]*CProxy)
+	configPaths := strings.Split(st.config.ConfigPaths, ",")
+	
+	logger.Logger.Debug("Processing config paths", slog.Int("path_count", len(configPaths)))
 
-	for _, configPath := range strings.Split(st.config.ConfigPaths, ",") {
+	for i, configPath := range configPaths {
 		// Trim空格并移除可能的引号
 		configPath = strings.TrimSpace(configPath)
 		if (strings.HasPrefix(configPath, "\"") && strings.HasSuffix(configPath, "\"")) ||
@@ -75,113 +86,228 @@ func (st *SpeedTester) LoadProxies(stashCompatible bool) (map[string]*CProxy, er
 		}
 		
 		if configPath == "" {
+			logger.Logger.Debug("Skipping empty config path", slog.Int("index", i))
 			continue
 		}
+
+		logger.Logger.Info("Loading config from path", 
+			slog.String("path", configPath),
+			slog.Int("index", i),
+		)
 
 		var body []byte
 		var err error
 		if strings.HasPrefix(configPath, "http") {
+			logger.Logger.Debug("Fetching config via HTTP", slog.String("url", configPath))
 			var resp *http.Response
 			resp, err = http.Get(configPath)
 			if err != nil {
+				logger.LogError("Failed to fetch config", err, slog.String("url", configPath))
 				log.Warnln("failed to fetch config: %s", err)
 				continue
 			}
+			defer resp.Body.Close()
+			
+			logger.Logger.Debug("HTTP response received", 
+				slog.Int("status_code", resp.StatusCode),
+				slog.String("content_type", resp.Header.Get("Content-Type")),
+			)
+			
 			body, err = io.ReadAll(resp.Body)
 		} else {
+			logger.Logger.Debug("Reading config from file", slog.String("file", configPath))
 			body, err = os.ReadFile(configPath)
 		}
 		if err != nil {
+			logger.LogError("Failed to read config", err, slog.String("path", configPath))
 			log.Warnln("failed to read config: %s", err)
 			continue
+		}
+
+		logger.Logger.Debug("Config content loaded", 
+			slog.String("path", configPath),
+			slog.Int("size_bytes", len(body)),
+		)
+
+		// 尝试检测并解码base64编码的配置
+		if strings.TrimSpace(string(body)) != "" {
+			if decoded, err := base64.StdEncoding.DecodeString(strings.TrimSpace(string(body))); err == nil {
+				// 检查解码后的内容是否是有效的YAML
+				if strings.Contains(string(decoded), "proxies:") || strings.Contains(string(decoded), "proxy-providers:") {
+					logger.Logger.Debug("Detected base64 encoded config, decoding")
+					body = decoded
+				}
+			}
 		}
 
 		rawCfg := &RawConfig{
 			Proxies: []map[string]any{},
 		}
 		if err := yaml.Unmarshal(body, rawCfg); err != nil {
+			logger.LogError("Failed to parse YAML config", err, slog.String("path", configPath))
 			return nil, err
 		}
+		
+		logger.Logger.Info("Config parsed successfully",
+			slog.String("path", configPath),
+			slog.Int("proxy_count", len(rawCfg.Proxies)),
+			slog.Int("provider_count", len(rawCfg.Providers)),
+		)
+		
 		proxies := make(map[string]*CProxy)
 		proxiesConfig := rawCfg.Proxies
 		providersConfig := rawCfg.Providers
 
+		// Process direct proxies
 		for i, config := range proxiesConfig {
 			proxy, err := adapter.ParseProxy(config)
 			if err != nil {
+				logger.LogError("Failed to parse proxy", err, 
+					slog.Int("proxy_index", i),
+					slog.String("config_path", configPath),
+				)
 				return nil, fmt.Errorf("proxy %d: %w", i, err)
 			}
 
 			if _, exist := proxies[proxy.Name()]; exist {
+				logger.Logger.Error("Duplicate proxy name found", 
+					slog.String("proxy_name", proxy.Name()),
+					slog.String("config_path", configPath),
+				)
 				return nil, fmt.Errorf("proxy %s is the duplicate name", proxy.Name())
 			}
 			proxies[proxy.Name()] = &CProxy{Proxy: proxy, Config: config}
 		}
+		
+		// Process proxy providers
 		for name, config := range providersConfig {
 			if name == provider.ReservedName {
+				logger.Logger.Error("Reserved provider name used", 
+					slog.String("provider_name", name),
+					slog.String("reserved_name", provider.ReservedName),
+				)
 				return nil, fmt.Errorf("can not defined a provider called `%s`", provider.ReservedName)
 			}
+			
+			logger.Logger.Debug("Processing proxy provider", 
+				slog.String("provider_name", name),
+				slog.String("config_path", configPath),
+			)
+			
 			pd, err := provider.ParseProxyProvider(name, config)
 			if err != nil {
+				logger.LogError("Failed to parse proxy provider", err, 
+					slog.String("provider_name", name),
+					slog.String("config_path", configPath),
+				)
 				return nil, fmt.Errorf("parse proxy provider %s error: %w", name, err)
 			}
 			if err := pd.Initial(); err != nil {
+				logger.LogError("Failed to initialize proxy provider", err, 
+					slog.String("provider_name", name),
+				)
 				return nil, fmt.Errorf("initial proxy provider %s error: %w", pd.Name(), err)
 			}
 
 			resp, err := http.Get(config["url"].(string))
 			if err != nil {
+				logger.LogError("Failed to fetch provider config", err, 
+					slog.String("provider_name", name),
+					slog.String("provider_url", config["url"].(string)),
+				)
 				log.Warnln("failed to fetch config: %s", err)
 				continue
 			}
 			body, err = io.ReadAll(resp.Body)
 			if err != nil {
+				logger.LogError("Failed to read provider response", err, 
+					slog.String("provider_name", name),
+				)
 				return nil, err
 			}
 			pdRawCfg := &RawConfig{
 				Proxies: []map[string]any{},
 			}
 			if err := yaml.Unmarshal(body, pdRawCfg); err != nil {
+				logger.LogError("Failed to parse provider YAML", err, 
+					slog.String("provider_name", name),
+				)
 				return nil, err
 			}
 			pdProxies := make(map[string]map[string]any)
 			for _, pdProxy := range pdRawCfg.Proxies {
 				pdProxies[pdProxy["name"].(string)] = pdProxy
 			}
+			
+			providerProxyCount := 0
 			for _, proxy := range pd.Proxies() {
 				proxies[fmt.Sprintf("[%s] %s", name, proxy.Name())] = &CProxy{
 					Proxy:  proxy,
 					Config: pdProxies[proxy.Name()],
 				}
+				providerProxyCount++
 			}
+			
+			logger.Logger.Info("Provider proxies loaded", 
+				slog.String("provider_name", name),
+				slog.Int("proxy_count", providerProxyCount),
+			)
 		}
+		
+		// Filter and add proxies to allProxies
+		addedCount := 0
 		for k, p := range proxies {
 			switch p.Type() {
 			case constant.Shadowsocks, constant.ShadowsocksR, constant.Snell, constant.Socks5, constant.Http,
 				constant.Vmess, constant.Vless, constant.Trojan, constant.Hysteria, constant.Hysteria2,
 				constant.WireGuard, constant.Tuic, constant.Ssh, constant.Mieru, constant.AnyTLS:
 			default:
+				logger.Logger.Debug("Skipping unsupported proxy type", 
+					slog.String("proxy_name", k),
+					slog.String("proxy_type", p.Type().String()),
+				)
 				continue
 			}
 			if server, ok := p.Config["server"]; ok {
 				p.Config["server"] = convertMappedIPv6ToIPv4(server.(string))
 			}
 			if stashCompatible && !isStashCompatible(p) {
+				logger.Logger.Debug("Skipping proxy not compatible with Stash", 
+					slog.String("proxy_name", k),
+					slog.String("proxy_type", p.Type().String()),
+				)
 				continue
 			}
 			if _, ok := allProxies[k]; !ok {
 				allProxies[k] = p
+				addedCount++
 			}
 		}
+		
+		logger.Logger.Info("Proxies processed from config", 
+			slog.String("config_path", configPath),
+			slog.Int("loaded_count", len(proxies)),
+			slog.Int("added_count", addedCount),
+		)
 	}
 
 	filterRegexp := regexp.MustCompile(st.config.FilterRegex)
 	filteredProxies := make(map[string]*CProxy)
+	matchedCount := 0
 	for name := range allProxies {
 		if filterRegexp.MatchString(name) {
 			filteredProxies[name] = allProxies[name]
+			matchedCount++
 		}
 	}
+	
+	logger.Logger.Info("Proxy loading completed",
+		slog.Int("total_loaded", len(allProxies)),
+		slog.Int("after_filter", len(filteredProxies)),
+		slog.String("filter_regex", st.config.FilterRegex),
+		slog.Int("matched_filter", matchedCount),
+	)
+	
 	return filteredProxies, nil
 }
 
@@ -278,6 +404,11 @@ func (st *SpeedTester) TestProxies(proxies map[string]*CProxy, tester func(resul
 	}
 }
 
+// TestProxiesWithCallback is an alias for TestProxies for clarity in WebSocket context
+func (st *SpeedTester) TestProxiesWithCallback(proxies map[string]*CProxy, callback func(result *Result)) {
+	st.TestProxies(proxies, callback)
+}
+
 type testJob struct {
 	name  string
 	proxy *CProxy
@@ -336,6 +467,11 @@ func formatSpeed(bytesPerSecond float64) string {
 }
 
 func (st *SpeedTester) testProxy(name string, proxy *CProxy) *Result {
+	logger.Logger.Debug("Starting proxy test", 
+		slog.String("proxy_name", name),
+		slog.String("proxy_type", proxy.Type().String()),
+	)
+	
 	result := &Result{
 		ProxyName:   name,
 		ProxyType:   proxy.Type().String(),
@@ -343,16 +479,34 @@ func (st *SpeedTester) testProxy(name string, proxy *CProxy) *Result {
 	}
 
 	// 1. 首先进行延迟测试
+	logger.Logger.Debug("Testing proxy latency", slog.String("proxy_name", name))
 	latencyResult := st.testLatency(proxy, st.config.MaxLatency)
 	result.Latency = latencyResult.avgLatency
 	result.Jitter = latencyResult.jitter
 	result.PacketLoss = latencyResult.packetLoss
 
+	logger.Logger.Debug("Latency test completed", 
+		slog.String("proxy_name", name),
+		slog.Int64("latency_ms", result.Latency.Milliseconds()),
+		slog.Float64("packet_loss", result.PacketLoss),
+		slog.Int64("jitter_ms", result.Jitter.Milliseconds()),
+	)
+
 	if result.PacketLoss == 100 || result.Latency > st.config.MaxLatency {
+		logger.Logger.Info("Proxy failed latency test, skipping speed tests", 
+			slog.String("proxy_name", name),
+			slog.Float64("packet_loss", result.PacketLoss),
+			slog.Int64("latency_ms", result.Latency.Milliseconds()),
+			slog.Int64("max_latency_ms", st.config.MaxLatency.Milliseconds()),
+		)
 		return result
 	}
 
 	// 2. 并发进行下载和上传测试
+	logger.Logger.Debug("Starting speed tests", 
+		slog.String("proxy_name", name),
+		slog.Int("concurrent", st.config.Concurrent),
+	)
 
 	var wg sync.WaitGroup
 
@@ -362,6 +516,12 @@ func (st *SpeedTester) testProxy(name string, proxy *CProxy) *Result {
 
 	downloadChunkSize := st.config.DownloadSize / st.config.Concurrent
 	if downloadChunkSize > 0 {
+		logger.Logger.Debug("Starting download test", 
+			slog.String("proxy_name", name),
+			slog.Int("chunk_size_mb", downloadChunkSize/(1024*1024)),
+			slog.Int("concurrent", st.config.Concurrent),
+		)
+		
 		downloadResults := make(chan *downloadResult, st.config.Concurrent)
 
 		for i := 0; i < st.config.Concurrent; i++ {
@@ -386,15 +546,33 @@ func (st *SpeedTester) testProxy(name string, proxy *CProxy) *Result {
 			result.DownloadSize = float64(totalDownloadBytes)
 			result.DownloadTime = totalDownloadTime / time.Duration(downloadCount)
 			result.DownloadSpeed = float64(totalDownloadBytes) / result.DownloadTime.Seconds()
+			
+			logger.Logger.Debug("Download test completed", 
+				slog.String("proxy_name", name),
+				slog.Int64("total_bytes", totalDownloadBytes),
+				slog.Float64("speed_mbps", result.DownloadSpeed/(1024*1024)),
+				slog.Int("successful_downloads", downloadCount),
+			)
 		}
 
 		if result.DownloadSpeed < st.config.MinDownloadSpeed {
+			logger.Logger.Info("Proxy failed minimum download speed requirement", 
+				slog.String("proxy_name", name),
+				slog.Float64("actual_speed_mbps", result.DownloadSpeed/(1024*1024)),
+				slog.Float64("min_speed_mbps", st.config.MinDownloadSpeed/(1024*1024)),
+			)
 			return result
 		}
 	}
 
 	uploadChunkSize := st.config.UploadSize / st.config.Concurrent
 	if uploadChunkSize > 0 {
+		logger.Logger.Debug("Starting upload test", 
+			slog.String("proxy_name", name),
+			slog.Int("chunk_size_mb", uploadChunkSize/(1024*1024)),
+			slog.Int("concurrent", st.config.Concurrent),
+		)
+		
 		uploadResults := make(chan *downloadResult, st.config.Concurrent)
 
 		for i := 0; i < st.config.Concurrent; i++ {
@@ -419,12 +597,32 @@ func (st *SpeedTester) testProxy(name string, proxy *CProxy) *Result {
 			result.UploadSize = float64(totalUploadBytes)
 			result.UploadTime = totalUploadTime / time.Duration(uploadCount)
 			result.UploadSpeed = float64(totalUploadBytes) / result.UploadTime.Seconds()
+			
+			logger.Logger.Debug("Upload test completed", 
+				slog.String("proxy_name", name),
+				slog.Int64("total_bytes", totalUploadBytes),
+				slog.Float64("speed_mbps", result.UploadSpeed/(1024*1024)),
+				slog.Int("successful_uploads", uploadCount),
+			)
 		}
 
 		if result.UploadSpeed < st.config.MinUploadSpeed {
+			logger.Logger.Info("Proxy failed minimum upload speed requirement", 
+				slog.String("proxy_name", name),
+				slog.Float64("actual_speed_mbps", result.UploadSpeed/(1024*1024)),
+				slog.Float64("min_speed_mbps", st.config.MinUploadSpeed/(1024*1024)),
+			)
 			return result
 		}
 	}
+
+	logger.Logger.Info("Proxy test completed successfully", 
+		slog.String("proxy_name", name),
+		slog.Int64("latency_ms", result.Latency.Milliseconds()),
+		slog.Float64("download_speed_mbps", result.DownloadSpeed/(1024*1024)),
+		slog.Float64("upload_speed_mbps", result.UploadSpeed/(1024*1024)),
+		slog.Float64("packet_loss", result.PacketLoss),
+	)
 
 	return result
 }
@@ -469,27 +667,54 @@ func (st *SpeedTester) testDownload(proxy constant.Proxy, size int, timeout time
 	client := st.createClient(proxy, timeout)
 	start := time.Now()
 
+	logger.Logger.Debug("Starting download test request", 
+		slog.String("server_url", st.config.ServerURL),
+		slog.Int("size_bytes", size),
+		slog.String("timeout", timeout.String()),
+	)
+
 	resp, err := client.Get(fmt.Sprintf("%s/__down?bytes=%d", st.config.ServerURL, size))
 	if err != nil {
+		logger.Logger.Debug("Download test request failed", 
+			slog.String("error", err.Error()),
+			slog.Int("size_bytes", size),
+		)
 		return nil
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
+		logger.Logger.Debug("Download test received non-200 status", 
+			slog.Int("status_code", resp.StatusCode),
+			slog.Int("size_bytes", size),
+		)
 		return nil
 	}
 
 	downloadBytes, _ := io.Copy(io.Discard, resp.Body)
+	duration := time.Since(start)
+
+	logger.Logger.Debug("Download test completed", 
+		slog.Int64("downloaded_bytes", downloadBytes),
+		slog.String("duration", duration.String()),
+		slog.Float64("speed_mbps", float64(downloadBytes)/duration.Seconds()/(1024*1024)),
+	)
 
 	return &downloadResult{
 		bytes:    downloadBytes,
-		duration: time.Since(start),
+		duration: duration,
 	}
 }
 
 func (st *SpeedTester) testUpload(proxy constant.Proxy, size int, timeout time.Duration) *downloadResult {
 	client := st.createClient(proxy, timeout)
 	reader := NewZeroReader(size)
+
+	logger.Logger.Debug("Starting upload test request", 
+		slog.String("server_url", st.config.ServerURL),
+		slog.Int("size_bytes", size),
+		slog.String("timeout", timeout.String()),
+	)
 
 	start := time.Now()
 	resp, err := client.Post(
@@ -498,17 +723,34 @@ func (st *SpeedTester) testUpload(proxy constant.Proxy, size int, timeout time.D
 		reader,
 	)
 	if err != nil {
+		logger.Logger.Debug("Upload test request failed", 
+			slog.String("error", err.Error()),
+			slog.Int("size_bytes", size),
+		)
 		return nil
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
+		logger.Logger.Debug("Upload test received non-200 status", 
+			slog.Int("status_code", resp.StatusCode),
+			slog.Int("size_bytes", size),
+		)
 		return nil
 	}
 
+	duration := time.Since(start)
+	uploadedBytes := reader.WrittenBytes()
+
+	logger.Logger.Debug("Upload test completed", 
+		slog.Int64("uploaded_bytes", uploadedBytes),
+		slog.String("duration", duration.String()),
+		slog.Float64("speed_mbps", float64(uploadedBytes)/duration.Seconds()/(1024*1024)),
+	)
+
 	return &downloadResult{
-		bytes:    reader.WrittenBytes(),
-		duration: time.Since(start),
+		bytes:    uploadedBytes,
+		duration: duration,
 	}
 }
 

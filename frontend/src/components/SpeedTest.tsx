@@ -303,7 +303,8 @@ export default function SpeedTestWithWebSocket() {
     // 准备CSV数据
     const csvHeaders = [
       "节点名称",
-      "代理类型", 
+      "代理类型",
+      "IP地址", 
       "延迟(ms)",
       "下载速度(MB/s)",
       "上传速度(MB/s)",
@@ -317,6 +318,7 @@ export default function SpeedTestWithWebSocket() {
     const csvRows = dataToExport.map((r) => {
       const name = 'proxy_name' in r ? r.proxy_name : (r as Result).proxy_name
       const type = 'proxy_type' in r ? r.proxy_type : (r as Result).proxy_type
+      const ip = 'proxy_ip' in r ? (r.proxy_ip || '-') : '-'
       const latency = 'latency_ms' in r ? r.latency_ms : Math.round((r as Result).latency / 1000000)
       const download = 'download_speed_mbps' in r ? r.download_speed_mbps.toFixed(2) : ((r as Result).download_speed / (1024 * 1024)).toFixed(2)
       const upload = 'upload_speed_mbps' in r ? r.upload_speed_mbps.toFixed(2) : ((r as Result).upload_speed / (1024 * 1024)).toFixed(2)
@@ -329,6 +331,7 @@ export default function SpeedTestWithWebSocket() {
       return [
         `"${name.replace(/"/g, '""')}"`,
         `"${type}"`,
+        `"${ip}"`,
         latency,
         download,
         upload,

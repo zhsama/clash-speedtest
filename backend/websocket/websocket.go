@@ -64,6 +64,7 @@ type TestProgressData struct {
 type TestResultData struct {
 	ProxyName         string  `json:"proxy_name"`
 	ProxyType         string  `json:"proxy_type"`
+	ProxyIP           string  `json:"proxy_ip,omitempty"`      // 新增代理IP地址
 	Latency           int64   `json:"latency_ms"`
 	Jitter            int64   `json:"jitter_ms"`
 	PacketLoss        float64 `json:"packet_loss"`

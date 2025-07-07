@@ -46,6 +46,21 @@ var wsHub *websocket.Hub
 var testCancelFunc context.CancelFunc
 var testCancelMutex sync.RWMutex
 
+// 任务管理
+type TestTask struct {
+	ID         string
+	Config     TestRequest
+	Context    context.Context
+	CancelFunc context.CancelFunc
+	Status     string // pending, running, completed, cancelled
+	StartTime  time.Time
+}
+
+var (
+	testTasks      = make(map[string]*TestTask)
+	testTasksMutex sync.RWMutex
+)
+
 func main() {
 	// Enable mihomo logs for debugging
 	log.SetLevel(log.DEBUG)
@@ -62,6 +77,8 @@ func main() {
 	go wsHub.Run()
 
 	http.HandleFunc("/api/test", loggingMiddleware(handleTestWithWebSocket))
+	http.HandleFunc("/api/test/async", loggingMiddleware(handleTestAsync))
+	http.HandleFunc("/api/nodes", loggingMiddleware(handleGetNodes))
 	http.HandleFunc("/api/protocols", loggingMiddleware(handleGetProtocols))
 	http.HandleFunc("/api/health", loggingMiddleware(handleHealth))
 	http.HandleFunc("/ws", loggingMiddleware(wsHub.HandleWebSocket))
@@ -156,6 +173,289 @@ func handleHealth(w http.ResponseWriter, r *http.Request) {
 	logger.Logger.Debug("Health check requested")
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+}
+
+// 生成任务ID
+func generateTaskID() string {
+	return fmt.Sprintf("task-%d-%s", time.Now().Unix(), time.Now().Format("150405"))
+}
+
+// 异步测试处理
+func handleTestAsync(w http.ResponseWriter, r *http.Request) {
+	logger.Logger.Info("Async test request received")
+	
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	
+	var req TestRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		logger.LogError("Failed to decode request body", err)
+		sendError(w, "Invalid request body: "+err.Error())
+		return
+	}
+	
+	// 设置默认值
+	if req.FilterRegex == "" {
+		req.FilterRegex = ".+"
+	}
+	if req.ServerURL == "" {
+		req.ServerURL = "https://speed.cloudflare.com"
+	}
+	if req.DownloadSize == 0 {
+		req.DownloadSize = 50
+	}
+	if req.UploadSize == 0 {
+		req.UploadSize = 20
+	}
+	if req.Timeout == 0 {
+		req.Timeout = 5
+	}
+	if req.Concurrent == 0 {
+		req.Concurrent = 4
+	}
+	if req.MaxLatency == 0 {
+		req.MaxLatency = 800
+	}
+	if req.MinDownloadSpeed == 0 {
+		req.MinDownloadSpeed = 5
+	}
+	if req.MinUploadSpeed == 0 {
+		req.MinUploadSpeed = 2
+	}
+	
+	// 创建任务
+	taskID := generateTaskID()
+	ctx, cancel := context.WithCancel(context.Background())
+	
+	task := &TestTask{
+		ID:         taskID,
+		Config:     req,
+		Context:    ctx,
+		CancelFunc: cancel,
+		Status:     "pending",
+		StartTime:  time.Now(),
+	}
+	
+	testTasksMutex.Lock()
+	testTasks[taskID] = task
+	testTasksMutex.Unlock()
+	
+	// 异步执行测试
+	go runTestTask(task)
+	
+	// 返回任务ID
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"success": true,
+		"taskId":  taskID,
+		"message": "Test task created successfully",
+	})
+}
+
+// 执行测试任务
+func runTestTask(task *TestTask) {
+	// 更新任务状态
+	testTasksMutex.Lock()
+	task.Status = "running"
+	testTasksMutex.Unlock()
+	
+	logger.Logger.Info("Starting test task", slog.String("task_id", task.ID))
+	
+	// 创建SpeedTester实例
+	speedTester := speedtester.New(&speedtester.Config{
+		ConfigPaths:      task.Config.ConfigPaths,
+		FilterRegex:      task.Config.FilterRegex,
+		IncludeNodes:     task.Config.IncludeNodes,
+		ExcludeNodes:     task.Config.ExcludeNodes,
+		ProtocolFilter:   task.Config.ProtocolFilter,
+		ServerURL:        task.Config.ServerURL,
+		DownloadSize:     task.Config.DownloadSize * 1024 * 1024,
+		UploadSize:       task.Config.UploadSize * 1024 * 1024,
+		Timeout:          time.Duration(task.Config.Timeout) * time.Second,
+		Concurrent:       task.Config.Concurrent,
+		MaxLatency:       time.Duration(task.Config.MaxLatency) * time.Millisecond,
+		MinDownloadSpeed: task.Config.MinDownloadSpeed * 1024 * 1024,
+		MinUploadSpeed:   task.Config.MinUploadSpeed * 1024 * 1024,
+	})
+	
+	// 加载代理
+	allProxies, err := speedTester.LoadProxies(task.Config.StashCompatible)
+	if err != nil {
+		logger.LogError("Failed to load proxies", err)
+		wsHub.BroadcastMessage(websocket.MessageTypeError, websocket.ErrorData{
+			Message: "Failed to load proxies: " + err.Error(),
+			Code:    "PROXY_LOAD_ERROR",
+		})
+		
+		testTasksMutex.Lock()
+		task.Status = "failed"
+		testTasksMutex.Unlock()
+		return
+	}
+	
+	if len(allProxies) == 0 {
+		wsHub.BroadcastMessage(websocket.MessageTypeError, websocket.ErrorData{
+			Message: "No proxies found",
+			Code:    "NO_PROXIES_FOUND",
+		})
+		
+		testTasksMutex.Lock()
+		task.Status = "failed"
+		testTasksMutex.Unlock()
+		return
+	}
+	
+	// 发送测试开始消息
+	testStartData := websocket.TestStartData{
+		TotalProxies: len(allProxies),
+	}
+	testStartData.Config.ConfigPaths = task.Config.ConfigPaths
+	testStartData.Config.FilterRegex = task.Config.FilterRegex
+	testStartData.Config.ServerURL = task.Config.ServerURL
+	testStartData.Config.DownloadSize = task.Config.DownloadSize
+	testStartData.Config.UploadSize = task.Config.UploadSize
+	testStartData.Config.Timeout = task.Config.Timeout
+	testStartData.Config.Concurrent = task.Config.Concurrent
+	testStartData.Config.MaxLatency = task.Config.MaxLatency
+	testStartData.Config.MinDownloadSpeed = task.Config.MinDownloadSpeed
+	testStartData.Config.MinUploadSpeed = task.Config.MinUploadSpeed
+	testStartData.Config.StashCompatible = task.Config.StashCompatible
+	
+	wsHub.BroadcastMessage(websocket.MessageTypeTestStart, testStartData)
+	
+	// 执行测试
+	results := make([]*speedtester.Result, 0)
+	completed := 0
+	successful := 0
+	failed := 0
+	
+	err = speedTester.TestProxiesWithContext(task.Context, allProxies, func(result *speedtester.Result) {
+		results = append(results, result)
+		completed++
+		
+		// 判断结果状态
+		status := "success"
+		if result.PacketLoss == 100 || result.Latency > time.Duration(task.Config.MaxLatency)*time.Millisecond {
+			status = "failed"
+			failed++
+		} else if result.DownloadSpeed < task.Config.MinDownloadSpeed*1024*1024 || result.UploadSpeed < task.Config.MinUploadSpeed*1024*1024 {
+			status = "failed"
+			failed++
+		} else {
+			successful++
+		}
+		
+		// 发送进度更新
+		progressData := websocket.TestProgressData{
+			CurrentProxy:    result.ProxyName,
+			CompletedCount:  completed,
+			TotalCount:      len(allProxies),
+			ProgressPercent: float64(completed) / float64(len(allProxies)) * 100,
+			Status:          status,
+		}
+		wsHub.BroadcastMessage(websocket.MessageTypeTestProgress, progressData)
+		
+		// 发送单个结果
+		resultData := websocket.TestResultData{
+			ProxyName:         result.ProxyName,
+			ProxyType:         result.ProxyType,
+			ProxyIP:           result.ProxyIP,
+			Latency:           result.Latency.Milliseconds(),
+			Jitter:            result.Jitter.Milliseconds(),
+			PacketLoss:        result.PacketLoss,
+			DownloadSpeed:     result.DownloadSpeed,
+			UploadSpeed:       result.UploadSpeed,
+			DownloadSpeedMbps: result.DownloadSpeed / (1024 * 1024),
+			UploadSpeedMbps:   result.UploadSpeed / (1024 * 1024),
+			Status:            status,
+		}
+		
+		if result.TestError != nil {
+			resultData.ErrorStage = result.TestError.Stage
+			resultData.ErrorCode = result.TestError.Code
+			resultData.ErrorMessage = result.TestError.Message
+		} else if result.FailureStage != "" {
+			resultData.ErrorStage = result.FailureStage
+			resultData.ErrorMessage = result.FailureReason
+		}
+		
+		wsHub.BroadcastMessage(websocket.MessageTypeTestResult, resultData)
+	})
+	
+	testDuration := time.Since(task.StartTime)
+	
+	// 检查是否被取消
+	if err != nil && err == context.Canceled {
+		logger.Logger.Info("Test task cancelled", slog.String("task_id", task.ID))
+		
+		cancelData := websocket.TestCancelledData{
+			Message:         "测试已被用户取消",
+			CompletedTests:  completed,
+			TotalTests:      len(allProxies),
+			PartialDuration: testDuration.String(),
+		}
+		wsHub.BroadcastMessage(websocket.MessageTypeTestCancelled, cancelData)
+		
+		testTasksMutex.Lock()
+		task.Status = "cancelled"
+		testTasksMutex.Unlock()
+		return
+	}
+	
+	// 发送测试完成消息
+	var totalLatency, totalDownload, totalUpload float64
+	bestProxy := ""
+	bestDownloadSpeed := 0.0
+	
+	for _, result := range results {
+		if result.PacketLoss < 100 {
+			totalLatency += float64(result.Latency.Milliseconds())
+			totalDownload += result.DownloadSpeed / (1024 * 1024)
+			totalUpload += result.UploadSpeed / (1024 * 1024)
+			
+			downloadMbps := result.DownloadSpeed / (1024 * 1024)
+			if downloadMbps > bestDownloadSpeed {
+				bestDownloadSpeed = downloadMbps
+				bestProxy = result.ProxyName
+			}
+		}
+	}
+	
+	avgLatency := 0.0
+	avgDownload := 0.0
+	avgUpload := 0.0
+	if successful > 0 {
+		avgLatency = totalLatency / float64(successful)
+		avgDownload = totalDownload / float64(successful)
+		avgUpload = totalUpload / float64(successful)
+	}
+	
+	completeData := websocket.TestCompleteData{
+		TotalTested:       len(results),
+		SuccessfulTests:   successful,
+		FailedTests:       failed,
+		TotalDuration:     testDuration.String(),
+		AverageLatency:    avgLatency,
+		AverageDownload:   avgDownload,
+		AverageUpload:     avgUpload,
+		BestProxy:         bestProxy,
+		BestDownloadSpeed: bestDownloadSpeed,
+	}
+	wsHub.BroadcastMessage(websocket.MessageTypeTestComplete, completeData)
+	
+	testTasksMutex.Lock()
+	task.Status = "completed"
+	testTasksMutex.Unlock()
+	
+	logger.Logger.Info("Test task completed", 
+		slog.String("task_id", task.ID),
+		slog.Int("total_tested", len(results)),
+		slog.Int("successful", successful),
+		slog.Int("failed", failed),
+		slog.String("duration", testDuration.String()),
+	)
 }
 
 func handleTest(w http.ResponseWriter, r *http.Request) {
@@ -484,6 +784,7 @@ func handleTestWithWebSocket(w http.ResponseWriter, r *http.Request) {
 		resultData := websocket.TestResultData{
 			ProxyName:         result.ProxyName,
 			ProxyType:         result.ProxyType,
+			ProxyIP:           result.ProxyIP,
 			Latency:           result.Latency.Milliseconds(),
 			Jitter:            result.Jitter.Milliseconds(),
 			PacketLoss:        result.PacketLoss,
@@ -707,17 +1008,128 @@ func handleWebSocketMessage(msgType string, data []byte) {
 	
 	switch msgType {
 	case "stop_test":
-		testCancelMutex.RLock()
-		if testCancelFunc != nil {
-			logger.Logger.Info("Stopping test via WebSocket command")
-			testCancelFunc()
-			
-			// Send cancellation message to all WebSocket clients
-			cancelData := websocket.TestCancelledData{
-				Message: "测试已被用户取消",
-			}
-			wsHub.BroadcastMessage(websocket.MessageTypeTestCancelled, cancelData)
+		// 解析消息获取任务ID
+		var msg struct {
+			TaskID string `json:"taskId"`
 		}
-		testCancelMutex.RUnlock()
+		if err := json.Unmarshal(data, &msg); err == nil && msg.TaskID != "" {
+			// 取消特定任务
+			testTasksMutex.RLock()
+			if task, ok := testTasks[msg.TaskID]; ok {
+				logger.Logger.Info("Stopping test task via WebSocket", slog.String("task_id", msg.TaskID))
+				task.CancelFunc()
+			}
+			testTasksMutex.RUnlock()
+		} else {
+			// 兼容旧版本：取消全局任务
+			testCancelMutex.RLock()
+			if testCancelFunc != nil {
+				logger.Logger.Info("Stopping test via WebSocket command")
+				testCancelFunc()
+				
+				// Send cancellation message to all WebSocket clients
+				cancelData := websocket.TestCancelledData{
+					Message: "测试已被用户取消",
+				}
+				wsHub.BroadcastMessage(websocket.MessageTypeTestCancelled, cancelData)
+			}
+			testCancelMutex.RUnlock()
+		}
 	}
+}
+
+// NodeInfo represents basic node information without test results
+type NodeInfo struct {
+	Name   string `json:"name"`
+	Type   string `json:"type"`
+	Server string `json:"server"`
+	Port   int    `json:"port"`
+}
+
+type NodesResponse struct {
+	Success bool       `json:"success"`
+	Error   string     `json:"error,omitempty"`
+	Nodes   []NodeInfo `json:"nodes,omitempty"`
+}
+
+func handleGetNodes(w http.ResponseWriter, r *http.Request) {
+	logger.Logger.Info("Get nodes request received")
+	
+	if r.Method != http.MethodPost {
+		logger.Logger.Warn("Invalid method for get nodes", slog.String("method", r.Method))
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req struct {
+		ConfigPaths     string   `json:"configPaths"`
+		IncludeNodes    []string `json:"includeNodes"`
+		ExcludeNodes    []string `json:"excludeNodes"`
+		ProtocolFilter  []string `json:"protocolFilter"`
+		StashCompatible bool     `json:"stashCompatible"`
+	}
+	
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		logger.LogError("Failed to decode request body", err)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(NodesResponse{
+			Success: false,
+			Error:   "Invalid request body: " + err.Error(),
+		})
+		return
+	}
+
+	speedTester := speedtester.New(&speedtester.Config{
+		ConfigPaths:    req.ConfigPaths,
+		FilterRegex:    ".+",
+		IncludeNodes:   req.IncludeNodes,
+		ExcludeNodes:   req.ExcludeNodes,
+		ProtocolFilter: req.ProtocolFilter,
+	})
+
+	logger.Logger.Info("Loading nodes", slog.String("config_paths", req.ConfigPaths))
+	allProxies, err := speedTester.LoadProxies(req.StashCompatible)
+	if err != nil {
+		logger.LogError("Failed to load proxies", err, slog.String("config_paths", req.ConfigPaths))
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(NodesResponse{
+			Success: false,
+			Error:   "Failed to load proxies: " + err.Error(),
+		})
+		return
+	}
+
+	// Convert proxies to NodeInfo
+	nodes := make([]NodeInfo, 0, len(allProxies))
+	for name, proxy := range allProxies {
+		nodeInfo := NodeInfo{
+			Name: name,
+			Type: proxy.Type().String(),
+		}
+		
+		// Extract server and port from config
+		if server, ok := proxy.Config["server"]; ok {
+			nodeInfo.Server = server.(string)
+		}
+		if port, ok := proxy.Config["port"]; ok {
+			switch p := port.(type) {
+			case int:
+				nodeInfo.Port = p
+			case float64:
+				nodeInfo.Port = int(p)
+			}
+		}
+		
+		nodes = append(nodes, nodeInfo)
+	}
+
+	logger.Logger.Info("Nodes loaded successfully", slog.Int("node_count", len(nodes)))
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(NodesResponse{
+		Success: true,
+		Nodes:   nodes,
+	})
 }

@@ -16,7 +16,8 @@ import {
   CheckCircle,
   XCircle,
   Loader2,
-  TrendingUp
+  TrendingUp,
+  Globe
 } from "lucide-react"
 import ClientIcon from "./ClientIcon"
 import type { TestResultData, TestProgressData, TestCompleteData, TestCancelledData } from "../hooks/useWebSocket"
@@ -217,6 +218,12 @@ export default function RealTimeProgressTable({
                     <TableHead className="text-gray-400">类型</TableHead>
                     <TableHead className="text-gray-400">
                       <div className="flex items-center gap-1">
+                        <ClientIcon icon={Globe} className="h-4 w-4" />
+                        IP地址
+                      </div>
+                    </TableHead>
+                    <TableHead className="text-gray-400">
+                      <div className="flex items-center gap-1">
                         <ClientIcon icon={Activity} className="h-4 w-4" />
                         延迟
                       </div>
@@ -258,6 +265,9 @@ export default function RealTimeProgressTable({
                         <Badge variant="secondary" className="badge-dark text-xs">
                           {result.proxy_type}
                         </Badge>
+                      </TableCell>
+                      <TableCell className="text-gray-400 font-mono text-xs">
+                        {result.proxy_ip || '-'}
                       </TableCell>
                       <TableCell className={getLatencyColor(result.latency_ms)}>
                         {formatLatency(result.latency_ms)}

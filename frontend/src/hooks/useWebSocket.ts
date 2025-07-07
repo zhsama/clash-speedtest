@@ -34,6 +34,7 @@ export interface TestProgressData {
 export interface TestResultData {
   proxy_name: string;
   proxy_type: string;
+  proxy_ip?: string; // 新增代理IP地址
   latency_ms: number;
   jitter_ms: number;
   packet_loss: number;

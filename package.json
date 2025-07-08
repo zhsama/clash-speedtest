@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "turbo run dev api:dev --parallel",
+    "dev": "turbo run dev --parallel",
     "dev:frontend": "turbo run dev --filter=frontend",
     "dev:backend": "turbo run dev --filter=backend",
     "dev:api": "turbo run api:dev --filter=backend",

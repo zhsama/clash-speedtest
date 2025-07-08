@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "go run main.go -interactive",
-    "api:dev": "go run api-server/main.go",
+    "dev": "npm run api:dev",
+    "api:dev": "go run main.go",
+    "dev:interactive": "go run main.go -interactive",
     "build": "go build -ldflags=\"-s -w\" -o dist/clash-speedtest .",
     "build:api": "go build -ldflags=\"-s -w\" -o dist/api-server ./api-server",
     "build:download": "go build -ldflags=\"-s -w\" -o dist/download-server ./download-server",

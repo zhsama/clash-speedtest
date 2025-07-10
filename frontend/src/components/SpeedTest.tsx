@@ -1,403 +1,622 @@
-import React, { useState, useEffect } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card } from "@/components/ui/card"
-import { Slider } from "@/components/ui/slider"
-import { Switch } from "@/components/ui/switch"
+import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Textarea } from "@/components/ui/textarea"
+import { Switch } from "@/components/ui/switch"
+import { Slider } from "@/components/ui/slider"
 import { toast } from "sonner"
 import {
   Play,
-  Pause,
   Download,
-  Settings,
-  ChevronDown,
-  ChevronUp,
-  RotateCcw,
+  Filter,
+  Globe,
+  ServerCog,
+  RefreshCw,
+  AlertCircle,
+  CheckCircle2,
+  Loader2,
 } from "lucide-react"
 import ClientIcon from "./ClientIcon"
 import RealTimeProgressTable from "./RealTimeProgressTable"
 import { useWebSocket } from "../hooks/useWebSocket"
+import { config } from "../lib/env"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 
-interface TestRequest {
-  configPaths: string
-  filterRegex: string
+interface NodeInfo {
+  name: string
+  type: string
+  server: string
+  port: number
+}
+
+interface FilterConfig {
   includeNodes: string[]
   excludeNodes: string[]
   protocolFilter: string[]
+  minDownloadSpeed: number
+  minUploadSpeed: number
+  maxLatency: number
+  stashCompatible: boolean
+}
+
+interface TestConfig {
+  configPaths: string
   serverUrl: string
   downloadSize: number
   uploadSize: number
   timeout: number
   concurrent: number
-  maxLatency: number
-  minDownloadSpeed: number
-  minUploadSpeed: number
-  stashCompatible: boolean
-  renameNodes: boolean
 }
 
-interface Result {
-  proxy_name: string
-  proxy_type: string
-  latency: number
-  jitter: number
-  packet_loss: number
-  download_speed: number
-  upload_speed: number
-}
-
-interface TestResponse {
-  success: boolean
-  error?: string
-  results?: Result[]
-}
-
-export default function SpeedTestWithWebSocket() {
-  const [config, setConfig] = useState<TestRequest>({
-    configPaths: "",
-    filterRegex: ".+",
+export default function SpeedTestPro() {
+  // 状态管理
+  const [configUrl, setConfigUrl] = useState("")
+  const [nodes, setNodes] = useState<NodeInfo[]>([])
+  const [filteredNodes, setFilteredNodes] = useState<NodeInfo[]>([])
+  const [loading, setLoading] = useState(false)
+  const [testing, setTesting] = useState(false)
+  const [taskId, setTaskId] = useState<string | null>(null)
+  
+  // 过滤配置
+  const [filterConfig, setFilterConfig] = useState<FilterConfig>({
     includeNodes: [],
     excludeNodes: [],
     protocolFilter: [],
+    minDownloadSpeed: 5,
+    minUploadSpeed: 2,
+    maxLatency: 3000,
+    stashCompatible: false,
+  })
+  
+  // 测试配置
+  const [testConfig, setTestConfig] = useState<TestConfig>({
+    configPaths: "",
     serverUrl: "https://speed.cloudflare.com",
     downloadSize: 50,
     uploadSize: 20,
     timeout: 10,
     concurrent: 4,
-    maxLatency: 3000,
-    minDownloadSpeed: 5,
-    minUploadSpeed: 2,
-    stashCompatible: false,
-    renameNodes: false,
   })
-
-  const [results, setResults] = useState<Result[]>([])
-  const [testing, setTesting] = useState(false)
-  const [showAdvanced, setShowAdvanced] = useState(false)
-  const [availableProtocols, setAvailableProtocols] = useState<string[]>([])
+  
+  // UI状态
   const [includeNodesInput, setIncludeNodesInput] = useState("")
   const [excludeNodesInput, setExcludeNodesInput] = useState("")
-  const [abortController, setAbortController] = useState<AbortController | null>(null)
-
-  // LocalStorage key for config persistence
-  const CONFIG_STORAGE_KEY = "clash-speedtest-config"
-
-  // WebSocket hook
-  const wsUrl = `ws://localhost:8080/ws`
+  const [availableProtocols, setAvailableProtocols] = useState<string[]>([])
+  
+  // WebSocket
+  const wsUrl = `${config.wsUrl}/ws`
   const {
     isConnected,
     connect,
     disconnect,
     sendMessage,
-    testStartData,
     testProgress,
     testResults,
     testCompleteData,
     testCancelledData,
-    error: wsError,
     clearData
   } = useWebSocket(wsUrl)
-
-  // Helper function to update config and save to localStorage
-  const updateConfig = (newConfig: Partial<TestRequest>) => {
-    setConfig(prev => ({ ...prev, ...newConfig }))
-  }
-
-  // Fetch available protocols from backend
-  const fetchAvailableProtocols = async (configPaths: string) => {
-    if (!configPaths.trim()) return
-    
-    try {
-      const response = await fetch("http://localhost:8080/api/protocols", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ configPaths }),
-      })
-
-      const data = await response.json()
-      if (data.success && data.protocols) {
-        setAvailableProtocols(data.protocols)
-      }
-    } catch (error) {
-      console.error("Failed to fetch protocols:", error)
-    }
-  }
-
-  // Handle include/exclude nodes input changes
-  const handleIncludeNodesChange = (value: string) => {
-    setIncludeNodesInput(value)
-    const nodes = value.split(',').map(s => s.trim()).filter(s => s.length > 0)
-    updateConfig({ includeNodes: nodes })
-  }
-
-  const handleExcludeNodesChange = (value: string) => {
-    setExcludeNodesInput(value)
-    const nodes = value.split(',').map(s => s.trim()).filter(s => s.length > 0)
-    updateConfig({ excludeNodes: nodes })
-  }
-
-  // Handle protocol filter changes
-  const handleProtocolFilterChange = (protocol: string, checked: boolean) => {
-    const currentProtocolFilter = config.protocolFilter || []
-    const newProtocolFilter = checked
-      ? [...currentProtocolFilter, protocol]
-      : currentProtocolFilter.filter(p => p !== protocol)
-    updateConfig({ protocolFilter: newProtocolFilter })
-  }
-
-  // Load config from localStorage on component mount
+  
+  // 从localStorage加载配置
   useEffect(() => {
-    const savedConfig = localStorage.getItem(CONFIG_STORAGE_KEY)
+    const savedConfig = localStorage.getItem("clash-speedtest-config")
     if (savedConfig) {
       try {
-        const parsedConfig = JSON.parse(savedConfig)
-        // Ensure new fields have default values if missing
-        const configWithDefaults = {
-          ...parsedConfig,
-          includeNodes: parsedConfig.includeNodes || [],
-          excludeNodes: parsedConfig.excludeNodes || [],
-          protocolFilter: parsedConfig.protocolFilter || [],
+        const parsed = JSON.parse(savedConfig)
+        console.log(parsed);
+        if (parsed.configUrl) setConfigUrl(parsed.configUrl)
+        if (parsed.filterConfig) {
+          setFilterConfig(parsed.filterConfig)
+          handleIncludeNodesChange(parsed.filterConfig.includeNodes?.join(', ') || '')
+          handleExcludeNodesChange(parsed.filterConfig.excludeNodes?.join(', ') || '')
         }
-        setConfig(configWithDefaults)
-        setIncludeNodesInput(configWithDefaults.includeNodes?.join(', ') || '')
-        setExcludeNodesInput(configWithDefaults.excludeNodes?.join(', ') || '')
+        if (parsed.testConfig) setTestConfig(prev => ({ ...prev, ...parsed.testConfig }))
       } catch (error) {
-        console.error("Failed to parse saved config:", error)
+        console.error("Failed to load saved config:", error)
       }
     }
   }, [])
-
-  // Save config to localStorage whenever config changes
+  
+  // 保存配置到localStorage
   useEffect(() => {
-    localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(config))
-  }, [config])
-
-  // Fetch protocols when config path changes
-  useEffect(() => {
-    if (config.configPaths) {
-      fetchAvailableProtocols(config.configPaths)
-    }
-  }, [config.configPaths])
-
-  // Connect to WebSocket on component mount
+    localStorage.setItem("clash-speedtest-config", JSON.stringify({
+      configUrl,
+      filterConfig,
+      testConfig
+    }))
+  }, [configUrl, filterConfig, testConfig])
+  
+  // 连接WebSocket
   useEffect(() => {
     connect()
-    return () => {
-      disconnect()
-    }
+    return () => disconnect()
   }, [connect, disconnect])
-
-  // Handle WebSocket errors
-  useEffect(() => {
-    if (wsError) {
-      toast.error(`WebSocket错误: ${wsError.message}`)
-    }
-  }, [wsError])
-
-  // Handle test completion
+  
+  // 处理测试完成
   useEffect(() => {
     if (testCompleteData && testing) {
       setTesting(false)
+      setTaskId(null)
       toast.success(
         `测试完成！成功: ${testCompleteData.successful_tests}, 失败: ${testCompleteData.failed_tests}`
       )
     }
   }, [testCompleteData, testing])
-
-  // Handle test cancellation
+  
+  // 处理测试取消
   useEffect(() => {
     if (testCancelledData && testing) {
       setTesting(false)
+      setTaskId(null)
       toast.info(
-        `测试已取消！已完成: ${testCancelledData.completed_tests}/${testCancelledData.total_tests}, 用时: ${testCancelledData.partial_duration}`
+        `测试已取消！已完成: ${testCancelledData.completed_tests}/${testCancelledData.total_tests}`
       )
     }
   }, [testCancelledData, testing])
-
-  const handleTest = async () => {
-    if (!config.configPaths) {
-      toast.error("请输入配置文件路径")
+  
+  // 获取配置文件
+  const fetchConfig = async () => {
+    if (!configUrl.trim()) {
+      toast.error("请输入配置文件路径或订阅链接")
       return
     }
-
+    
+    setLoading(true)
+    setNodes([])
+    setFilteredNodes([])
+    
+    try {
+      const response = await fetch(`${config.apiUrl}/api/nodes`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          configPaths: configUrl,
+          stashCompatible: filterConfig.stashCompatible,
+        }),
+      })
+      
+      const data = await response.json()
+      
+      if (data.success && data.nodes) {
+        setNodes(data.nodes)
+        
+        // 提取可用协议
+        const protocols = [...new Set(data.nodes.map((n: NodeInfo) => n.type))]
+        setAvailableProtocols(protocols as string[])
+        
+        toast.success(`成功加载 ${data.nodes.length} 个节点`)
+        
+        // 自动应用过滤
+        applyFilters(data.nodes)
+      } else {
+        toast.error(data.error || "加载配置失败")
+      }
+    } catch (error) {
+      toast.error("请求失败：" + (error as Error).message)
+    } finally {
+      setLoading(false)
+    }
+  }
+  
+  // 应用过滤条件
+  const applyFilters = (nodesToFilter: NodeInfo[] = nodes) => {
+    // 这里只做客户端预览，实际过滤在后端进行
+    let filtered = [...nodesToFilter]
+    
+    // 包含过滤
+    if (filterConfig.includeNodes.length > 0) {
+      filtered = filtered.filter(node =>
+        filterConfig.includeNodes.some(include =>
+          node.name.toLowerCase().includes(include.toLowerCase())
+        )
+      )
+    }
+    
+    // 排除过滤
+    if (filterConfig.excludeNodes.length > 0) {
+      filtered = filtered.filter(node =>
+        !filterConfig.excludeNodes.some(exclude =>
+          node.name.toLowerCase().includes(exclude.toLowerCase())
+        )
+      )
+    }
+    
+    // 协议过滤
+    if (filterConfig.protocolFilter.length > 0) {
+      filtered = filtered.filter(node =>
+        filterConfig.protocolFilter.includes(node.type)
+      )
+    }
+    
+    setFilteredNodes(filtered)
+  }
+  
+  // 监听过滤条件变化
+  useEffect(() => {
+    if (nodes.length > 0) {
+      applyFilters()
+    }
+  }, [filterConfig, nodes])
+  
+  // 开始测试
+  const startTest = async () => {
     if (!isConnected) {
       toast.error("WebSocket未连接，正在尝试重新连接...")
       connect()
       return
     }
-
-    // Create new AbortController for this test
-    const controller = new AbortController()
-    setAbortController(controller)
+    
+    if (filteredNodes.length === 0) {
+      toast.error("没有符合条件的节点可以测试")
+      return
+    }
     
     setTesting(true)
-    setResults([])
     clearData()
-
+    
     try {
-      const response = await fetch("http://localhost:8080/api/test", {
+      // 发送异步测试请求
+      const response = await fetch(`${config.apiUrl}/api/test/async`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(config),
-        signal: controller.signal, // Add abort signal
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...testConfig,
+          configPaths: configUrl,
+          ...filterConfig,
+          filterRegex: ".+",
+        }),
       })
-
-      const data: TestResponse = await response.json()
-
-      if (data.success && data.results) {
-        setResults(data.results)
+      
+      const data = await response.json()
+      
+      if (data.success && data.taskId) {
+        setTaskId(data.taskId)
+        toast.success(`测试任务已创建，任务ID: ${data.taskId}`)
       } else {
-        toast.error(data.error || "测试失败")
+        toast.error(data.error || "创建测试任务失败")
         setTesting(false)
       }
     } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') {
-        toast.info("测试已被取消")
-      } else {
-        toast.error("请求失败：" + (error as Error).message)
-      }
+      toast.error("请求失败：" + (error as Error).message)
       setTesting(false)
-    } finally {
-      setAbortController(null)
     }
   }
-
+  
+  // 停止测试
   const stopTest = () => {
-    // Cancel the ongoing fetch request
-    if (abortController) {
-      abortController.abort()
-    }
-    
-    // Send stop signal via WebSocket
-    if (isConnected) {
+    if (isConnected && taskId) {
       sendMessage({
         type: 'stop_test',
+        taskId: taskId,
         timestamp: new Date().toISOString()
       })
     }
-    
     setTesting(false)
-    toast.info("测试已停止")
+    toast.info("正在停止测试...")
   }
-
-  const reconnectWebSocket = () => {
-    disconnect()
-    setTimeout(connect, 1000)
-    toast.info("正在重新连接WebSocket...")
+  
+  // 处理包含节点输入
+  const handleIncludeNodesChange = (value: string) => {
+    setIncludeNodesInput(value)
+    const nodes = value.split(',').map(s => s.trim()).filter(s => s.length > 0)
+    setFilterConfig(prev => ({ ...prev, includeNodes: nodes }))
   }
-
-  const exportResults = () => {
-    const dataToExport = testResults.length > 0 ? testResults : results
-    if (dataToExport.length === 0) {
-      toast.error("没有结果可导出")
-      return
-    }
-
-    // 准备CSV数据
-    const csvHeaders = [
-      "节点名称",
-      "代理类型",
-      "IP地址", 
-      "延迟(ms)",
-      "下载速度(MB/s)",
-      "上传速度(MB/s)",
-      "丢包率(%)",
-      "状态",
-      "错误阶段",
-      "错误代码",
-      "错误信息"
-    ]
-
-    const csvRows = dataToExport.map((r) => {
-      const name = 'proxy_name' in r ? r.proxy_name : (r as Result).proxy_name
-      const type = 'proxy_type' in r ? r.proxy_type : (r as Result).proxy_type
-      const ip = 'proxy_ip' in r ? (r.proxy_ip || '-') : '-'
-      const latency = 'latency_ms' in r ? r.latency_ms : Math.round((r as Result).latency / 1000000)
-      const download = 'download_speed_mbps' in r ? r.download_speed_mbps.toFixed(2) : ((r as Result).download_speed / (1024 * 1024)).toFixed(2)
-      const upload = 'upload_speed_mbps' in r ? r.upload_speed_mbps.toFixed(2) : ((r as Result).upload_speed / (1024 * 1024)).toFixed(2)
-      const packetLoss = r.packet_loss.toFixed(1)
-      const status = 'status' in r ? r.status : 'unknown'
-      const errorStage = 'error_stage' in r ? (r.error_stage || '') : ''
-      const errorCode = 'error_code' in r ? (r.error_code || '') : ''
-      const errorMessage = 'error_message' in r ? (r.error_message || '') : ''
-
-      return [
-        `"${name.replace(/"/g, '""')}"`,
-        `"${type}"`,
-        `"${ip}"`,
-        latency,
-        download,
-        upload,
-        packetLoss,
-        `"${status}"`,
-        `"${errorStage.replace(/"/g, '""')}"`,
-        `"${errorCode.replace(/"/g, '""')}"`,
-        `"${errorMessage.replace(/"/g, '""')}"`
-      ].join(',')
-    })
-
-    // 生成CSV内容
-    const csvContent = [
-      csvHeaders.map(h => `"${h}"`).join(','),
-      ...csvRows
-    ].join('\n')
-
-    // 添加BOM以支持中文显示
-    const BOM = '\uFEFF'
-    const blob = new Blob([BOM + csvContent], { type: "text/csv;charset=utf-8" })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = `clash-speedtest-results-${new Date().toISOString().slice(0, 19).replace(/[T:]/g, '-')}.csv`
-    a.click()
-    URL.revokeObjectURL(url)
-    toast.success("CSV结果已导出")
+  
+  // 处理排除节点输入
+  const handleExcludeNodesChange = (value: string) => {
+    setExcludeNodesInput(value)
+    const nodes = value.split(',').map(s => s.trim()).filter(s => s.length > 0)
+    setFilterConfig(prev => ({ ...prev, excludeNodes: nodes }))
   }
-
+  
+  // 处理协议过滤
+  const handleProtocolFilterChange = (protocol: string, checked: boolean) => {
+    setFilterConfig(prev => ({
+      ...prev,
+      protocolFilter: checked
+        ? [...prev.protocolFilter, protocol]
+        : prev.protocolFilter.filter(p => p !== protocol)
+    }))
+  }
+  
   return (
     <div className="min-h-screen p-8">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-5xl font-bold mb-4">
-            <span className="text-gradient">Clash SpeedTest</span>
+      <div className="max-w-7xl mx-auto">
+        {/* 头部 */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold mb-3">
+            <span className="text-gradient">Clash SpeedTest Pro</span>
           </h1>
-          <p className="text-gray-400 text-lg">实时测试您的代理节点性能</p>
+          <p className="text-gray-400">专业的代理节点性能测试工具</p>
         </div>
-
-        {/* Main Test Card */}
-        <Card className="glass-morphism border-gray-800 mb-8">
-          <div className="p-8">
-            {/* Config Input */}
-            <div className="mb-8">
-              <Label className="text-gray-300 mb-2 block">配置文件路径</Label>
-              <div className="flex gap-4">
-                <Input
-                  placeholder="输入配置文件路径或订阅链接..."
-                  value={config.configPaths}
-                  onChange={(e) => updateConfig({ configPaths: e.target.value })}
-                  className="flex-1 input-dark text-white placeholder:text-gray-500"
-                />
+        
+        {/* 配置获取卡片 */}
+        <Card className="glass-morphism border-gray-800 mb-6">
+          <div className="p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <ClientIcon icon={Globe} className="h-5 w-5 text-blue-400" />
+              <h2 className="text-lg font-semibold text-white">配置获取</h2>
+              <div className="ml-auto">
+                {isConnected ? (
+                  <Badge variant="outline" className="border-green-500 text-green-400">
+                    <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse" />
+                    WebSocket 已连接
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="border-red-500 text-red-400">
+                    <div className="w-2 h-2 bg-red-400 rounded-full mr-2" />
+                    WebSocket 未连接
+                  </Badge>
+                )}
+              </div>
+            </div>
+            
+            <div className="flex gap-3">
+              <Input
+                placeholder="输入配置文件路径或订阅链接..."
+                value={configUrl}
+                onChange={(e) => setConfigUrl(e.target.value)}
+                className="flex-1 input-dark text-white placeholder:text-gray-500"
+                disabled={loading || testing}
+              />
+              <Button
+                onClick={fetchConfig}
+                disabled={loading || testing}
+                className="button-gradient min-w-[120px]"
+              >
+                {loading ? (
+                  <>
+                    <ClientIcon icon={Loader2} className="mr-2 h-4 w-4 animate-spin" />
+                    获取中...
+                  </>
+                ) : (
+                  <>
+                    <ClientIcon icon={Download} className="mr-2 h-4 w-4" />
+                    获取配置
+                  </>
+                )}
+              </Button>
+            </div>
+            
+            {nodes.length > 0 && (
+              <div className="mt-4 flex items-center gap-4">
+                <Badge variant="secondary" className="badge-dark">
+                  总节点数: {nodes.length}
+                </Badge>
+                <Badge variant="secondary" className="badge-dark">
+                  符合条件: {filteredNodes.length}
+                </Badge>
+              </div>
+            )}
+          </div>
+        </Card>
+        
+        {/* 节点列表 */}
+        {nodes.length > 0 && !testing && (
+          <Card className="glass-morphism border-gray-800 mb-6">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                  <ClientIcon icon={ServerCog} className="h-5 w-5 text-blue-400" />
+                  节点列表
+                </h2>
                 <Button
-                  onClick={testing ? stopTest : handleTest}
-                  disabled={!isConnected && !testing}
+                  onClick={() => applyFilters()}
+                  variant="outline"
+                  size="sm"
+                  className="border-gray-700 text-gray-300 hover:text-white"
+                >
+                  <ClientIcon icon={RefreshCw} className="h-4 w-4 mr-1" />
+                  刷新过滤
+                </Button>
+              </div>
+              
+              <div className="overflow-x-auto max-h-96">
+                <Table className="table-dark">
+                  <TableHeader>
+                    <TableRow className="border-gray-800">
+                      <TableHead className="text-gray-400">状态</TableHead>
+                      <TableHead className="text-gray-400">节点名称</TableHead>
+                      <TableHead className="text-gray-400">类型</TableHead>
+                      <TableHead className="text-gray-400">服务器</TableHead>
+                      <TableHead className="text-gray-400">端口</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredNodes.map((node, index) => (
+                      <TableRow key={`${node.name}-${index}`} className="table-row-dark">
+                        <TableCell>
+                          {filterConfig.includeNodes.length > 0 || 
+                           filterConfig.excludeNodes.length > 0 || 
+                           filterConfig.protocolFilter.length > 0 ? (
+                            <CheckCircle2 className="h-4 w-4 text-green-400" />
+                          ) : (
+                            <div className="w-4 h-4" />
+                          )}
+                        </TableCell>
+                        <TableCell className="font-medium text-white">
+                          <div className="truncate max-w-xs" title={node.name}>
+                            {node.name}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary" className="badge-dark text-xs">
+                            {node.type}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-gray-400 font-mono text-sm">
+                          {node.server}
+                        </TableCell>
+                        <TableCell className="text-gray-400">
+                          {node.port}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          </Card>
+        )}
+        
+        {/* 过滤条件卡片 */}
+        <Card className="glass-morphism border-gray-800 mb-6">
+          <div className="p-6">
+            <div className="flex items-center gap-2 mb-6">
+              <ClientIcon icon={Filter} className="h-5 w-5 text-purple-400" />
+              <h2 className="text-lg font-semibold text-white">过滤条件</h2>
+            </div>
+            
+            <div className="space-y-6">
+              {/* 节点名称过滤 */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-gray-300 mb-2 block">
+                    包含节点 (逗号分隔)
+                  </Label>
+                  <Textarea
+                    placeholder="例如: 香港, HK, 新加坡..."
+                    value={includeNodesInput}
+                    onChange={(e) => handleIncludeNodesChange(e.target.value)}
+                    className="input-dark text-white placeholder:text-gray-500 resize-none"
+                    rows={2}
+                  />
+                </div>
+                
+                <div>
+                  <Label className="text-gray-300 mb-2 block">
+                    排除节点 (逗号分隔)
+                  </Label>
+                  <Textarea
+                    placeholder="例如: 过期, 测试, 备用..."
+                    value={excludeNodesInput}
+                    onChange={(e) => handleExcludeNodesChange(e.target.value)}
+                    className="input-dark text-white placeholder:text-gray-500 resize-none"
+                    rows={2}
+                  />
+                </div>
+              </div>
+              
+              {/* 协议过滤 */}
+              {availableProtocols.length > 0 && (
+                <div>
+                  <Label className="text-gray-300 mb-3 block">
+                    协议过滤
+                  </Label>
+                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                    {availableProtocols.map((protocol) => (
+                      <div key={protocol} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`protocol-${protocol}`}
+                          checked={filterConfig.protocolFilter.includes(protocol)}
+                          onCheckedChange={(checked: boolean) => 
+                            handleProtocolFilterChange(protocol, checked)
+                          }
+                          className="checkbox-dark"
+                        />
+                        <Label 
+                          htmlFor={`protocol-${protocol}`} 
+                          className="text-sm text-gray-300 cursor-pointer"
+                        >
+                          {protocol}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* 性能过滤 */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <Label className="text-gray-300 mb-2 block">
+                    最低下载速度: {filterConfig.minDownloadSpeed} MB/s
+                  </Label>
+                  <Slider
+                    value={[filterConfig.minDownloadSpeed]}
+                    onValueChange={(v) => setFilterConfig(prev => ({ 
+                      ...prev, 
+                      minDownloadSpeed: v[0] 
+                    }))}
+                    max={100}
+                    min={0}
+                    step={5}
+                    className="slider-dark"
+                  />
+                </div>
+                
+                <div>
+                  <Label className="text-gray-300 mb-2 block">
+                    最低上传速度: {filterConfig.minUploadSpeed} MB/s
+                  </Label>
+                  <Slider
+                    value={[filterConfig.minUploadSpeed]}
+                    onValueChange={(v) => setFilterConfig(prev => ({ 
+                      ...prev, 
+                      minUploadSpeed: v[0] 
+                    }))}
+                    max={50}
+                    min={0}
+                    step={1}
+                    className="slider-dark"
+                  />
+                </div>
+                
+                <div>
+                  <Label className="text-gray-300 mb-2 block">
+                    最大延迟: {filterConfig.maxLatency} ms
+                  </Label>
+                  <Slider
+                    value={[filterConfig.maxLatency]}
+                    onValueChange={(v) => setFilterConfig(prev => ({ 
+                      ...prev, 
+                      maxLatency: v[0] 
+                    }))}
+                    max={5000}
+                    min={100}
+                    step={100}
+                    className="slider-dark"
+                  />
+                </div>
+              </div>
+              
+              {/* 其他选项 */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="stashCompatible"
+                    checked={filterConfig.stashCompatible}
+                    onCheckedChange={(checked) => setFilterConfig(prev => ({ 
+                      ...prev, 
+                      stashCompatible: checked 
+                    }))}
+                    className="switch-dark"
+                  />
+                  <Label htmlFor="stashCompatible" className="text-gray-300">
+                    Stash 兼容模式
+                  </Label>
+                </div>
+                
+                <Button
+                  onClick={testing ? stopTest : startTest}
+                  disabled={!isConnected || nodes.length === 0 || loading}
                   size="lg"
-                  className={`min-w-[140px] ${
-                    testing
-                      ? "bg-orange-600 hover:bg-orange-700"
-                      : "button-gradient"
-                  }`}
+                  className={testing ? "bg-red-600 hover:bg-red-700" : "button-gradient"}
                 >
                   {testing ? (
                     <>
-                      <ClientIcon icon={Pause} className="mr-2 h-4 w-4" />
+                      <ClientIcon icon={Loader2} className="mr-2 h-4 w-4 animate-spin" />
                       停止测试
                     </>
                   ) : (
@@ -409,219 +628,96 @@ export default function SpeedTestWithWebSocket() {
                 </Button>
               </div>
             </div>
-
-            {/* WebSocket Status */}
-            <div className="mb-6 flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`} />
-                  <span className="text-sm text-gray-400">
-                    WebSocket: {isConnected ? '已连接' : '未连接'}
-                  </span>
-                  {!isConnected && (
-                    <Button
-                      onClick={reconnectWebSocket}
-                      size="sm"
-                      variant="outline"
-                      className="ml-2 border-gray-700 text-gray-300 hover:text-white"
-                    >
-                      <ClientIcon icon={RotateCcw} className="h-3 w-3 mr-1" />
-                      重连
-                    </Button>
-                  )}
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                {(testResults.length > 0 || results.length > 0) && (
-                  <Button
-                    onClick={exportResults}
-                    variant="outline"
-                    size="sm"
-                    className="border-gray-700 text-gray-300 hover:text-white"
-                  >
-                    <ClientIcon icon={Download} className="mr-2 h-4 w-4" />
-                    导出结果
-                  </Button>
-                )}
-              </div>
-            </div>
-
-            {/* Advanced Settings */}
-            <div className="border-t border-gray-800 pt-6">
-              <button
-                onClick={() => setShowAdvanced(!showAdvanced)}
-                className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
-              >
-                <ClientIcon icon={Settings} className="h-4 w-4" />
-                高级设置
-                {showAdvanced ? (
-                  <ClientIcon icon={ChevronUp} className="h-4 w-4" />
-                ) : (
-                  <ClientIcon icon={ChevronDown} className="h-4 w-4" />
-                )}
-              </button>
-
-              {showAdvanced && (
-                <div className="mt-6 space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div>
-                      <Label className="text-gray-300 mb-2 block">
-                        下载测试大小: {config.downloadSize} MB
-                      </Label>
-                      <Slider
-                        value={[config.downloadSize]}
-                        onValueChange={(v) => updateConfig({ downloadSize: v[0] })}
-                        max={100}
-                        min={10}
-                        step={10}
-                        className="slider-dark"
-                      />
-                    </div>
-
-                    <div>
-                      <Label className="text-gray-300 mb-2 block">
-                        并发数: {config.concurrent}
-                      </Label>
-                      <Slider
-                        value={[config.concurrent]}
-                        onValueChange={(v) => updateConfig({ concurrent: v[0] })}
-                        max={16}
-                        min={1}
-                        step={1}
-                        className="slider-dark"
-                      />
-                    </div>
-
-                    <div>
-                      <Label className="text-gray-300 mb-2 block">
-                        最大延迟: {config.maxLatency} ms
-                      </Label>
-                      <Slider
-                        value={[config.maxLatency]}
-                        onValueChange={(v) => updateConfig({ maxLatency: v[0] })}
-                        max={10000}
-                        min={500}
-                        step={500}
-                        className="slider-dark"
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label className="text-gray-300 mb-2 block">
-                        连接超时: {config.timeout} 秒
-                      </Label>
-                      <Slider
-                        value={[config.timeout]}
-                        onValueChange={(v) => updateConfig({ timeout: v[0] })}
-                        max={30}
-                        min={5}
-                        step={5}
-                        className="slider-dark"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Filtering Options */}
-                  <div className="border-t border-gray-800 pt-6">
-                    <h3 className="text-gray-300 mb-4 font-medium">节点过滤选项</h3>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                      {/* Include Nodes Filter */}
-                      <div>
-                        <Label className="text-gray-300 mb-2 block">
-                          包含节点 (用逗号分隔)
-                        </Label>
-                        <Textarea
-                          placeholder="例如: 香港, HK, 新加坡..."
-                          value={includeNodesInput}
-                          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleIncludeNodesChange(e.target.value)}
-                          className="input-dark text-white placeholder:text-gray-500 resize-none"
-                          rows={2}
-                        />
-                        <p className="text-xs text-gray-500 mt-1">只测试包含这些关键词的节点（模糊匹配）</p>
-                      </div>
-
-                      {/* Exclude Nodes Filter */}
-                      <div>
-                        <Label className="text-gray-300 mb-2 block">
-                          排除节点 (用逗号分隔)
-                        </Label>
-                        <Textarea
-                          placeholder="例如: 过期, 到期, 测试..."
-                          value={excludeNodesInput}
-                          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleExcludeNodesChange(e.target.value)}
-                          className="input-dark text-white placeholder:text-gray-500 resize-none"
-                          rows={2}
-                        />
-                        <p className="text-xs text-gray-500 mt-1">排除包含这些关键词的节点（模糊匹配）</p>
-                      </div>
-                    </div>
-
-                    {/* Protocol Filter */}
-                    {availableProtocols.length > 0 && (
-                      <div>
-                        <Label className="text-gray-300 mb-3 block">
-                          协议过滤 ({(config.protocolFilter?.length || 0) > 0 ? `已选择 ${config.protocolFilter.length} 个` : '全选'})
-                        </Label>
-                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                          {availableProtocols.map((protocol) => (
-                            <div key={protocol} className="flex items-center space-x-2">
-                              <Checkbox
-                                id={`protocol-${protocol}`}
-                                checked={(config.protocolFilter?.length || 0) === 0 || config.protocolFilter?.includes(protocol) || false}
-                                onCheckedChange={(checked: boolean) => handleProtocolFilterChange(protocol, checked)}
-                                className="checkbox-dark"
-                              />
-                              <Label htmlFor={`protocol-${protocol}`} className="text-sm text-gray-300 cursor-pointer">
-                                {protocol}
-                              </Label>
-                            </div>
-                          ))}
-                        </div>
-                        <p className="text-xs text-gray-500 mt-2">留空表示选择所有协议</p>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-6">
-                    <div className="flex items-center space-x-2">
-                      <Switch
-                        id="stashCompatible"
-                        checked={config.stashCompatible}
-                        onCheckedChange={(checked) => updateConfig({ stashCompatible: checked })}
-                        className="switch-dark"
-                      />
-                      <Label htmlFor="stashCompatible" className="text-gray-300">
-                        Stash 兼容模式
-                      </Label>
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <Switch
-                        id="renameNodes"
-                        checked={config.renameNodes}
-                        onCheckedChange={(checked) => updateConfig({ renameNodes: checked })}
-                        className="switch-dark"
-                      />
-                      <Label htmlFor="renameNodes" className="text-gray-300">
-                        重命名节点
-                      </Label>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
           </div>
         </Card>
-
-        {/* Real-time Progress Table */}
-        <RealTimeProgressTable
-          results={testResults}
-          progress={testProgress}
-          completeData={testCompleteData}
-          cancelledData={testCancelledData}
-          isConnected={isConnected}
-        />
+        
+        {/* 测试配置（折叠） */}
+        <details className="mb-6">
+          <summary className="cursor-pointer text-gray-400 hover:text-white transition-colors">
+            高级测试配置
+          </summary>
+          <Card className="glass-morphism border-gray-800 mt-4">
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div>
+                  <Label className="text-gray-300 mb-2 block">
+                    测试服务器
+                  </Label>
+                  <Input
+                    value={testConfig.serverUrl}
+                    onChange={(e) => setTestConfig(prev => ({ 
+                      ...prev, 
+                      serverUrl: e.target.value 
+                    }))}
+                    className="input-dark text-white"
+                  />
+                </div>
+                
+                <div>
+                  <Label className="text-gray-300 mb-2 block">
+                    下载测试大小: {testConfig.downloadSize} MB
+                  </Label>
+                  <Slider
+                    value={[testConfig.downloadSize]}
+                    onValueChange={(v) => setTestConfig(prev => ({ 
+                      ...prev, 
+                      downloadSize: v[0] 
+                    }))}
+                    max={100}
+                    min={10}
+                    step={10}
+                    className="slider-dark"
+                  />
+                </div>
+                
+                <div>
+                  <Label className="text-gray-300 mb-2 block">
+                    并发数: {testConfig.concurrent}
+                  </Label>
+                  <Slider
+                    value={[testConfig.concurrent]}
+                    onValueChange={(v) => setTestConfig(prev => ({ 
+                      ...prev, 
+                      concurrent: v[0] 
+                    }))}
+                    max={16}
+                    min={1}
+                    step={1}
+                    className="slider-dark"
+                  />
+                </div>
+                
+                <div>
+                  <Label className="text-gray-300 mb-2 block">
+                    超时时间: {testConfig.timeout} 秒
+                  </Label>
+                  <Slider
+                    value={[testConfig.timeout]}
+                    onValueChange={(v) => setTestConfig(prev => ({ 
+                      ...prev, 
+                      timeout: v[0] 
+                    }))}
+                    max={30}
+                    min={5}
+                    step={5}
+                    className="slider-dark"
+                  />
+                </div>
+              </div>
+            </div>
+          </Card>
+        </details>
+        
+        {/* 测试进度和结果 */}
+        {testing && (
+          <RealTimeProgressTable
+            results={testResults}
+            progress={testProgress}
+            completeData={testCompleteData}
+            cancelledData={testCancelledData}
+            isConnected={isConnected}
+          />
+        )}
       </div>
     </div>
   )

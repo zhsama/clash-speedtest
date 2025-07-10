@@ -108,7 +108,11 @@ export default function SpeedTestPro() {
         const parsed = JSON.parse(savedConfig)
         if (parsed.configUrl) setConfigUrl(parsed.configUrl)
         if (parsed.filterConfig) {
-          setFilterConfig(parsed.filterConfig)
+          setFilterConfig(prev => ({
+            ...prev,
+            ...parsed.filterConfig,
+            protocolFilter: prev.protocolFilter
+          }))
           handleIncludeNodesChange(parsed.filterConfig.includeNodes?.join(', ') || '')
           handleExcludeNodesChange(parsed.filterConfig.excludeNodes?.join(', ') || '')
         }
@@ -120,9 +124,10 @@ export default function SpeedTestPro() {
   }, [])
   
   useEffect(() => {
+    const { protocolFilter, ...filterConfigToSave } = filterConfig
     localStorage.setItem("clash-speedtest-config", JSON.stringify({
       configUrl,
-      filterConfig,
+      filterConfig: filterConfigToSave,
       testConfig
     }))
   }, [configUrl, filterConfig, testConfig])
@@ -180,6 +185,11 @@ export default function SpeedTestPro() {
         const protocols = [...new Set(data.nodes.map((n: NodeInfo) => n.type))]
         setAvailableProtocols(protocols as string[])
         
+        setFilterConfig(prev => ({
+          ...prev,
+          protocolFilter: protocols as string[]
+        }))
+        
         applyFilters(data.nodes)
         
         const filteredCount = data.nodes.filter((node: NodeInfo) => !isNodeFiltered(node)).length
@@ -208,18 +218,25 @@ export default function SpeedTestPro() {
       const included = filterConfig.includeNodes.some(include =>
         node.name.toLowerCase().includes(include.toLowerCase())
       )
-      if (!included) return true
+      if (!included) {
+        console.log(`Node ${node.name} filtered out by includeNodes`);
+        return true
+      }
     }
     
     if (filterConfig.excludeNodes.length > 0) {
       const excluded = filterConfig.excludeNodes.some(exclude =>
         node.name.toLowerCase().includes(exclude.toLowerCase())
       )
-      if (excluded) return true
+      if (excluded) {
+        console.log(`Node ${node.name} filtered out by excludeNodes`);
+        return true
+      }
     }
     
-    if (filterConfig.protocolFilter.length > 0) {
-      if (!filterConfig.protocolFilter.includes(node.type)) return true
+    if (!filterConfig.protocolFilter.includes(node.type)) {
+      console.log(`Node ${node.name} (${node.type}) filtered out by protocolFilter. Current filter:`, filterConfig.protocolFilter);
+      return true
     }
     
     return false
@@ -244,11 +261,9 @@ export default function SpeedTestPro() {
       )
     }
     
-    if (filterConfig.protocolFilter.length > 0) {
-      filtered = filtered.filter(node =>
-        filterConfig.protocolFilter.includes(node.type)
-      )
-    }
+    filtered = filtered.filter(node =>
+      filterConfig.protocolFilter.includes(node.type)
+    )
     
     setFilteredNodes(filtered)
   }
@@ -326,33 +341,21 @@ export default function SpeedTestPro() {
   }
   
   const isProtocolSelected = (protocol: string) => {
-    if (filterConfig.protocolFilter.length === 0) {
-      return true
-    }
     return filterConfig.protocolFilter.includes(protocol)
   }
 
   const handleProtocolFilterChange = (protocol: string, checked: boolean) => {
+    console.log(protocol, checked);
     setFilterConfig(prev => {
       let newProtocolFilter: string[]
       
       if (checked) {
-        if (prev.protocolFilter.length === 0) {
-          newProtocolFilter = [protocol]
-        } else {
-          newProtocolFilter = [...prev.protocolFilter, protocol]
-        }
+        newProtocolFilter = [...prev.protocolFilter, protocol]
       } else {
-        if (prev.protocolFilter.length === 0) {
-          newProtocolFilter = availableProtocols.filter(p => p !== protocol)
-        } else {
-          newProtocolFilter = prev.protocolFilter.filter(p => p !== protocol)
-        }
+        newProtocolFilter = prev.protocolFilter.filter(p => p !== protocol)
       }
       
-      if (newProtocolFilter.length === availableProtocols.length) {
-        newProtocolFilter = []
-      }
+      console.log('protocolFilter changed from', prev.protocolFilter, 'to', newProtocolFilter);
       
       return {
         ...prev,
@@ -436,7 +439,6 @@ export default function SpeedTestPro() {
           </div>
         </Card>
         
-        {/* 节点列表 */}
         {nodes.length > 0 && (
           <Card className="glass-morphism border-gray-800 mb-6">
             <div className="p-6">
@@ -500,7 +502,6 @@ export default function SpeedTestPro() {
           </Card>
         )}
         
-        {/* 过滤条件卡片 */}
         <Card className="glass-morphism border-gray-800 mb-6">
           <div className="p-6">
             <div className="flex items-center gap-2 mb-6">
@@ -733,7 +734,7 @@ export default function SpeedTestPro() {
           </Card>
         </details>
         
-        {testing && (
+        {(testing || testResults.length > 0 || testCompleteData || testCancelledData) && (
           <RealTimeProgressTable
             results={testResults}
             progress={testProgress}

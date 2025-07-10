@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/faceair/clash-speedtest/logger"
+	"github.com/faceair/clash-speedtest/unlock"
 	"github.com/metacubex/mihomo/adapter"
 	"github.com/metacubex/mihomo/adapter/provider"
 	"github.com/metacubex/mihomo/constant"
@@ -83,13 +84,17 @@ type Config struct {
 	MaxLatency       time.Duration
 	MinDownloadSpeed float64
 	MinUploadSpeed   float64
-	// 新增快速模式和节点重命名选项
+	// 现有字段
 	FastMode         bool // 快速模式：只测试延迟，跳过速度测试
 	RenameNodes      bool // 节点重命名：添加地理位置和速度信息
+	// 新增解锁检测相关字段
+	TestMode         string                   // 测试模式: speed_only, unlock_only, both
+	UnlockConfig     *unlock.UnlockTestConfig // 解锁检测配置
 }
 
 type SpeedTester struct {
-	config *Config
+	config         *Config
+	unlockDetector *unlock.Detector
 }
 
 func New(config *Config) *SpeedTester {
@@ -102,9 +107,21 @@ func New(config *Config) *SpeedTester {
 	if config.UploadSize < 0 {
 		config.UploadSize = 10 * 1024 * 1024
 	}
-	return &SpeedTester{
+	
+	st := &SpeedTester{
 		config: config,
 	}
+	
+	// 初始化解锁检测器（如果配置存在且启用）
+	if config.UnlockConfig != nil && config.UnlockConfig.Enabled {
+		st.unlockDetector = unlock.NewDetector(config.UnlockConfig)
+		logger.Logger.Info("Unlock detector initialized", 
+			slog.Int("platforms", len(config.UnlockConfig.Platforms)),
+			slog.Int("concurrent", config.UnlockConfig.Concurrent),
+		)
+	}
+	
+	return st
 }
 
 type CProxy struct {
@@ -568,6 +585,9 @@ type Result struct {
 	TestError     *VlessTestError `json:"test_error,omitempty"` // 测试错误详情
 	FailureStage  string          `json:"failure_stage,omitempty"` // 失败阶段
 	FailureReason string          `json:"failure_reason,omitempty"` // 失败原因
+	// 新增解锁检测结果字段
+	UnlockResults []unlock.UnlockResult `json:"unlock_results,omitempty"` // 解锁检测结果
+	UnlockSummary string                `json:"unlock_summary,omitempty"` // 解锁摘要
 }
 
 func (r *Result) FormatDownloadSpeed() string {
@@ -654,6 +674,7 @@ func (st *SpeedTester) testProxy(name string, proxy *CProxy) *Result {
 	logger.Logger.Debug("Starting proxy test", 
 		slog.String("proxy_name", name),
 		slog.String("proxy_type", proxy.Type().String()),
+		slog.String("test_mode", st.config.TestMode),
 	)
 	
 	result := &Result{
@@ -675,69 +696,124 @@ func (st *SpeedTester) testProxy(name string, proxy *CProxy) *Result {
 		)
 	}
 
-	// 1. 首先进行延迟测试
-	logger.Logger.Debug("Testing proxy latency", slog.String("proxy_name", name))
-	
-	// For VLESS proxies, use a longer timeout for latency testing
-	latencyTimeout := st.config.MaxLatency
-	if isVless {
-		// Use the general timeout setting for VLESS, but ensure it's at least 10 seconds
-		if st.config.Timeout > latencyTimeout {
-			latencyTimeout = st.config.Timeout
-		}
-		if latencyTimeout < 10*time.Second {
-			latencyTimeout = 10 * time.Second
-		}
-		logger.Logger.Debug("Using extended timeout for VLESS latency test", 
-			slog.String("proxy_name", name),
-			slog.String("timeout", latencyTimeout.String()),
-		)
-	}
-	
-	latencyResult := st.testLatencyWithErrors(proxy, latencyTimeout, isVless)
-	result.Latency = latencyResult.avgLatency
-	result.Jitter = latencyResult.jitter
-	result.PacketLoss = latencyResult.packetLoss
-	
-	// 如果是 vless 协议且有错误，记录错误详情
-	if isVless && latencyResult.lastError != nil {
-		result.TestError = AnalyzeError(latencyResult.lastError, name, StageDNS)
-		result.FailureStage = result.TestError.Stage
-		result.FailureReason = result.TestError.Message
-		
-		logger.Logger.Info("Vless latency test failed with detailed error", 
-			slog.String("proxy_name", name),
-			slog.String("error_stage", result.TestError.Stage),
-			slog.String("error_code", result.TestError.Code),
-			slog.String("error_message", result.TestError.Message),
-		)
+	// 根据测试模式执行不同的测试
+	testMode := st.config.TestMode
+	if testMode == "" {
+		testMode = "both" // 默认两者都测试
 	}
 
-	logger.Logger.Debug("Latency test completed", 
+	// 1. 延迟测试（除非是仅解锁模式）
+	if testMode != "unlock_only" {
+		logger.Logger.Debug("Testing proxy latency", slog.String("proxy_name", name))
+		
+		// For VLESS proxies, use a longer timeout for latency testing
+		latencyTimeout := st.config.MaxLatency
+		if isVless {
+			// Use the general timeout setting for VLESS, but ensure it's at least 10 seconds
+			if st.config.Timeout > latencyTimeout {
+				latencyTimeout = st.config.Timeout
+			}
+			if latencyTimeout < 10*time.Second {
+				latencyTimeout = 10 * time.Second
+			}
+			logger.Logger.Debug("Using extended timeout for VLESS latency test", 
+				slog.String("proxy_name", name),
+				slog.String("timeout", latencyTimeout.String()),
+			)
+		}
+		
+		latencyResult := st.testLatencyWithErrors(proxy, latencyTimeout, isVless)
+		result.Latency = latencyResult.avgLatency
+		result.Jitter = latencyResult.jitter
+		result.PacketLoss = latencyResult.packetLoss
+		
+		// 如果是 vless 协议且有错误，记录错误详情
+		if isVless && latencyResult.lastError != nil {
+			result.TestError = AnalyzeError(latencyResult.lastError, name, StageDNS)
+			result.FailureStage = result.TestError.Stage
+			result.FailureReason = result.TestError.Message
+			
+			logger.Logger.Info("Vless latency test failed with detailed error", 
+				slog.String("proxy_name", name),
+				slog.String("error_stage", result.TestError.Stage),
+				slog.String("error_code", result.TestError.Code),
+				slog.String("error_message", result.TestError.Message),
+			)
+		}
+
+		logger.Logger.Debug("Latency test completed", 
+			slog.String("proxy_name", name),
+			slog.Int64("latency_ms", result.Latency.Milliseconds()),
+			slog.Float64("packet_loss", result.PacketLoss),
+			slog.Int64("jitter_ms", result.Jitter.Milliseconds()),
+		)
+
+		// 如果延迟测试失败，且不是快速模式或解锁优先模式，则跳过后续测试
+		if testMode == "speed_only" && (result.PacketLoss == 100 || result.Latency > st.config.MaxLatency) {
+			logger.Logger.Info("Proxy failed latency test, skipping speed tests", 
+				slog.String("proxy_name", name),
+				slog.Float64("packet_loss", result.PacketLoss),
+				slog.Int64("latency_ms", result.Latency.Milliseconds()),
+				slog.Int64("max_latency_ms", st.config.MaxLatency.Milliseconds()),
+			)
+			return result
+		}
+	}
+
+	// 2. 解锁检测（除非是仅测速模式）
+	if testMode != "speed_only" && st.unlockDetector != nil {
+		logger.Logger.Debug("Starting unlock detection", 
+			slog.String("proxy_name", name),
+			slog.Int("platforms", len(st.config.UnlockConfig.Platforms)),
+		)
+		
+		unlockResults := st.unlockDetector.DetectAll(proxy.Proxy, st.config.UnlockConfig.Platforms)
+		result.UnlockResults = unlockResults
+		result.UnlockSummary = unlock.GetUnlockSummary(unlockResults)
+		
+		logger.Logger.Debug("Unlock detection completed", 
+			slog.String("proxy_name", name),
+			slog.Int("detected_platforms", len(unlockResults)),
+			slog.String("summary", result.UnlockSummary),
+		)
+		
+		// 如果是仅解锁模式，直接返回结果
+		if testMode == "unlock_only" {
+			return result
+		}
+	}
+
+	// 3. 速度测试（除非是仅解锁模式或快速模式）
+	if testMode != "unlock_only" && !st.config.FastMode {
+		// 检查延迟是否满足要求（如果进行了延迟测试）
+		if testMode != "unlock_only" && (result.PacketLoss == 100 || result.Latency > st.config.MaxLatency) {
+			logger.Logger.Info("Proxy failed latency test, skipping speed tests", 
+				slog.String("proxy_name", name),
+				slog.Float64("packet_loss", result.PacketLoss),
+				slog.Int64("latency_ms", result.Latency.Milliseconds()),
+				slog.Int64("max_latency_ms", st.config.MaxLatency.Milliseconds()),
+			)
+			return result
+		}
+
+		// 进行速度测试
+		st.performSpeedTests(proxy, result, isVless, name)
+	}
+
+	logger.Logger.Info("Proxy test completed successfully", 
 		slog.String("proxy_name", name),
 		slog.Int64("latency_ms", result.Latency.Milliseconds()),
+		slog.Float64("download_speed_mbps", result.DownloadSpeed/(1024*1024)),
+		slog.Float64("upload_speed_mbps", result.UploadSpeed/(1024*1024)),
 		slog.Float64("packet_loss", result.PacketLoss),
-		slog.Int64("jitter_ms", result.Jitter.Milliseconds()),
+		slog.String("unlock_summary", result.UnlockSummary),
 	)
 
-	if result.PacketLoss == 100 || result.Latency > st.config.MaxLatency {
-		logger.Logger.Info("Proxy failed latency test, skipping speed tests", 
-			slog.String("proxy_name", name),
-			slog.Float64("packet_loss", result.PacketLoss),
-			slog.Int64("latency_ms", result.Latency.Milliseconds()),
-			slog.Int64("max_latency_ms", st.config.MaxLatency.Milliseconds()),
-		)
-		return result
-	}
+	return result
+}
 
-	// 快速模式：只测试延迟，跳过速度测试
-	if st.config.FastMode {
-		logger.Logger.Debug("Fast mode enabled, skipping speed tests", 
-			slog.String("proxy_name", name),
-		)
-		return result
-	}
-
+// performSpeedTests 执行速度测试
+func (st *SpeedTester) performSpeedTests(proxy *CProxy, result *Result, isVless bool, name string) {
 	// 并发进行下载和上传测试
 	logger.Logger.Debug("Starting speed tests", 
 		slog.String("proxy_name", name),
@@ -797,7 +873,7 @@ func (st *SpeedTester) testProxy(name string, proxy *CProxy) *Result {
 				slog.Float64("actual_speed_mbps", result.DownloadSpeed/(1024*1024)),
 				slog.Float64("min_speed_mbps", st.config.MinDownloadSpeed/(1024*1024)),
 			)
-			return result
+			return
 		}
 	}
 
@@ -858,19 +934,9 @@ func (st *SpeedTester) testProxy(name string, proxy *CProxy) *Result {
 				slog.Float64("actual_speed_mbps", result.UploadSpeed/(1024*1024)),
 				slog.Float64("min_speed_mbps", st.config.MinUploadSpeed/(1024*1024)),
 			)
-			return result
+			return
 		}
 	}
-
-	logger.Logger.Info("Proxy test completed successfully", 
-		slog.String("proxy_name", name),
-		slog.Int64("latency_ms", result.Latency.Milliseconds()),
-		slog.Float64("download_speed_mbps", result.DownloadSpeed/(1024*1024)),
-		slog.Float64("upload_speed_mbps", result.UploadSpeed/(1024*1024)),
-		slog.Float64("packet_loss", result.PacketLoss),
-	)
-
-	return result
 }
 
 type latencyResult struct {

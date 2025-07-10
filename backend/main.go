@@ -16,6 +16,7 @@ import (
 
 	"github.com/faceair/clash-speedtest/logger"
 	"github.com/faceair/clash-speedtest/speedtester"
+	"github.com/faceair/clash-speedtest/unlock"
 	"github.com/faceair/clash-speedtest/utils"
 	"github.com/faceair/clash-speedtest/websocket"
 	"github.com/metacubex/mihomo/log"
@@ -41,6 +42,13 @@ type TestRequest struct {
 	RenameNodes      bool     `json:"renameNodes"`     // 节点重命名：添加地理位置信息
 	ExportFormat     string   `json:"exportFormat"`    // 导出格式：json, csv, yaml, clash
 	ExportPath       string   `json:"exportPath"`      // 导出路径
+	// 解锁检测相关字段
+	TestMode         string   `json:"testMode"`        // 测试模式：speed_only, unlock_only, both
+	UnlockEnabled    bool     `json:"unlockEnabled"`   // 是否启用解锁检测
+	UnlockPlatforms  []string `json:"unlockPlatforms"` // 要检测的平台列表
+	UnlockConcurrent int      `json:"unlockConcurrent"` // 解锁检测并发数
+	UnlockTimeout    int      `json:"unlockTimeout"`   // 解锁检测超时时间
+	UnlockRetry      bool     `json:"unlockRetry"`     // 解锁检测失败时是否重试
 }
 
 type TestResponse struct {
@@ -67,6 +75,40 @@ var (
 	testTasks      = make(map[string]*TestTask)
 	testTasksMutex sync.RWMutex
 )
+
+// createUnlockConfig 根据TestRequest创建解锁检测配置
+func createUnlockConfig(req TestRequest) *unlock.UnlockTestConfig {
+	if !req.UnlockEnabled {
+		return &unlock.UnlockTestConfig{
+			Enabled: false,
+		}
+	}
+	
+	// 设置默认值
+	platforms := req.UnlockPlatforms
+	if len(platforms) == 0 {
+		platforms = []string{"Netflix", "YouTube", "Disney+", "ChatGPT", "Spotify", "Bilibili"}
+	}
+	
+	concurrent := req.UnlockConcurrent
+	if concurrent <= 0 {
+		concurrent = 5
+	}
+	
+	timeout := req.UnlockTimeout
+	if timeout <= 0 {
+		timeout = 10
+	}
+	
+	return &unlock.UnlockTestConfig{
+		Enabled:       true,
+		Platforms:     platforms,
+		Concurrent:    concurrent,
+		Timeout:       timeout,
+		RetryOnError:  req.UnlockRetry,
+		IncludeIPInfo: true,
+	}
+}
 
 func main() {
 	// Initialize custom logging configuration
@@ -291,6 +333,7 @@ func runTestTask(task *TestTask) {
 	logger.Logger.Info("Starting test task", slog.String("task_id", task.ID))
 	
 	// 创建SpeedTester实例
+	unlockConfig := createUnlockConfig(task.Config)
 	speedTester := speedtester.New(&speedtester.Config{
 		ConfigPaths:      task.Config.ConfigPaths,
 		FilterRegex:      task.Config.FilterRegex,
@@ -305,6 +348,10 @@ func runTestTask(task *TestTask) {
 		MaxLatency:       time.Duration(task.Config.MaxLatency) * time.Millisecond,
 		MinDownloadSpeed: task.Config.MinDownloadSpeed * 1024 * 1024,
 		MinUploadSpeed:   task.Config.MinUploadSpeed * 1024 * 1024,
+		FastMode:         task.Config.FastMode,
+		RenameNodes:      task.Config.RenameNodes,
+		TestMode:         task.Config.TestMode,
+		UnlockConfig:     unlockConfig,
 	})
 	
 	// 加载代理
@@ -535,6 +582,7 @@ func handleTest(w http.ResponseWriter, r *http.Request) {
 	}
 	// 保持用户设置的0值，表示不限制速度
 
+	unlockConfig := createUnlockConfig(req)
 	speedTester := speedtester.New(&speedtester.Config{
 		ConfigPaths:      req.ConfigPaths,
 		FilterRegex:      req.FilterRegex,
@@ -549,6 +597,10 @@ func handleTest(w http.ResponseWriter, r *http.Request) {
 		MaxLatency:       time.Duration(req.MaxLatency) * time.Millisecond,
 		MinDownloadSpeed: req.MinDownloadSpeed * 1024 * 1024,
 		MinUploadSpeed:   req.MinUploadSpeed * 1024 * 1024,
+		FastMode:         req.FastMode,
+		RenameNodes:      req.RenameNodes,
+		TestMode:         req.TestMode,
+		UnlockConfig:     unlockConfig,
 	})
 
 	logger.Logger.Info("Loading proxies", slog.String("config_paths", req.ConfigPaths))
@@ -685,6 +737,7 @@ func handleTestWithWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 	// 保持用户设置的0值，表示不限制速度
 
+	unlockConfig := createUnlockConfig(req)
 	speedTester := speedtester.New(&speedtester.Config{
 		ConfigPaths:      req.ConfigPaths,
 		FilterRegex:      req.FilterRegex,
@@ -699,6 +752,10 @@ func handleTestWithWebSocket(w http.ResponseWriter, r *http.Request) {
 		MaxLatency:       time.Duration(req.MaxLatency) * time.Millisecond,
 		MinDownloadSpeed: req.MinDownloadSpeed * 1024 * 1024,
 		MinUploadSpeed:   req.MinUploadSpeed * 1024 * 1024,
+		FastMode:         req.FastMode,
+		RenameNodes:      req.RenameNodes,
+		TestMode:         req.TestMode,
+		UnlockConfig:     unlockConfig,
 	})
 
 	logger.Logger.Info("Loading proxies", slog.String("config_paths", req.ConfigPaths))

@@ -55,6 +55,13 @@ interface TestConfig {
   uploadSize: number
   timeout: number
   concurrent: number
+  // 解锁检测相关配置
+  testMode: string
+  unlockEnabled: boolean
+  unlockPlatforms: string[]
+  unlockConcurrent: number
+  unlockTimeout: number
+  unlockRetry: boolean
 }
 
 export default function SpeedTestPro() {
@@ -82,6 +89,13 @@ export default function SpeedTestPro() {
     uploadSize: 20,
     timeout: 10,
     concurrent: 4,
+    // 解锁检测配置
+    testMode: "both", // both, speed_only, unlock_only
+    unlockEnabled: true,
+    unlockPlatforms: ["Netflix", "YouTube", "Disney+", "ChatGPT", "Spotify", "Bilibili"],
+    unlockConcurrent: 5,
+    unlockTimeout: 10,
+    unlockRetry: true,
   })
   
   const [includeNodesInput, setIncludeNodesInput] = useState("")
@@ -729,6 +743,90 @@ export default function SpeedTestPro() {
                     className="slider-dark"
                   />
                 </div>
+              </div>
+              
+              {/* 解锁检测配置 */}
+              <div className="mt-6 pt-6 border-t border-gray-700">
+                <h4 className="text-gray-300 text-lg font-medium mb-4">流媒体解锁检测</h4>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div>
+                    <Label className="text-gray-300 mb-2 block">
+                      测试模式
+                    </Label>
+                    <select
+                      value={testConfig.testMode}
+                      onChange={(e) => setTestConfig(prev => ({ 
+                        ...prev, 
+                        testMode: e.target.value 
+                      }))}
+                      className="w-full p-2 rounded border border-gray-600 bg-gray-800 text-white"
+                    >
+                      <option value="both">全面测试（测速+解锁）</option>
+                      <option value="speed_only">仅测速</option>
+                      <option value="unlock_only">仅解锁检测</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <Label className="text-gray-300 mb-2 flex items-center gap-2">
+                      <Switch
+                        checked={testConfig.unlockEnabled}
+                        onCheckedChange={(checked) => setTestConfig(prev => ({ 
+                          ...prev, 
+                          unlockEnabled: checked 
+                        }))}
+                        className="switch-dark"
+                      />
+                      启用解锁检测
+                    </Label>
+                  </div>
+                  
+                  <div>
+                    <Label className="text-gray-300 mb-2 block">
+                      解锁检测并发数: {testConfig.unlockConcurrent}
+                    </Label>
+                    <Slider
+                      value={[testConfig.unlockConcurrent]}
+                      onValueChange={(v) => setTestConfig(prev => ({ 
+                        ...prev, 
+                        unlockConcurrent: v[0] 
+                      }))}
+                      max={10}
+                      min={1}
+                      step={1}
+                      className="slider-dark"
+                      disabled={!testConfig.unlockEnabled}
+                    />
+                  </div>
+                </div>
+                
+                {testConfig.unlockEnabled && (
+                  <div className="mt-4">
+                    <Label className="text-gray-300 mb-2 block">
+                      检测平台
+                    </Label>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                      {["Netflix", "YouTube", "Disney+", "ChatGPT", "Spotify", "Bilibili"].map((platform) => (
+                        <label key={platform} className="flex items-center space-x-2 cursor-pointer">
+                          <Checkbox
+                            checked={testConfig.unlockPlatforms.includes(platform)}
+                            onCheckedChange={(checked) => {
+                              setTestConfig(prev => ({
+                                ...prev,
+                                unlockPlatforms: checked
+                                  ? [...prev.unlockPlatforms, platform]
+                                  : prev.unlockPlatforms.filter(p => p !== platform)
+                              }))
+                            }}
+                            className="checkbox-dark"
+                          />
+                          <span className="text-gray-300 text-sm">{platform}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </Card>

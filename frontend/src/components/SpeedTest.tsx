@@ -16,14 +16,12 @@ import {
   Globe,
   ServerCog,
   RefreshCw,
-  AlertCircle,
-  CheckCircle2,
   Loader2,
 } from "lucide-react"
 import ClientIcon from "./ClientIcon"
 import RealTimeProgressTable from "./RealTimeProgressTable"
 import { useWebSocket } from "../hooks/useWebSocket"
-import { config } from "../lib/env"
+import { config } from "@/lib/env"
 import {
   Table,
   TableBody,
@@ -60,7 +58,6 @@ interface TestConfig {
 }
 
 export default function SpeedTestPro() {
-  // 状态管理
   const [configUrl, setConfigUrl] = useState("")
   const [nodes, setNodes] = useState<NodeInfo[]>([])
   const [filteredNodes, setFilteredNodes] = useState<NodeInfo[]>([])
@@ -68,7 +65,6 @@ export default function SpeedTestPro() {
   const [testing, setTesting] = useState(false)
   const [taskId, setTaskId] = useState<string | null>(null)
   
-  // 过滤配置
   const [filterConfig, setFilterConfig] = useState<FilterConfig>({
     includeNodes: [],
     excludeNodes: [],
@@ -79,7 +75,6 @@ export default function SpeedTestPro() {
     stashCompatible: false,
   })
   
-  // 测试配置
   const [testConfig, setTestConfig] = useState<TestConfig>({
     configPaths: "",
     serverUrl: "https://speed.cloudflare.com",
@@ -89,12 +84,10 @@ export default function SpeedTestPro() {
     concurrent: 4,
   })
   
-  // UI状态
   const [includeNodesInput, setIncludeNodesInput] = useState("")
   const [excludeNodesInput, setExcludeNodesInput] = useState("")
   const [availableProtocols, setAvailableProtocols] = useState<string[]>([])
   
-  // WebSocket
   const wsUrl = `${config.wsUrl}/ws`
   const {
     isConnected,
@@ -108,13 +101,11 @@ export default function SpeedTestPro() {
     clearData
   } = useWebSocket(wsUrl)
   
-  // 从localStorage加载配置
   useEffect(() => {
     const savedConfig = localStorage.getItem("clash-speedtest-config")
     if (savedConfig) {
       try {
         const parsed = JSON.parse(savedConfig)
-        console.log(parsed);
         if (parsed.configUrl) setConfigUrl(parsed.configUrl)
         if (parsed.filterConfig) {
           setFilterConfig(parsed.filterConfig)
@@ -128,7 +119,6 @@ export default function SpeedTestPro() {
     }
   }, [])
   
-  // 保存配置到localStorage
   useEffect(() => {
     localStorage.setItem("clash-speedtest-config", JSON.stringify({
       configUrl,
@@ -137,13 +127,11 @@ export default function SpeedTestPro() {
     }))
   }, [configUrl, filterConfig, testConfig])
   
-  // 连接WebSocket
   useEffect(() => {
     connect()
     return () => disconnect()
   }, [connect, disconnect])
   
-  // 处理测试完成
   useEffect(() => {
     if (testCompleteData && testing) {
       setTesting(false)
@@ -154,7 +142,6 @@ export default function SpeedTestPro() {
     }
   }, [testCompleteData, testing])
   
-  // 处理测试取消
   useEffect(() => {
     if (testCancelledData && testing) {
       setTesting(false)
@@ -165,7 +152,6 @@ export default function SpeedTestPro() {
     }
   }, [testCancelledData, testing])
   
-  // 获取配置文件
   const fetchConfig = async () => {
     if (!configUrl.trim()) {
       toast.error("请输入配置文件路径或订阅链接")
@@ -191,14 +177,22 @@ export default function SpeedTestPro() {
       if (data.success && data.nodes) {
         setNodes(data.nodes)
         
-        // 提取可用协议
         const protocols = [...new Set(data.nodes.map((n: NodeInfo) => n.type))]
         setAvailableProtocols(protocols as string[])
         
-        toast.success(`成功加载 ${data.nodes.length} 个节点`)
-        
-        // 自动应用过滤
         applyFilters(data.nodes)
+        
+        const filteredCount = data.nodes.filter((node: NodeInfo) => !isNodeFiltered(node)).length
+        const hasFilters = filterConfig.includeNodes.length > 0 || 
+                          filterConfig.excludeNodes.length > 0 || 
+                          filterConfig.protocolFilter.length > 0
+        
+        if (hasFilters && filteredCount < data.nodes.length) {
+          const filteredOutCount = data.nodes.length - filteredCount
+          toast.success(`成功加载 ${data.nodes.length} 个节点，已过滤 ${filteredOutCount} 个节点，符合条件 ${filteredCount} 个节点`)
+        } else {
+          toast.success(`成功加载 ${data.nodes.length} 个节点`)
+        }
       } else {
         toast.error(data.error || "加载配置失败")
       }
@@ -209,12 +203,31 @@ export default function SpeedTestPro() {
     }
   }
   
-  // 应用过滤条件
+  const isNodeFiltered = (node: NodeInfo) => {
+    if (filterConfig.includeNodes.length > 0) {
+      const included = filterConfig.includeNodes.some(include =>
+        node.name.toLowerCase().includes(include.toLowerCase())
+      )
+      if (!included) return true
+    }
+    
+    if (filterConfig.excludeNodes.length > 0) {
+      const excluded = filterConfig.excludeNodes.some(exclude =>
+        node.name.toLowerCase().includes(exclude.toLowerCase())
+      )
+      if (excluded) return true
+    }
+    
+    if (filterConfig.protocolFilter.length > 0) {
+      if (!filterConfig.protocolFilter.includes(node.type)) return true
+    }
+    
+    return false
+  }
+
   const applyFilters = (nodesToFilter: NodeInfo[] = nodes) => {
-    // 这里只做客户端预览，实际过滤在后端进行
     let filtered = [...nodesToFilter]
     
-    // 包含过滤
     if (filterConfig.includeNodes.length > 0) {
       filtered = filtered.filter(node =>
         filterConfig.includeNodes.some(include =>
@@ -223,7 +236,6 @@ export default function SpeedTestPro() {
       )
     }
     
-    // 排除过滤
     if (filterConfig.excludeNodes.length > 0) {
       filtered = filtered.filter(node =>
         !filterConfig.excludeNodes.some(exclude =>
@@ -232,7 +244,6 @@ export default function SpeedTestPro() {
       )
     }
     
-    // 协议过滤
     if (filterConfig.protocolFilter.length > 0) {
       filtered = filtered.filter(node =>
         filterConfig.protocolFilter.includes(node.type)
@@ -242,14 +253,12 @@ export default function SpeedTestPro() {
     setFilteredNodes(filtered)
   }
   
-  // 监听过滤条件变化
   useEffect(() => {
     if (nodes.length > 0) {
       applyFilters()
     }
   }, [filterConfig, nodes])
   
-  // 开始测试
   const startTest = async () => {
     if (!isConnected) {
       toast.error("WebSocket未连接，正在尝试重新连接...")
@@ -266,7 +275,6 @@ export default function SpeedTestPro() {
     clearData()
     
     try {
-      // 发送异步测试请求
       const response = await fetch(`${config.apiUrl}/api/test/async`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -293,7 +301,6 @@ export default function SpeedTestPro() {
     }
   }
   
-  // 停止测试
   const stopTest = () => {
     if (isConnected && taskId) {
       sendMessage({
@@ -306,34 +313,57 @@ export default function SpeedTestPro() {
     toast.info("正在停止测试...")
   }
   
-  // 处理包含节点输入
   const handleIncludeNodesChange = (value: string) => {
     setIncludeNodesInput(value)
     const nodes = value.split(',').map(s => s.trim()).filter(s => s.length > 0)
     setFilterConfig(prev => ({ ...prev, includeNodes: nodes }))
   }
   
-  // 处理排除节点输入
   const handleExcludeNodesChange = (value: string) => {
     setExcludeNodesInput(value)
     const nodes = value.split(',').map(s => s.trim()).filter(s => s.length > 0)
     setFilterConfig(prev => ({ ...prev, excludeNodes: nodes }))
   }
   
-  // 处理协议过滤
+  const isProtocolSelected = (protocol: string) => {
+    if (filterConfig.protocolFilter.length === 0) {
+      return true
+    }
+    return filterConfig.protocolFilter.includes(protocol)
+  }
+
   const handleProtocolFilterChange = (protocol: string, checked: boolean) => {
-    setFilterConfig(prev => ({
-      ...prev,
-      protocolFilter: checked
-        ? [...prev.protocolFilter, protocol]
-        : prev.protocolFilter.filter(p => p !== protocol)
-    }))
+    setFilterConfig(prev => {
+      let newProtocolFilter: string[]
+      
+      if (checked) {
+        if (prev.protocolFilter.length === 0) {
+          newProtocolFilter = [protocol]
+        } else {
+          newProtocolFilter = [...prev.protocolFilter, protocol]
+        }
+      } else {
+        if (prev.protocolFilter.length === 0) {
+          newProtocolFilter = availableProtocols.filter(p => p !== protocol)
+        } else {
+          newProtocolFilter = prev.protocolFilter.filter(p => p !== protocol)
+        }
+      }
+      
+      if (newProtocolFilter.length === availableProtocols.length) {
+        newProtocolFilter = []
+      }
+      
+      return {
+        ...prev,
+        protocolFilter: newProtocolFilter
+      }
+    })
   }
   
   return (
     <div className="min-h-screen p-8">
       <div className="max-w-7xl mx-auto">
-        {/* 头部 */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold mb-3">
             <span className="text-gradient">Clash SpeedTest Pro</span>
@@ -341,7 +371,6 @@ export default function SpeedTestPro() {
           <p className="text-gray-400">专业的代理节点性能测试工具</p>
         </div>
         
-        {/* 配置获取卡片 */}
         <Card className="glass-morphism border-gray-800 mb-6">
           <div className="p-6">
             <div className="flex items-center gap-2 mb-4">
@@ -395,27 +424,33 @@ export default function SpeedTestPro() {
                   总节点数: {nodes.length}
                 </Badge>
                 <Badge variant="secondary" className="badge-dark">
-                  符合条件: {filteredNodes.length}
+                  符合条件: {nodes.filter(node => !isNodeFiltered(node)).length}
                 </Badge>
+                {testing && (
+                  <Badge variant="secondary" className="bg-blue-600 text-white">
+                    测试中...
+                  </Badge>
+                )}
               </div>
             )}
           </div>
         </Card>
         
         {/* 节点列表 */}
-        {nodes.length > 0 && !testing && (
+        {nodes.length > 0 && (
           <Card className="glass-morphism border-gray-800 mb-6">
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-white flex items-center gap-2">
                   <ClientIcon icon={ServerCog} className="h-5 w-5 text-blue-400" />
-                  节点列表
+                  节点列表 {testing ? '(测试中)' : '(预览)'}
                 </h2>
                 <Button
                   onClick={() => applyFilters()}
                   variant="outline"
                   size="sm"
                   className="border-gray-700 text-gray-300 hover:text-white"
+                  disabled={testing}
                 >
                   <ClientIcon icon={RefreshCw} className="h-4 w-4 mr-1" />
                   刷新过滤
@@ -426,7 +461,6 @@ export default function SpeedTestPro() {
                 <Table className="table-dark">
                   <TableHeader>
                     <TableRow className="border-gray-800">
-                      <TableHead className="text-gray-400">状态</TableHead>
                       <TableHead className="text-gray-400">节点名称</TableHead>
                       <TableHead className="text-gray-400">类型</TableHead>
                       <TableHead className="text-gray-400">服务器</TableHead>
@@ -434,35 +468,31 @@ export default function SpeedTestPro() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredNodes.map((node, index) => (
-                      <TableRow key={`${node.name}-${index}`} className="table-row-dark">
-                        <TableCell>
-                          {filterConfig.includeNodes.length > 0 || 
-                           filterConfig.excludeNodes.length > 0 || 
-                           filterConfig.protocolFilter.length > 0 ? (
-                            <CheckCircle2 className="h-4 w-4 text-green-400" />
-                          ) : (
-                            <div className="w-4 h-4" />
-                          )}
-                        </TableCell>
-                        <TableCell className="font-medium text-white">
-                          <div className="truncate max-w-xs" title={node.name}>
-                            {node.name}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="secondary" className="badge-dark text-xs">
-                            {node.type}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-gray-400 font-mono text-sm">
-                          {node.server}
-                        </TableCell>
-                        <TableCell className="text-gray-400">
-                          {node.port}
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {nodes.filter(node => !isNodeFiltered(node)).map((node, index) => {
+                      return (
+                        <TableRow 
+                          key={`${node.name}-${index}`} 
+                          className="table-row-dark"
+                        >
+                          <TableCell className="font-medium text-white">
+                            <div className="truncate max-w-xs" title={node.name}>
+                              {node.name}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="secondary" className="badge-dark text-xs">
+                              {node.type}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-gray-400 font-mono text-sm">
+                            {node.server}
+                          </TableCell>
+                          <TableCell className="text-gray-400">
+                            {node.port}
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })}
                   </TableBody>
                 </Table>
               </div>
@@ -479,7 +509,6 @@ export default function SpeedTestPro() {
             </div>
             
             <div className="space-y-6">
-              {/* 节点名称过滤 */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label className="text-gray-300 mb-2 block">
@@ -508,7 +537,6 @@ export default function SpeedTestPro() {
                 </div>
               </div>
               
-              {/* 协议过滤 */}
               {availableProtocols.length > 0 && (
                 <div>
                   <Label className="text-gray-300 mb-3 block">
@@ -519,7 +547,7 @@ export default function SpeedTestPro() {
                       <div key={protocol} className="flex items-center space-x-2">
                         <Checkbox
                           id={`protocol-${protocol}`}
-                          checked={filterConfig.protocolFilter.includes(protocol)}
+                          checked={isProtocolSelected(protocol)}
                           onCheckedChange={(checked: boolean) => 
                             handleProtocolFilterChange(protocol, checked)
                           }
@@ -537,7 +565,6 @@ export default function SpeedTestPro() {
                 </div>
               )}
               
-              {/* 性能过滤 */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                   <Label className="text-gray-300 mb-2 block">
@@ -591,7 +618,6 @@ export default function SpeedTestPro() {
                 </div>
               </div>
               
-              {/* 其他选项 */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <Switch
@@ -631,7 +657,6 @@ export default function SpeedTestPro() {
           </div>
         </Card>
         
-        {/* 测试配置（折叠） */}
         <details className="mb-6">
           <summary className="cursor-pointer text-gray-400 hover:text-white transition-colors">
             高级测试配置
@@ -708,7 +733,6 @@ export default function SpeedTestPro() {
           </Card>
         </details>
         
-        {/* 测试进度和结果 */}
         {testing && (
           <RealTimeProgressTable
             results={testResults}

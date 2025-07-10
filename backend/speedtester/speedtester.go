@@ -83,6 +83,9 @@ type Config struct {
 	MaxLatency       time.Duration
 	MinDownloadSpeed float64
 	MinUploadSpeed   float64
+	// 新增快速模式和节点重命名选项
+	FastMode         bool // 快速模式：只测试延迟，跳过速度测试
+	RenameNodes      bool // 节点重命名：添加地理位置和速度信息
 }
 
 type SpeedTester struct {
@@ -547,11 +550,6 @@ func (st *SpeedTester) TestProxiesWithContext(ctx context.Context, proxies map[s
 	return nil
 }
 
-type testJob struct {
-	name  string
-	proxy *CProxy
-}
-
 type Result struct {
 	ProxyName     string         `json:"proxy_name"`
 	ProxyType     string         `json:"proxy_type"`
@@ -732,6 +730,14 @@ func (st *SpeedTester) testProxy(name string, proxy *CProxy) *Result {
 		return result
 	}
 
+	// 快速模式：只测试延迟，跳过速度测试
+	if st.config.FastMode {
+		logger.Logger.Debug("Fast mode enabled, skipping speed tests", 
+			slog.String("proxy_name", name),
+		)
+		return result
+	}
+
 	// 并发进行下载和上传测试
 	logger.Logger.Debug("Starting speed tests", 
 		slog.String("proxy_name", name),
@@ -797,12 +803,11 @@ func (st *SpeedTester) testProxy(name string, proxy *CProxy) *Result {
 
 	uploadChunkSize := st.config.UploadSize / st.config.Concurrent
 	if uploadChunkSize > 0 {
-		// 对于VLESS，减少并发上传数
 		uploadConcurrent := st.config.Concurrent
-		if isVless && uploadConcurrent > 2 {
-			uploadConcurrent = 2
+		if isVless && uploadConcurrent > 3 {
+			uploadConcurrent = 3
 			uploadChunkSize = st.config.UploadSize / uploadConcurrent
-			logger.Logger.Debug("Reducing upload concurrency for VLESS", 
+			logger.Logger.Debug("Adjusting upload concurrency for VLESS", 
 				slog.String("proxy_name", name),
 				slog.Int("concurrent", uploadConcurrent),
 			)
@@ -875,43 +880,6 @@ type latencyResult struct {
 	lastError  error // 添加最后一次错误信息
 }
 
-func (st *SpeedTester) testLatency(proxy constant.Proxy, minLatency time.Duration) *latencyResult {
-	client := st.createClient(proxy, minLatency)
-	latencies := make([]time.Duration, 0, 6)
-	failedPings := 0
-
-	for i := 0; i < 6; i++ {
-		time.Sleep(100 * time.Millisecond)
-
-		start := time.Now()
-		resp, err := client.Get(fmt.Sprintf("%s/__down?bytes=0", st.config.ServerURL))
-		if err != nil {
-			logger.Logger.Debug("Latency test failed", 
-				slog.String("proxy_name", proxy.Name()),
-				slog.String("proxy_type", proxy.Type().String()),
-				slog.Int("attempt", i+1),
-				slog.String("error", err.Error()),
-			)
-			failedPings++
-			continue
-		}
-		resp.Body.Close()
-		if resp.StatusCode == http.StatusOK {
-			latencies = append(latencies, time.Since(start))
-		} else {
-			logger.Logger.Debug("Latency test received bad status", 
-				slog.String("proxy_name", proxy.Name()),
-				slog.String("proxy_type", proxy.Type().String()),
-				slog.Int("attempt", i+1),
-				slog.Int("status_code", resp.StatusCode),
-			)
-			failedPings++
-		}
-	}
-
-	return calculateLatencyStats(latencies, failedPings, 6)
-}
-
 // testLatencyWithErrors 增强版延迟测试，包含详细错误信息
 func (st *SpeedTester) testLatencyWithErrors(proxy constant.Proxy, minLatency time.Duration, captureErrors bool) *latencyResult {
 	client := st.createClient(proxy, minLatency)
@@ -929,7 +897,7 @@ func (st *SpeedTester) testLatencyWithErrors(proxy constant.Proxy, minLatency ti
 		)
 	}
 
-	for i := 0; i < pingAttempts; i++ {
+	for i := range pingAttempts {
 		time.Sleep(100 * time.Millisecond)
 
 		start := time.Now()
@@ -1035,9 +1003,8 @@ func (st *SpeedTester) testUpload(proxy constant.Proxy, size int, timeout time.D
 	var reader io.Reader
 	
 	if isVless {
-		// VLESS使用分块读取器，每次读取较小的块
-		chunkSize := 64 * 1024  // 64KB chunks
-		delayBetween := 10 * time.Millisecond  // 10ms delay between chunks
+		chunkSize := 256 * 1024
+		delayBetween := 1 * time.Millisecond
 		reader = NewChunkedZeroReader(size, chunkSize, delayBetween)
 		logger.Logger.Debug("Using chunked reader for VLESS upload", 
 			slog.String("proxy_name", proxy.Name()),
@@ -1056,7 +1023,6 @@ func (st *SpeedTester) testUpload(proxy constant.Proxy, size int, timeout time.D
 		slog.String("timeout", timeout.String()),
 	)
 
-	// 构建请求
 	req, err := http.NewRequest("POST", fmt.Sprintf("%s/__up", st.config.ServerURL), reader)
 	if err != nil {
 		logger.Logger.Debug("Failed to create upload request", 
@@ -1069,11 +1035,9 @@ func (st *SpeedTester) testUpload(proxy constant.Proxy, size int, timeout time.D
 	req.Header.Set("Content-Type", "application/octet-stream")
 	req.Header.Set("Content-Length", strconv.Itoa(size))
 	
-	// 对于VLESS，添加额外的请求头以确保兼容性
 	if isVless {
 		req.Header.Set("Connection", "keep-alive")
 		req.Header.Set("Transfer-Encoding", "")
-		// 设置较小的缓冲区大小
 		req.Header.Set("Expect", "")
 		logger.Logger.Debug("Using VLESS-optimized upload settings", 
 			slog.String("proxy_name", proxy.Name()),
@@ -1094,7 +1058,6 @@ func (st *SpeedTester) testUpload(proxy constant.Proxy, size int, timeout time.D
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		// 读取响应体以获取更多错误信息
 		respBody := make([]byte, 256)
 		n, _ := resp.Body.Read(respBody)
 		logger.Logger.Debug("Upload test received non-200 status", 
@@ -1110,7 +1073,6 @@ func (st *SpeedTester) testUpload(proxy constant.Proxy, size int, timeout time.D
 	duration := time.Since(start)
 	var uploadedBytes int64
 	if isVless {
-		// 对于VLESS，使用ChunkedZeroReader的WrittenBytes方法
 		if czr, ok := reader.(*ChunkedZeroReader); ok {
 			uploadedBytes = czr.WrittenBytes()
 		} else {
@@ -1139,7 +1101,6 @@ func (st *SpeedTester) testUpload(proxy constant.Proxy, size int, timeout time.D
 }
 
 func (st *SpeedTester) createClient(proxy constant.Proxy, timeout time.Duration) *http.Client {
-	// For VLESS proxies, configure more conservative connection settings
 	transport := &http.Transport{
 		DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
 			host, port, err := net.SplitHostPort(addr)
@@ -1191,7 +1152,6 @@ func (st *SpeedTester) createClient(proxy constant.Proxy, timeout time.Duration)
 		},
 	}
 	
-	// For VLESS proxies, use more conservative timeouts
 	if proxy.Type() == constant.Vless {
 		transport.TLSHandshakeTimeout = timeout
 		transport.ResponseHeaderTimeout = timeout

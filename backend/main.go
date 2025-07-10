@@ -9,12 +9,14 @@ import (
 	"os"
 	"os/signal"
 	"sort"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
 
 	"github.com/faceair/clash-speedtest/logger"
 	"github.com/faceair/clash-speedtest/speedtester"
+	"github.com/faceair/clash-speedtest/utils"
 	"github.com/faceair/clash-speedtest/websocket"
 	"github.com/metacubex/mihomo/log"
 )
@@ -34,6 +36,11 @@ type TestRequest struct {
 	MinDownloadSpeed float64  `json:"minDownloadSpeed"`
 	MinUploadSpeed   float64  `json:"minUploadSpeed"`
 	StashCompatible  bool     `json:"stashCompatible"`
+	// 新增字段
+	FastMode         bool     `json:"fastMode"`        // 快速模式：只测试延迟
+	RenameNodes      bool     `json:"renameNodes"`     // 节点重命名：添加地理位置信息
+	ExportFormat     string   `json:"exportFormat"`    // 导出格式：json, csv, yaml, clash
+	ExportPath       string   `json:"exportPath"`      // 导出路径
 }
 
 type TestResponse struct {
@@ -62,6 +69,29 @@ var (
 )
 
 func main() {
+	// Initialize custom logging configuration
+	logConfig := logger.DefaultLogConfig()
+	
+	// Override from environment variables
+	if logDir := os.Getenv("LOG_DIR"); logDir != "" {
+		logConfig.LogDir = logDir
+	}
+	if logFile := os.Getenv("LOG_FILE"); logFile != "" {
+		logConfig.LogFileName = logFile
+	}
+	if os.Getenv("LOG_TO_FILE") == "false" {
+		logConfig.OutputToFile = false
+	}
+	if os.Getenv("LOG_TO_CONSOLE") == "false" {
+		logConfig.EnableConsole = false
+	}
+	
+	// Initialize logger with custom config
+	logger.InitLoggerWithConfig(logConfig)
+	
+	// Ensure proper cleanup on exit
+	defer logger.Cleanup()
+	
 	// Enable mihomo logs for debugging
 	log.SetLevel(log.DEBUG)
 	
@@ -80,6 +110,8 @@ func main() {
 	http.HandleFunc("/api/test/async", loggingMiddleware(handleTestAsync))
 	http.HandleFunc("/api/nodes", loggingMiddleware(handleGetNodes))
 	http.HandleFunc("/api/protocols", loggingMiddleware(handleGetProtocols))
+	http.HandleFunc("/api/export", loggingMiddleware(handleExportResults))
+	http.HandleFunc("/api/logs", loggingMiddleware(handleLogManagement))
 	http.HandleFunc("/api/health", loggingMiddleware(handleHealth))
 	http.HandleFunc("/ws", loggingMiddleware(wsHub.HandleWebSocket))
 
@@ -218,12 +250,7 @@ func handleTestAsync(w http.ResponseWriter, r *http.Request) {
 	if req.MaxLatency == 0 {
 		req.MaxLatency = 800
 	}
-	if req.MinDownloadSpeed == 0 {
-		req.MinDownloadSpeed = 5
-	}
-	if req.MinUploadSpeed == 0 {
-		req.MinUploadSpeed = 2
-	}
+	// 保持用户设置的0值，表示不限制速度
 	
 	// 创建任务
 	taskID := generateTaskID()
@@ -506,12 +533,7 @@ func handleTest(w http.ResponseWriter, r *http.Request) {
 	if req.MaxLatency == 0 {
 		req.MaxLatency = 800
 	}
-	if req.MinDownloadSpeed == 0 {
-		req.MinDownloadSpeed = 5
-	}
-	if req.MinUploadSpeed == 0 {
-		req.MinUploadSpeed = 2
-	}
+	// 保持用户设置的0值，表示不限制速度
 
 	speedTester := speedtester.New(&speedtester.Config{
 		ConfigPaths:      req.ConfigPaths,
@@ -661,12 +683,7 @@ func handleTestWithWebSocket(w http.ResponseWriter, r *http.Request) {
 	if req.MaxLatency == 0 {
 		req.MaxLatency = 800
 	}
-	if req.MinDownloadSpeed == 0 {
-		req.MinDownloadSpeed = 5
-	}
-	if req.MinUploadSpeed == 0 {
-		req.MinUploadSpeed = 2
-	}
+	// 保持用户设置的0值，表示不限制速度
 
 	speedTester := speedtester.New(&speedtester.Config{
 		ConfigPaths:      req.ConfigPaths,
@@ -763,7 +780,7 @@ func handleTestWithWebSocket(w http.ResponseWriter, r *http.Request) {
 		if result.PacketLoss == 100 || result.Latency > time.Duration(req.MaxLatency)*time.Millisecond {
 			status = "failed"
 			failed++
-		} else if result.DownloadSpeed < req.MinDownloadSpeed*1024*1024 || result.UploadSpeed < req.MinUploadSpeed*1024*1024 {
+		} else if (req.MinDownloadSpeed > 0 && result.DownloadSpeed < req.MinDownloadSpeed*1024*1024) || (req.MinUploadSpeed > 0 && result.UploadSpeed < req.MinUploadSpeed*1024*1024) {
 			status = "failed"
 			failed++
 		} else {
@@ -1132,4 +1149,141 @@ func handleGetNodes(w http.ResponseWriter, r *http.Request) {
 		Success: true,
 		Nodes:   nodes,
 	})
+}
+
+// handleExportResults handles exporting test results in various formats
+func handleExportResults(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
+	var exportReq struct {
+		TaskID  string              `json:"taskId"`
+		Options utils.ExportOptions `json:"options"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&exportReq); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": "Invalid request body: " + err.Error(),
+		})
+		return
+	}
+
+	// Validate export options
+	if err := utils.ValidateExportOptions(exportReq.Options); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": "Invalid export options: " + err.Error(),
+		})
+		return
+	}
+
+	// TODO: Get test results from the task ID
+	// For now, return a placeholder response
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]any{
+		"success": true,
+		"message": "Export functionality will be implemented",
+		"format":  exportReq.Options.Format,
+		"path":    exportReq.Options.OutputPath,
+	})
+}
+
+// handleLogManagement handles log management operations
+func handleLogManagement(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		handleGetLogInfo(w, r)
+	case http.MethodPost:
+		handleLogAction(w, r)
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+}
+
+// handleGetLogInfo returns current log configuration and status
+func handleGetLogInfo(w http.ResponseWriter, r *http.Request) {
+	logInfo := map[string]any{
+		"level":          logger.Logger.Enabled(context.Background(), slog.LevelDebug),
+		"file_logging":   true, // Based on current config
+		"console_logging": true,
+		"log_dir":        "logs",
+		"log_file":       "clash-speedtest.log",
+		"max_size_mb":    10,
+		"max_files":      5,
+	}
+	
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]any{
+		"success": true,
+		"config":  logInfo,
+	})
+}
+
+// handleLogAction handles log actions like rotation, level change
+func handleLogAction(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Action string `json:"action"` // "rotate", "set_level"
+		Level  string `json:"level,omitempty"`
+	}
+	
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": "Invalid request body: " + err.Error(),
+		})
+		return
+	}
+	
+	switch req.Action {
+	case "rotate":
+		if err := logger.RotateLogNow(); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]string{
+				"error": "Failed to rotate log: " + err.Error(),
+			})
+			return
+		}
+		
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]any{
+			"success": true,
+			"message": "Log rotated successfully",
+		})
+		
+	case "set_level":
+		var level slog.Level
+		switch strings.ToUpper(req.Level) {
+		case "DEBUG":
+			level = slog.LevelDebug
+		case "INFO":
+			level = slog.LevelInfo
+		case "WARN":
+			level = slog.LevelWarn
+		case "ERROR":
+			level = slog.LevelError
+		default:
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(map[string]string{
+				"error": "Invalid log level. Use DEBUG, INFO, WARN, or ERROR",
+			})
+			return
+		}
+		
+		logger.SetLevel(level)
+		
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]any{
+			"success": true,
+			"message": fmt.Sprintf("Log level set to %s", req.Level),
+		})
+		
+	default:
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": "Invalid action. Use 'rotate' or 'set_level'",
+		})
+	}
 }

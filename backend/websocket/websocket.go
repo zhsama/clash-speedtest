@@ -24,13 +24,21 @@ const (
 	MessageTypeTestCancelled MessageType = "test_cancelled"
 	MessageTypeError         MessageType = "error"
 	MessageTypeStopTest      MessageType = "stop_test"
+	// 新增细化的进度消息类型
+	MessageTypeLatencyStart  MessageType = "latency_start"
+	MessageTypeLatencyResult MessageType = "latency_result"
+	MessageTypeDownloadStart MessageType = "download_start"
+	MessageTypeDownloadResult MessageType = "download_result"
+	MessageTypeUploadStart   MessageType = "upload_start"
+	MessageTypeUploadResult  MessageType = "upload_result"
+	MessageTypeProxySkipped  MessageType = "proxy_skipped"
 )
 
 // WebSocketMessage represents a message sent via WebSocket
 type WebSocketMessage struct {
 	Type      MessageType `json:"type"`
 	Timestamp time.Time   `json:"timestamp"`
-	Data      interface{} `json:"data"`
+	Data      any         `json:"data"`
 }
 
 // TestStartData contains information about test initialization
@@ -58,6 +66,41 @@ type TestProgressData struct {
 	TotalCount      int     `json:"total_count"`
 	ProgressPercent float64 `json:"progress_percent"`
 	Status          string  `json:"status"`
+	// 新增详细进度信息
+	CurrentStage    string  `json:"current_stage,omitempty"`    // "latency", "download", "upload"
+	StageProgress   float64 `json:"stage_progress,omitempty"`   // 当前阶段进度 0-100
+	EstimatedTime   int     `json:"estimated_time,omitempty"`   // 预计剩余时间(秒)
+}
+
+// LatencyTestData contains latency test specific data
+type LatencyTestData struct {
+	ProxyName       string `json:"proxy_name"`
+	ProxyType       string `json:"proxy_type"`
+	AttemptCount    int    `json:"attempt_count"`    // 当前尝试次数
+	TotalAttempts   int    `json:"total_attempts"`   // 总尝试次数
+	CurrentLatency  int64  `json:"current_latency"`  // 当前延迟(ms)
+	AverageLatency  int64  `json:"average_latency"`  // 平均延迟(ms)
+	PacketLossRate  float64 `json:"packet_loss_rate"` // 当前丢包率
+}
+
+// BandwidthTestData contains bandwidth test specific data
+type BandwidthTestData struct {
+	ProxyName       string  `json:"proxy_name"`
+	ProxyType       string  `json:"proxy_type"`
+	TestType        string  `json:"test_type"`        // "download" or "upload"
+	BytesTransferred int64  `json:"bytes_transferred"` // 已传输字节数
+	TotalBytes      int64   `json:"total_bytes"`      // 总字节数
+	CurrentSpeed    float64 `json:"current_speed"`    // 当前速度(bytes/s)
+	ElapsedTime     int64   `json:"elapsed_time"`     // 已用时间(ms)
+	Concurrent      int     `json:"concurrent"`       // 并发数
+}
+
+// ProxySkippedData contains information about skipped proxies
+type ProxySkippedData struct {
+	ProxyName string `json:"proxy_name"`
+	ProxyType string `json:"proxy_type"`
+	Reason    string `json:"reason"` // "latency_failed", "min_speed_not_met", "timeout", etc.
+	Details   string `json:"details,omitempty"`
 }
 
 // TestResultData contains the result of a single proxy test
@@ -180,7 +223,7 @@ func (h *Hub) Run() {
 }
 
 // BroadcastMessage sends a message to all connected clients
-func (h *Hub) BroadcastMessage(msgType MessageType, data interface{}) {
+func (h *Hub) BroadcastMessage(msgType MessageType, data any) {
 	message := WebSocketMessage{
 		Type:      msgType,
 		Timestamp: time.Now(),

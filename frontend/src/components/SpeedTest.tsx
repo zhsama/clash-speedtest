@@ -579,7 +579,7 @@ export default function SpeedTestPro() {
                     }))}
                     max={100}
                     min={0}
-                    step={5}
+                    step={1}
                     className="slider-dark"
                   />
                 </div>

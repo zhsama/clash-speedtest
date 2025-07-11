@@ -676,8 +676,9 @@ export default function SpeedTestPro() {
           <summary className="cursor-pointer text-gray-400 hover:text-white transition-colors">
             高级测试配置
           </summary>
-          <Card className="glass-morphism border-gray-800 mt-4">
+          <Card className="glass-morphism border-gray-800 mt-4 py-0">
             <div className="p-6">
+              <h4 className="text-gray-300 text-lg font-medium mb-4">服务器测速配置</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div>
                   <Label className="text-gray-300 mb-2 block">

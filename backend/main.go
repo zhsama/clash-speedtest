@@ -22,54 +22,9 @@ import (
 	"github.com/metacubex/mihomo/log"
 )
 
-type TestRequest struct {
-	ConfigPaths      string   `json:"configPaths"`
-	FilterRegex      string   `json:"filterRegex"`
-	IncludeNodes     []string `json:"includeNodes"`
-	ExcludeNodes     []string `json:"excludeNodes"`
-	ProtocolFilter   []string `json:"protocolFilter"`
-	ServerURL        string   `json:"serverUrl"`
-	DownloadSize     int      `json:"downloadSize"`
-	UploadSize       int      `json:"uploadSize"`
-	Timeout          int      `json:"timeout"`
-	Concurrent       int      `json:"concurrent"`
-	MaxLatency       int      `json:"maxLatency"`
-	MinDownloadSpeed float64  `json:"minDownloadSpeed"`
-	MinUploadSpeed   float64  `json:"minUploadSpeed"`
-	StashCompatible  bool     `json:"stashCompatible"`
-	// 新增字段
-	FastMode         bool     `json:"fastMode"`        // 快速模式：只测试延迟
-	RenameNodes      bool     `json:"renameNodes"`     // 节点重命名：添加地理位置信息
-	ExportFormat     string   `json:"exportFormat"`    // 导出格式：json, csv, yaml, clash
-	ExportPath       string   `json:"exportPath"`      // 导出路径
-	// 解锁检测相关字段
-	TestMode         string   `json:"testMode"`        // 测试模式：speed_only, unlock_only, both
-	UnlockEnabled    bool     `json:"unlockEnabled"`   // 是否启用解锁检测
-	UnlockPlatforms  []string `json:"unlockPlatforms"` // 要检测的平台列表
-	UnlockConcurrent int      `json:"unlockConcurrent"` // 解锁检测并发数
-	UnlockTimeout    int      `json:"unlockTimeout"`   // 解锁检测超时时间
-	UnlockRetry      bool     `json:"unlockRetry"`     // 解锁检测失败时是否重试
-}
-
-type TestResponse struct {
-	Success bool                  `json:"success"`
-	Error   string                `json:"error,omitempty"`
-	Results []*speedtester.Result `json:"results,omitempty"`
-}
-
 var wsHub *websocket.Hub
 var testCancelFunc context.CancelFunc
 var testCancelMutex sync.RWMutex
-
-// 任务管理
-type TestTask struct {
-	ID         string
-	Config     TestRequest
-	Context    context.Context
-	CancelFunc context.CancelFunc
-	Status     string // pending, running, completed, cancelled
-	StartTime  time.Time
-}
 
 var (
 	testTasks      = make(map[string]*TestTask)
@@ -83,23 +38,23 @@ func createUnlockConfig(req TestRequest) *unlock.UnlockTestConfig {
 			Enabled: false,
 		}
 	}
-	
+
 	// 设置默认值
 	platforms := req.UnlockPlatforms
 	if len(platforms) == 0 {
 		platforms = []string{"Netflix", "YouTube", "Disney+", "ChatGPT", "Spotify", "Bilibili"}
 	}
-	
+
 	concurrent := req.UnlockConcurrent
 	if concurrent <= 0 {
 		concurrent = 5
 	}
-	
+
 	timeout := req.UnlockTimeout
 	if timeout <= 0 {
 		timeout = 10
 	}
-	
+
 	return &unlock.UnlockTestConfig{
 		Enabled:       true,
 		Platforms:     platforms,
@@ -113,7 +68,7 @@ func createUnlockConfig(req TestRequest) *unlock.UnlockTestConfig {
 func main() {
 	// Initialize custom logging configuration
 	logConfig := logger.DefaultLogConfig()
-	
+
 	// Override from environment variables
 	if logDir := os.Getenv("LOG_DIR"); logDir != "" {
 		logConfig.LogDir = logDir
@@ -127,16 +82,16 @@ func main() {
 	if os.Getenv("LOG_TO_CONSOLE") == "false" {
 		logConfig.EnableConsole = false
 	}
-	
+
 	// Initialize logger with custom config
 	logger.InitLoggerWithConfig(logConfig)
-	
+
 	// Ensure proper cleanup on exit
 	defer logger.Cleanup()
-	
+
 	// Enable mihomo logs for debugging
 	log.SetLevel(log.DEBUG)
-	
+
 	logger.Logger.Info("Starting Clash SpeedTest API Server",
 		slog.String("version", "2.0.0"),
 		slog.String("port", "8080"),
@@ -178,7 +133,7 @@ func main() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-	
+
 	logger.Logger.Info("Received shutdown signal, gracefully shutting down server")
 	fmt.Println("Shutting down server...")
 
@@ -189,7 +144,7 @@ func main() {
 		logger.LogError("Server forced to shutdown", err)
 		os.Exit(1)
 	}
-	
+
 	logger.Logger.Info("Server gracefully shut down")
 	fmt.Println("Server exited")
 }
@@ -213,7 +168,7 @@ func corsMiddleware(next http.Handler) http.Handler {
 func loggingMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
-		
+
 		// Skip logging wrapper for WebSocket routes to allow hijacking
 		if r.URL.Path == "/ws" {
 			next.ServeHTTP(w, r)
@@ -221,55 +176,35 @@ func loggingMiddleware(next http.HandlerFunc) http.HandlerFunc {
 			logger.LogHTTPRequest(r.Method, r.URL.Path, r.RemoteAddr, 200, duration.String())
 			return
 		}
-		
+
 		// Create a custom ResponseWriter to capture status code for non-WebSocket routes
 		lrw := &loggingResponseWriter{ResponseWriter: w, statusCode: http.StatusOK}
-		
+
 		next.ServeHTTP(lrw, r)
-		
+
 		duration := time.Since(start)
 		logger.LogHTTPRequest(r.Method, r.URL.Path, r.RemoteAddr, lrw.statusCode, duration.String())
 	}
 }
 
-// loggingResponseWriter wraps http.ResponseWriter to capture status code
-type loggingResponseWriter struct {
-	http.ResponseWriter
-	statusCode int
-}
-
-func (lrw *loggingResponseWriter) WriteHeader(code int) {
-	lrw.statusCode = code
-	lrw.ResponseWriter.WriteHeader(code)
-}
-
-func handleHealth(w http.ResponseWriter, r *http.Request) {
-	logger.Logger.Debug("Health check requested")
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
-}
-
 // 生成任务ID
-func generateTaskID() string {
-	return fmt.Sprintf("task-%d-%s", time.Now().Unix(), time.Now().Format("150405"))
-}
 
 // 异步测试处理
 func handleTestAsync(w http.ResponseWriter, r *http.Request) {
 	logger.Logger.Info("Async test request received")
-	
+
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	
+
 	var req TestRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		logger.LogError("Failed to decode request body", err)
 		sendError(w, "Invalid request body: "+err.Error())
 		return
 	}
-	
+
 	// 设置默认值
 	if req.FilterRegex == "" {
 		req.FilterRegex = ".+"
@@ -293,11 +228,11 @@ func handleTestAsync(w http.ResponseWriter, r *http.Request) {
 		req.MaxLatency = 800
 	}
 	// 保持用户设置的0值，表示不限制速度
-	
+
 	// 创建任务
 	taskID := generateTaskID()
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	task := &TestTask{
 		ID:         taskID,
 		Config:     req,
@@ -306,14 +241,14 @@ func handleTestAsync(w http.ResponseWriter, r *http.Request) {
 		Status:     "pending",
 		StartTime:  time.Now(),
 	}
-	
+
 	testTasksMutex.Lock()
 	testTasks[taskID] = task
 	testTasksMutex.Unlock()
-	
+
 	// 异步执行测试
 	go runTestTask(task)
-	
+
 	// 返回任务ID
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
@@ -329,9 +264,9 @@ func runTestTask(task *TestTask) {
 	testTasksMutex.Lock()
 	task.Status = "running"
 	testTasksMutex.Unlock()
-	
+
 	logger.Logger.Info("Starting test task", slog.String("task_id", task.ID))
-	
+
 	// 创建SpeedTester实例
 	unlockConfig := createUnlockConfig(task.Config)
 	speedTester := speedtester.New(&speedtester.Config{
@@ -353,7 +288,7 @@ func runTestTask(task *TestTask) {
 		TestMode:         task.Config.TestMode,
 		UnlockConfig:     unlockConfig,
 	})
-	
+
 	// 加载代理
 	allProxies, err := speedTester.LoadProxies(task.Config.StashCompatible)
 	if err != nil {
@@ -362,25 +297,25 @@ func runTestTask(task *TestTask) {
 			Message: "Failed to load proxies: " + err.Error(),
 			Code:    "PROXY_LOAD_ERROR",
 		})
-		
+
 		testTasksMutex.Lock()
 		task.Status = "failed"
 		testTasksMutex.Unlock()
 		return
 	}
-	
+
 	if len(allProxies) == 0 {
 		wsHub.BroadcastMessage(websocket.MessageTypeError, websocket.ErrorData{
 			Message: "No proxies found",
 			Code:    "NO_PROXIES_FOUND",
 		})
-		
+
 		testTasksMutex.Lock()
 		task.Status = "failed"
 		testTasksMutex.Unlock()
 		return
 	}
-	
+
 	// 发送测试开始消息
 	testStartData := websocket.TestStartData{
 		TotalProxies: len(allProxies),
@@ -396,19 +331,19 @@ func runTestTask(task *TestTask) {
 	testStartData.Config.MinDownloadSpeed = task.Config.MinDownloadSpeed
 	testStartData.Config.MinUploadSpeed = task.Config.MinUploadSpeed
 	testStartData.Config.StashCompatible = task.Config.StashCompatible
-	
+
 	wsHub.BroadcastMessage(websocket.MessageTypeTestStart, testStartData)
-	
+
 	// 执行测试
 	results := make([]*speedtester.Result, 0)
 	completed := 0
 	successful := 0
 	failed := 0
-	
+
 	err = speedTester.TestProxiesWithContext(task.Context, allProxies, func(result *speedtester.Result) {
 		results = append(results, result)
 		completed++
-		
+
 		// 判断结果状态
 		status := "success"
 		if result.PacketLoss == 100 || result.Latency > time.Duration(task.Config.MaxLatency)*time.Millisecond {
@@ -420,7 +355,7 @@ func runTestTask(task *TestTask) {
 		} else {
 			successful++
 		}
-		
+
 		// 发送进度更新
 		progressData := websocket.TestProgressData{
 			CurrentProxy:    result.ProxyName,
@@ -430,7 +365,7 @@ func runTestTask(task *TestTask) {
 			Status:          status,
 		}
 		wsHub.BroadcastMessage(websocket.MessageTypeTestProgress, progressData)
-		
+
 		// 发送单个结果
 		resultData := websocket.TestResultData{
 			ProxyName:         result.ProxyName,
@@ -445,7 +380,7 @@ func runTestTask(task *TestTask) {
 			UploadSpeedMbps:   result.UploadSpeed / (1024 * 1024),
 			Status:            status,
 		}
-		
+
 		if result.TestError != nil {
 			resultData.ErrorStage = result.TestError.Stage
 			resultData.ErrorCode = result.TestError.Code
@@ -454,16 +389,16 @@ func runTestTask(task *TestTask) {
 			resultData.ErrorStage = result.FailureStage
 			resultData.ErrorMessage = result.FailureReason
 		}
-		
+
 		wsHub.BroadcastMessage(websocket.MessageTypeTestResult, resultData)
 	})
-	
+
 	testDuration := time.Since(task.StartTime)
-	
+
 	// 检查是否被取消
 	if err != nil && err == context.Canceled {
 		logger.Logger.Info("Test task cancelled", slog.String("task_id", task.ID))
-		
+
 		cancelData := websocket.TestCancelledData{
 			Message:         "测试已被用户取消",
 			CompletedTests:  completed,
@@ -471,24 +406,24 @@ func runTestTask(task *TestTask) {
 			PartialDuration: testDuration.String(),
 		}
 		wsHub.BroadcastMessage(websocket.MessageTypeTestCancelled, cancelData)
-		
+
 		testTasksMutex.Lock()
 		task.Status = "cancelled"
 		testTasksMutex.Unlock()
 		return
 	}
-	
+
 	// 发送测试完成消息
 	var totalLatency, totalDownload, totalUpload float64
 	bestProxy := ""
 	bestDownloadSpeed := 0.0
-	
+
 	for _, result := range results {
 		if result.PacketLoss < 100 {
 			totalLatency += float64(result.Latency.Milliseconds())
 			totalDownload += result.DownloadSpeed / (1024 * 1024)
 			totalUpload += result.UploadSpeed / (1024 * 1024)
-			
+
 			downloadMbps := result.DownloadSpeed / (1024 * 1024)
 			if downloadMbps > bestDownloadSpeed {
 				bestDownloadSpeed = downloadMbps
@@ -496,7 +431,7 @@ func runTestTask(task *TestTask) {
 			}
 		}
 	}
-	
+
 	avgLatency := 0.0
 	avgDownload := 0.0
 	avgUpload := 0.0
@@ -505,7 +440,7 @@ func runTestTask(task *TestTask) {
 		avgDownload = totalDownload / float64(successful)
 		avgUpload = totalUpload / float64(successful)
 	}
-	
+
 	completeData := websocket.TestCompleteData{
 		TotalTested:       len(results),
 		SuccessfulTests:   successful,
@@ -518,12 +453,12 @@ func runTestTask(task *TestTask) {
 		BestDownloadSpeed: bestDownloadSpeed,
 	}
 	wsHub.BroadcastMessage(websocket.MessageTypeTestComplete, completeData)
-	
+
 	testTasksMutex.Lock()
 	task.Status = "completed"
 	testTasksMutex.Unlock()
-	
-	logger.Logger.Info("Test task completed", 
+
+	logger.Logger.Info("Test task completed",
 		slog.String("task_id", task.ID),
 		slog.Int("total_tested", len(results)),
 		slog.Int("successful", successful),
@@ -534,7 +469,7 @@ func runTestTask(task *TestTask) {
 
 func handleTest(w http.ResponseWriter, r *http.Request) {
 	logger.Logger.Info("Speed test request received")
-	
+
 	if r.Method != http.MethodPost {
 		logger.Logger.Warn("Invalid method for speed test", slog.String("method", r.Method))
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -621,7 +556,7 @@ func handleTest(w http.ResponseWriter, r *http.Request) {
 
 	logger.Logger.Info("Starting speed tests", slog.Int("proxy_count", len(allProxies)))
 	startTime := time.Now()
-	
+
 	results := make([]*speedtester.Result, 0)
 	speedTester.TestProxies(allProxies, func(result *speedtester.Result) {
 		results = append(results, result)
@@ -668,28 +603,9 @@ func handleTest(w http.ResponseWriter, r *http.Request) {
 	sendSuccess(w, filteredResults)
 }
 
-func sendError(w http.ResponseWriter, message string) {
-	logger.Logger.Error("Sending error response", slog.String("error", message))
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusBadRequest)
-	json.NewEncoder(w).Encode(TestResponse{
-		Success: false,
-		Error:   message,
-	})
-}
-
-func sendSuccess(w http.ResponseWriter, results []*speedtester.Result) {
-	logger.Logger.Info("Sending successful response", slog.Int("result_count", len(results)))
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(TestResponse{
-		Success: true,
-		Results: results,
-	})
-}
-
 func handleTestWithWebSocket(w http.ResponseWriter, r *http.Request) {
 	logger.Logger.Info("Speed test request received (WebSocket enabled)")
-	
+
 	if r.Method != http.MethodPost {
 		logger.Logger.Warn("Invalid method for speed test", slog.String("method", r.Method))
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -762,13 +678,13 @@ func handleTestWithWebSocket(w http.ResponseWriter, r *http.Request) {
 	allProxies, err := speedTester.LoadProxies(req.StashCompatible)
 	if err != nil {
 		logger.LogError("Failed to load proxies", err, slog.String("config_paths", req.ConfigPaths))
-		
+
 		// Send error via WebSocket
 		wsHub.BroadcastMessage(websocket.MessageTypeError, websocket.ErrorData{
 			Message: "Failed to load proxies: " + err.Error(),
 			Code:    "PROXY_LOAD_ERROR",
 		})
-		
+
 		sendError(w, "Failed to load proxies: "+err.Error())
 		return
 	}
@@ -777,13 +693,13 @@ func handleTestWithWebSocket(w http.ResponseWriter, r *http.Request) {
 
 	if len(allProxies) == 0 {
 		logger.Logger.Warn("No proxies found after loading and filtering")
-		
+
 		// Send error via WebSocket
 		wsHub.BroadcastMessage(websocket.MessageTypeError, websocket.ErrorData{
 			Message: "No proxies found. Check your configuration path and filter regex.",
 			Code:    "NO_PROXIES_FOUND",
 		})
-		
+
 		sendError(w, "No proxies found. Check your configuration path and filter regex.")
 		return
 	}
@@ -821,17 +737,17 @@ func handleTestWithWebSocket(w http.ResponseWriter, r *http.Request) {
 
 	logger.Logger.Info("Starting speed tests", slog.Int("proxy_count", len(allProxies)))
 	startTime := time.Now()
-	
+
 	results := make([]*speedtester.Result, 0)
 	completed := 0
 	successful := 0
 	failed := 0
-	
+
 	// Test proxies with WebSocket updates and context cancellation
 	err = speedTester.TestProxiesWithContext(ctx, allProxies, func(result *speedtester.Result) {
 		results = append(results, result)
 		completed++
-		
+
 		// Determine status
 		status := "success"
 		if result.PacketLoss == 100 || result.Latency > time.Duration(req.MaxLatency)*time.Millisecond {
@@ -868,7 +784,7 @@ func handleTestWithWebSocket(w http.ResponseWriter, r *http.Request) {
 			UploadSpeedMbps:   result.UploadSpeed / (1024 * 1024),
 			Status:            status,
 		}
-		
+
 		// 如果有错误详情，添加到WebSocket消息中
 		if result.TestError != nil {
 			resultData.ErrorStage = result.TestError.Stage
@@ -878,7 +794,7 @@ func handleTestWithWebSocket(w http.ResponseWriter, r *http.Request) {
 			resultData.ErrorStage = result.FailureStage
 			resultData.ErrorMessage = result.FailureReason
 		}
-		
+
 		wsHub.BroadcastMessage(websocket.MessageTypeTestResult, resultData)
 
 		logger.Logger.Debug("Proxy test completed",
@@ -892,7 +808,7 @@ func handleTestWithWebSocket(w http.ResponseWriter, r *http.Request) {
 	})
 
 	testDuration := time.Since(startTime)
-	
+
 	// Check if the test was cancelled
 	if err != nil && err == context.Canceled {
 		logger.Logger.Info("Speed tests cancelled",
@@ -900,7 +816,7 @@ func handleTestWithWebSocket(w http.ResponseWriter, r *http.Request) {
 			slog.Int("total_tests", len(allProxies)),
 			slog.String("duration", testDuration.String()),
 		)
-		
+
 		// Update the cancellation data with actual progress
 		cancelData := websocket.TestCancelledData{
 			Message:         "测试已被用户取消",
@@ -909,7 +825,7 @@ func handleTestWithWebSocket(w http.ResponseWriter, r *http.Request) {
 			PartialDuration: testDuration.String(),
 		}
 		wsHub.BroadcastMessage(websocket.MessageTypeTestCancelled, cancelData)
-		
+
 		// Still return filtered results for the completed tests
 		filteredResults := make([]*speedtester.Result, 0)
 		for _, result := range results {
@@ -924,7 +840,7 @@ func handleTestWithWebSocket(w http.ResponseWriter, r *http.Request) {
 			}
 			filteredResults = append(filteredResults, result)
 		}
-		
+
 		sendSuccess(w, filteredResults)
 		return
 	}
@@ -940,13 +856,13 @@ func handleTestWithWebSocket(w http.ResponseWriter, r *http.Request) {
 	var totalLatency, totalDownload, totalUpload float64
 	bestProxy := ""
 	bestDownloadSpeed := 0.0
-	
+
 	for _, result := range results {
 		if result.PacketLoss < 100 {
 			totalLatency += float64(result.Latency.Milliseconds())
 			totalDownload += result.DownloadSpeed / (1024 * 1024)
 			totalUpload += result.UploadSpeed / (1024 * 1024)
-			
+
 			downloadMbps := result.DownloadSpeed / (1024 * 1024)
 			if downloadMbps > bestDownloadSpeed {
 				bestDownloadSpeed = downloadMbps
@@ -1006,15 +922,9 @@ func handleTestWithWebSocket(w http.ResponseWriter, r *http.Request) {
 	sendSuccess(w, filteredResults)
 }
 
-type ProtocolsResponse struct {
-	Success   bool     `json:"success"`
-	Error     string   `json:"error,omitempty"`
-	Protocols []string `json:"protocols,omitempty"`
-}
-
 func handleGetProtocols(w http.ResponseWriter, r *http.Request) {
 	logger.Logger.Info("Get protocols request received")
-	
+
 	if r.Method != http.MethodPost {
 		logger.Logger.Warn("Invalid method for get protocols", slog.String("method", r.Method))
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -1075,11 +985,11 @@ func handleGetProtocols(w http.ResponseWriter, r *http.Request) {
 
 // handleWebSocketMessage handles incoming WebSocket messages
 func handleWebSocketMessage(msgType string, data []byte) {
-	logger.Logger.Debug("Received WebSocket message", 
+	logger.Logger.Debug("Received WebSocket message",
 		slog.String("type", msgType),
 		slog.String("data", string(data)),
 	)
-	
+
 	switch msgType {
 	case "stop_test":
 		// 解析消息获取任务ID
@@ -1100,7 +1010,7 @@ func handleWebSocketMessage(msgType string, data []byte) {
 			if testCancelFunc != nil {
 				logger.Logger.Info("Stopping test via WebSocket command")
 				testCancelFunc()
-				
+
 				// Send cancellation message to all WebSocket clients
 				cancelData := websocket.TestCancelledData{
 					Message: "测试已被用户取消",
@@ -1113,22 +1023,10 @@ func handleWebSocketMessage(msgType string, data []byte) {
 }
 
 // NodeInfo represents basic node information without test results
-type NodeInfo struct {
-	Name   string `json:"name"`
-	Type   string `json:"type"`
-	Server string `json:"server"`
-	Port   int    `json:"port"`
-}
-
-type NodesResponse struct {
-	Success bool       `json:"success"`
-	Error   string     `json:"error,omitempty"`
-	Nodes   []NodeInfo `json:"nodes,omitempty"`
-}
 
 func handleGetNodes(w http.ResponseWriter, r *http.Request) {
 	logger.Logger.Info("Get nodes request received")
-	
+
 	if r.Method != http.MethodPost {
 		logger.Logger.Warn("Invalid method for get nodes", slog.String("method", r.Method))
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -1142,7 +1040,7 @@ func handleGetNodes(w http.ResponseWriter, r *http.Request) {
 		ProtocolFilter  []string `json:"protocolFilter"`
 		StashCompatible bool     `json:"stashCompatible"`
 	}
-	
+
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		logger.LogError("Failed to decode request body", err)
 		w.Header().Set("Content-Type", "application/json")
@@ -1182,7 +1080,7 @@ func handleGetNodes(w http.ResponseWriter, r *http.Request) {
 			Name: name,
 			Type: proxy.Type().String(),
 		}
-		
+
 		// Extract server and port from config
 		if server, ok := proxy.Config["server"]; ok {
 			nodeInfo.Server = server.(string)
@@ -1195,7 +1093,7 @@ func handleGetNodes(w http.ResponseWriter, r *http.Request) {
 				nodeInfo.Port = int(p)
 			}
 		}
-		
+
 		nodes = append(nodes, nodeInfo)
 	}
 
@@ -1263,15 +1161,15 @@ func handleLogManagement(w http.ResponseWriter, r *http.Request) {
 // handleGetLogInfo returns current log configuration and status
 func handleGetLogInfo(w http.ResponseWriter, r *http.Request) {
 	logInfo := map[string]any{
-		"level":          logger.Logger.Enabled(context.Background(), slog.LevelDebug),
-		"file_logging":   true, // Based on current config
+		"level":           logger.Logger.Enabled(context.Background(), slog.LevelDebug),
+		"file_logging":    true, // Based on current config
 		"console_logging": true,
-		"log_dir":        "logs",
-		"log_file":       "clash-speedtest.log",
-		"max_size_mb":    10,
-		"max_files":      5,
+		"log_dir":         "logs",
+		"log_file":        "clash-speedtest.log",
+		"max_size_mb":     10,
+		"max_files":       5,
 	}
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]any{
 		"success": true,
@@ -1285,7 +1183,7 @@ func handleLogAction(w http.ResponseWriter, r *http.Request) {
 		Action string `json:"action"` // "rotate", "set_level"
 		Level  string `json:"level,omitempty"`
 	}
-	
+
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{
@@ -1293,7 +1191,7 @@ func handleLogAction(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
-	
+
 	switch req.Action {
 	case "rotate":
 		if err := logger.RotateLogNow(); err != nil {
@@ -1303,13 +1201,13 @@ func handleLogAction(w http.ResponseWriter, r *http.Request) {
 			})
 			return
 		}
-		
+
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]any{
 			"success": true,
 			"message": "Log rotated successfully",
 		})
-		
+
 	case "set_level":
 		var level slog.Level
 		switch strings.ToUpper(req.Level) {
@@ -1328,15 +1226,15 @@ func handleLogAction(w http.ResponseWriter, r *http.Request) {
 			})
 			return
 		}
-		
+
 		logger.SetLevel(level)
-		
+
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]any{
 			"success": true,
 			"message": fmt.Sprintf("Log level set to %s", req.Level),
 		})
-		
+
 	default:
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{

@@ -140,6 +140,105 @@
     border-color: rgba(148, 163, 184, 0.3);
   }
 
+  /* 测试模式选择器专用样式 */
+  .test-mode-selector {
+    background: rgba(30, 41, 59, 0.8);
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    backdrop-filter: blur(12px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .test-mode-selector:hover {
+    border-color: rgba(59, 130, 246, 0.5);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+
+  .test-mode-selector:focus {
+    border-color: rgba(59, 130, 246, 0.6);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    outline: none;
+  }
+
+  /* 配置项过渡动画 */
+  .config-section-enter {
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+
+  .config-section-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .config-section-exit {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+
+  .config-section-exit-active {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  /* 配置项显示动画 */
+  .config-fade-in {
+    animation: configFadeIn 0.4s ease-out forwards;
+  }
+
+  @keyframes configFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* 测试模式主题色彩 */
+  .test-mode-speed {
+    --primary-color: #3b82f6;
+    --accent-color: #60a5fa;
+  }
+
+  .test-mode-unlock {
+    --primary-color: #10b981;
+    --accent-color: #34d399;
+  }
+
+  .test-mode-both {
+    --primary-color: #8b5cf6;
+    --accent-color: #a78bfa;
+  }
+
+  .test-mode-indicator {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .test-mode-indicator::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.1),
+      transparent
+    );
+    transition: left 0.5s ease;
+  }
+
+  .test-mode-indicator:hover::before {
+    left: 100%;
+  }
+
   /* 按钮增强样式 */
   .button-gradient {
     background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
@@ -177,6 +276,92 @@
 
   .table-row-dark:hover {
     background: rgba(59, 130, 246, 0.1);
+  }
+
+  /* 测试模式主题表格 */
+  .table-speed-mode {
+    border-left: 3px solid #3b82f6;
+  }
+
+  .table-unlock-mode {
+    border-left: 3px solid #10b981;
+  }
+
+  .table-both-mode {
+    border-left: 3px solid #8b5cf6;
+  }
+
+  /* 数据可视化组件 */
+  .speed-indicator {
+    position: relative;
+    height: 4px;
+    background: rgba(55, 65, 81, 0.5);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .speed-indicator-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.3s ease;
+  }
+
+  .speed-indicator-excellent {
+    background: linear-gradient(90deg, #10b981, #34d399);
+  }
+
+  .speed-indicator-good {
+    background: linear-gradient(90deg, #3b82f6, #60a5fa);
+  }
+
+  .speed-indicator-fair {
+    background: linear-gradient(90deg, #f59e0b, #fbbf24);
+  }
+
+  .speed-indicator-poor {
+    background: linear-gradient(90deg, #ef4444, #f87171);
+  }
+
+  /* 状态指示器 */
+  .status-pulse {
+    animation: statusPulse 2s infinite;
+  }
+
+  @keyframes statusPulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+
+  /* 解锁状态指示器 */
+  .unlock-indicator {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .unlock-indicator::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+    animation: unlockPulse 1.5s infinite;
+  }
+
+  @keyframes unlockPulse {
+    0%, 100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.7;
+      transform: scale(1.2);
+    }
   }
 
   /* 进度条样式 */

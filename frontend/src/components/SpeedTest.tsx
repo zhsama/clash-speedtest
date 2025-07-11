@@ -64,6 +64,240 @@ interface TestConfig {
   unlockRetry: boolean
 }
 
+// 速度测试配置组件
+const SpeedTestConfig = ({ testConfig, setTestConfig, filterConfig, setFilterConfig }: { 
+  testConfig: TestConfig; 
+  setTestConfig: React.Dispatch<React.SetStateAction<TestConfig>>;
+  filterConfig: FilterConfig;
+  setFilterConfig: React.Dispatch<React.SetStateAction<FilterConfig>>;
+}) => (
+  <div className="mb-6 config-fade-in">
+    <h4 className="text-gray-300 text-lg font-medium mb-4 flex items-center gap-2">
+      <ClientIcon icon={Download} className="h-5 w-5 text-blue-400" />
+      服务器测速配置
+    </h4>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+      <div>
+        <Label className="text-gray-300 mb-2 block">
+          测试服务器
+        </Label>
+        <Input
+          value={testConfig.serverUrl}
+          onChange={(e) => setTestConfig(prev => ({ 
+            ...prev, 
+            serverUrl: e.target.value 
+          }))}
+          className="input-dark text-white"
+        />
+      </div>
+      
+      <div>
+        <Label className="text-gray-300 mb-2 block">
+          下载测试大小: {testConfig.downloadSize} MB
+        </Label>
+        <Slider
+          value={[testConfig.downloadSize]}
+          onValueChange={(v) => setTestConfig(prev => ({ 
+            ...prev, 
+            downloadSize: v[0] 
+          }))}
+          max={100}
+          min={10}
+          step={10}
+          className="slider-dark"
+        />
+      </div>
+      
+      <div>
+        <Label className="text-gray-300 mb-2 block">
+          并发数: {testConfig.concurrent}
+        </Label>
+        <Slider
+          value={[testConfig.concurrent]}
+          onValueChange={(v) => setTestConfig(prev => ({ 
+            ...prev, 
+            concurrent: v[0] 
+          }))}
+          max={16}
+          min={1}
+          step={1}
+          className="slider-dark"
+        />
+      </div>
+      
+      <div>
+        <Label className="text-gray-300 mb-2 block">
+          超时时间: {testConfig.timeout} 秒
+        </Label>
+        <Slider
+          value={[testConfig.timeout]}
+          onValueChange={(v) => setTestConfig(prev => ({ 
+            ...prev, 
+            timeout: v[0] 
+          }))}
+          max={30}
+          min={5}
+          step={5}
+          className="slider-dark"
+        />
+      </div>
+    </div>
+
+    {/* 速度过滤条件 */}
+    <div className="border-t border-gray-700 pt-4">
+      <h5 className="text-gray-300 text-base font-medium mb-3 flex items-center gap-2">
+        <ClientIcon icon={Filter} className="h-4 w-4 text-blue-400" />
+        速度过滤条件
+      </h5>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div>
+          <Label className="text-gray-300 mb-2 block">
+            最低下载速度: {filterConfig.minDownloadSpeed} MB/s
+          </Label>
+          <Slider
+            value={[filterConfig.minDownloadSpeed]}
+            onValueChange={(v) => setFilterConfig(prev => ({ 
+              ...prev, 
+              minDownloadSpeed: v[0] 
+            }))}
+            max={100}
+            min={0}
+            step={1}
+            className="slider-dark"
+          />
+        </div>
+        
+        <div>
+          <Label className="text-gray-300 mb-2 block">
+            最低上传速度: {filterConfig.minUploadSpeed} MB/s
+          </Label>
+          <Slider
+            value={[filterConfig.minUploadSpeed]}
+            onValueChange={(v) => setFilterConfig(prev => ({ 
+              ...prev, 
+              minUploadSpeed: v[0] 
+            }))}
+            max={50}
+            min={0}
+            step={1}
+            className="slider-dark"
+          />
+        </div>
+        
+        <div>
+          <Label className="text-gray-300 mb-2 block">
+            最大延迟: {filterConfig.maxLatency} ms
+          </Label>
+          <Slider
+            value={[filterConfig.maxLatency]}
+            onValueChange={(v) => setFilterConfig(prev => ({ 
+              ...prev, 
+              maxLatency: v[0] 
+            }))}
+            max={5000}
+            min={100}
+            step={100}
+            className="slider-dark"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+)
+
+// 解锁检测配置组件
+const UnlockTestConfig = ({ testConfig, setTestConfig, hasSpeedConfig }: { 
+  testConfig: TestConfig; 
+  setTestConfig: React.Dispatch<React.SetStateAction<TestConfig>>;
+  hasSpeedConfig: boolean;
+}) => (
+  <div className={`config-fade-in ${hasSpeedConfig ? "pt-6 border-t border-gray-700" : ""}`}>
+    <h4 className="text-gray-300 text-lg font-medium mb-4 flex items-center gap-2">
+      <ClientIcon icon={Globe} className="h-5 w-5 text-green-400" />
+      流媒体解锁检测
+    </h4>
+    
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div>
+        <Label className="text-gray-300 mb-2 flex items-center gap-2">
+          <Switch
+            checked={testConfig.unlockEnabled}
+            onCheckedChange={(checked) => setTestConfig(prev => ({ 
+              ...prev, 
+              unlockEnabled: checked 
+            }))}
+            className="switch-dark"
+          />
+          启用解锁检测
+        </Label>
+      </div>
+      
+      <div>
+        <Label className="text-gray-300 mb-2 block">
+          解锁检测并发数: {testConfig.unlockConcurrent}
+        </Label>
+        <Slider
+          value={[testConfig.unlockConcurrent]}
+          onValueChange={(v) => setTestConfig(prev => ({ 
+            ...prev, 
+            unlockConcurrent: v[0] 
+          }))}
+          max={10}
+          min={1}
+          step={1}
+          className="slider-dark"
+          disabled={!testConfig.unlockEnabled}
+        />
+      </div>
+      
+      <div>
+        <Label className="text-gray-300 mb-2 block">
+          解锁检测超时: {testConfig.unlockTimeout} 秒
+        </Label>
+        <Slider
+          value={[testConfig.unlockTimeout]}
+          onValueChange={(v) => setTestConfig(prev => ({ 
+            ...prev, 
+            unlockTimeout: v[0] 
+          }))}
+          max={30}
+          min={5}
+          step={5}
+          className="slider-dark"
+          disabled={!testConfig.unlockEnabled}
+        />
+      </div>
+    </div>
+    
+    {testConfig.unlockEnabled && (
+      <div className="mt-4 config-fade-in">
+        <Label className="text-gray-300 mb-2 block">
+          检测平台
+        </Label>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+          {["Netflix", "YouTube", "Disney+", "ChatGPT", "Spotify", "Bilibili"].map((platform) => (
+            <label key={platform} className="flex items-center space-x-2 cursor-pointer">
+              <Checkbox
+                checked={testConfig.unlockPlatforms.includes(platform)}
+                onCheckedChange={(checked) => {
+                  setTestConfig(prev => ({
+                    ...prev,
+                    unlockPlatforms: checked
+                      ? [...prev.unlockPlatforms, platform]
+                      : prev.unlockPlatforms.filter(p => p !== platform)
+                  }))
+                }}
+                className="checkbox-dark"
+              />
+              <span className="text-gray-300 text-sm">{platform}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+    )}
+  </div>
+)
+
 export default function SpeedTestPro() {
   const [configUrl, setConfigUrl] = useState("")
   const [nodes, setNodes] = useState<NodeInfo[]>([])
@@ -520,315 +754,220 @@ export default function SpeedTestPro() {
           <div className="p-6">
             <div className="flex items-center gap-2 mb-6">
               <ClientIcon icon={Filter} className="h-5 w-5 text-purple-400" />
-              <h2 className="text-lg font-semibold text-white">过滤条件</h2>
+              <h2 className="text-lg font-semibold text-white">测试配置</h2>
             </div>
             
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-gray-300 mb-2 block">
-                    包含节点 (逗号分隔)
-                  </Label>
-                  <Textarea
-                    placeholder="例如: 香港, HK, 新加坡..."
-                    value={includeNodesInput}
-                    onChange={(e) => handleIncludeNodesChange(e.target.value)}
-                    className="input-dark text-white placeholder:text-gray-500 resize-none"
-                    rows={2}
-                  />
-                </div>
-                
-                <div>
-                  <Label className="text-gray-300 mb-2 block">
-                    排除节点 (逗号分隔)
-                  </Label>
-                  <Textarea
-                    placeholder="例如: 过期, 测试, 备用..."
-                    value={excludeNodesInput}
-                    onChange={(e) => handleExcludeNodesChange(e.target.value)}
-                    className="input-dark text-white placeholder:text-gray-500 resize-none"
-                    rows={2}
-                  />
-                </div>
-              </div>
-              
-              {availableProtocols.length > 0 && (
-                <div>
-                  <Label className="text-gray-300 mb-3 block">
-                    协议过滤
-                  </Label>
-                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                    {availableProtocols.map((protocol) => (
-                      <div key={protocol} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`protocol-${protocol}`}
-                          checked={isProtocolSelected(protocol)}
-                          onCheckedChange={(checked: boolean) => 
-                            handleProtocolFilterChange(protocol, checked)
-                          }
-                          className="checkbox-dark"
-                        />
-                        <Label 
-                          htmlFor={`protocol-${protocol}`} 
-                          className="text-sm text-gray-300 cursor-pointer"
-                        >
-                          {protocol}
-                        </Label>
-                      </div>
-                    ))}
+            {/* 测试模式选择器 - 移至顶部 */}
+            <div className="mb-6 p-4 bg-gray-800/50 rounded-lg border border-gray-700 test-mode-indicator">
+              <Label className="text-gray-300 mb-3 block text-base font-medium">
+                测试模式
+              </Label>
+              <select
+                value={testConfig.testMode}
+                onChange={(e) => setTestConfig(prev => ({ 
+                  ...prev, 
+                  testMode: e.target.value 
+                }))}
+                className="test-mode-selector w-full p-3 rounded-lg text-white text-base"
+              >
+                <option value="both">全面测试（测速+解锁）</option>
+                <option value="speed_only">仅测速</option>
+                <option value="unlock_only">仅解锁检测</option>
+              </select>
+              <p className="text-sm text-gray-400 mt-2">
+                {testConfig.testMode === "both" && "同时进行速度测试和流媒体解锁检测"}
+                {testConfig.testMode === "speed_only" && "只进行网络速度测试，跳过解锁检测"}
+                {testConfig.testMode === "unlock_only" && "只进行流媒体解锁检测，跳过速度测试"}
+              </p>
+            </div>
+            
+            <div className="border-t border-gray-700 pt-6">
+              <h3 className="text-gray-300 mb-4 font-medium">节点过滤条件</h3>
+            
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-gray-300 mb-2 block">
+                      包含节点 (逗号分隔)
+                    </Label>
+                    <Textarea
+                      placeholder="例如: 香港, HK, 新加坡..."
+                      value={includeNodesInput}
+                      onChange={(e) => handleIncludeNodesChange(e.target.value)}
+                      className="input-dark text-white placeholder:text-gray-500 resize-none"
+                      rows={2}
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label className="text-gray-300 mb-2 block">
+                      排除节点 (逗号分隔)
+                    </Label>
+                    <Textarea
+                      placeholder="例如: 过期, 测试, 备用..."
+                      value={excludeNodesInput}
+                      onChange={(e) => handleExcludeNodesChange(e.target.value)}
+                      className="input-dark text-white placeholder:text-gray-500 resize-none"
+                      rows={2}
+                    />
                   </div>
                 </div>
-              )}
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                  <Label className="text-gray-300 mb-2 block">
-                    最低下载速度: {filterConfig.minDownloadSpeed} MB/s
-                  </Label>
-                  <Slider
-                    value={[filterConfig.minDownloadSpeed]}
-                    onValueChange={(v) => setFilterConfig(prev => ({ 
-                      ...prev, 
-                      minDownloadSpeed: v[0] 
-                    }))}
-                    max={100}
-                    min={0}
-                    step={1}
-                    className="slider-dark"
-                  />
-                </div>
                 
-                <div>
-                  <Label className="text-gray-300 mb-2 block">
-                    最低上传速度: {filterConfig.minUploadSpeed} MB/s
-                  </Label>
-                  <Slider
-                    value={[filterConfig.minUploadSpeed]}
-                    onValueChange={(v) => setFilterConfig(prev => ({ 
-                      ...prev, 
-                      minUploadSpeed: v[0] 
-                    }))}
-                    max={50}
-                    min={0}
-                    step={1}
-                    className="slider-dark"
-                  />
-                </div>
+                {availableProtocols.length > 0 && (
+                  <div>
+                    <Label className="text-gray-300 mb-3 block">
+                      协议过滤
+                    </Label>
+                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                      {availableProtocols.map((protocol) => (
+                        <div key={protocol} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`protocol-${protocol}`}
+                            checked={isProtocolSelected(protocol)}
+                            onCheckedChange={(checked: boolean) => 
+                              handleProtocolFilterChange(protocol, checked)
+                            }
+                            className="checkbox-dark"
+                          />
+                          <Label 
+                            htmlFor={`protocol-${protocol}`} 
+                            className="text-sm text-gray-300 cursor-pointer"
+                          >
+                            {protocol}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 
-                <div>
-                  <Label className="text-gray-300 mb-2 block">
-                    最大延迟: {filterConfig.maxLatency} ms
-                  </Label>
-                  <Slider
-                    value={[filterConfig.maxLatency]}
-                    onValueChange={(v) => setFilterConfig(prev => ({ 
-                      ...prev, 
-                      maxLatency: v[0] 
-                    }))}
-                    max={5000}
-                    min={100}
-                    step={100}
-                    className="slider-dark"
-                  />
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="stashCompatible"
-                    checked={filterConfig.stashCompatible}
-                    onCheckedChange={(checked) => setFilterConfig(prev => ({ 
-                      ...prev, 
-                      stashCompatible: checked 
-                    }))}
-                    className="switch-dark"
-                  />
-                  <Label htmlFor="stashCompatible" className="text-gray-300">
-                    Stash 兼容模式
-                  </Label>
-                </div>
+                {/* 只在解锁检测模式下显示速度过滤条件 */}
+                {(testConfig.testMode === "unlock_only") && (
+                  <div>
+                    <h5 className="text-gray-300 text-base font-medium mb-3 flex items-center gap-2">
+                      <ClientIcon icon={Filter} className="h-4 w-4 text-green-400" />
+                      速度过滤条件 (预过滤)
+                    </h5>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div>
+                        <Label className="text-gray-300 mb-2 block">
+                          最低下载速度: {filterConfig.minDownloadSpeed} MB/s
+                        </Label>
+                        <Slider
+                          value={[filterConfig.minDownloadSpeed]}
+                          onValueChange={(v) => setFilterConfig(prev => ({ 
+                            ...prev, 
+                            minDownloadSpeed: v[0] 
+                          }))}
+                          max={100}
+                          min={0}
+                          step={1}
+                          className="slider-dark"
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label className="text-gray-300 mb-2 block">
+                          最低上传速度: {filterConfig.minUploadSpeed} MB/s
+                        </Label>
+                        <Slider
+                          value={[filterConfig.minUploadSpeed]}
+                          onValueChange={(v) => setFilterConfig(prev => ({ 
+                            ...prev, 
+                            minUploadSpeed: v[0] 
+                          }))}
+                          max={50}
+                          min={0}
+                          step={1}
+                          className="slider-dark"
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label className="text-gray-300 mb-2 block">
+                          最大延迟: {filterConfig.maxLatency} ms
+                        </Label>
+                        <Slider
+                          value={[filterConfig.maxLatency]}
+                          onValueChange={(v) => setFilterConfig(prev => ({ 
+                            ...prev, 
+                            maxLatency: v[0] 
+                          }))}
+                          max={5000}
+                          min={100}
+                          step={100}
+                          className="slider-dark"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
                 
-                <Button
-                  onClick={testing ? stopTest : startTest}
-                  disabled={!isConnected || nodes.length === 0 || loading}
-                  size="lg"
-                  className={testing ? "bg-red-600 hover:bg-red-700" : "button-gradient"}
-                >
-                  {testing ? (
-                    <>
-                      <ClientIcon icon={Loader2} className="mr-2 h-4 w-4 animate-spin" />
-                      停止测试
-                    </>
-                  ) : (
-                    <>
-                      <ClientIcon icon={Play} className="mr-2 h-4 w-4" />
-                      开始测试
-                    </>
-                  )}
-                </Button>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="stashCompatible"
+                      checked={filterConfig.stashCompatible}
+                      onCheckedChange={(checked) => setFilterConfig(prev => ({ 
+                        ...prev, 
+                        stashCompatible: checked 
+                      }))}
+                      className="switch-dark"
+                    />
+                    <Label htmlFor="stashCompatible" className="text-gray-300">
+                      Stash 兼容模式
+                    </Label>
+                  </div>
+                  
+                  <Button
+                    onClick={testing ? stopTest : startTest}
+                    disabled={!isConnected || nodes.length === 0 || loading}
+                    size="lg"
+                    className={testing ? "bg-red-600 hover:bg-red-700" : "button-gradient"}
+                  >
+                    {testing ? (
+                      <>
+                        <ClientIcon icon={Loader2} className="mr-2 h-4 w-4 animate-spin" />
+                        停止测试
+                      </>
+                    ) : (
+                      <>
+                        <ClientIcon icon={Play} className="mr-2 h-4 w-4" />
+                        开始测试
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
         </Card>
         
+        {/* 高级配置根据测试模式条件显示 */}
         <details className="mb-6">
           <summary className="cursor-pointer text-gray-400 hover:text-white transition-colors">
             高级测试配置
           </summary>
           <Card className="glass-morphism border-gray-800 mt-4 py-0">
             <div className="p-6">
-              <h4 className="text-gray-300 text-lg font-medium mb-4">服务器测速配置</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div>
-                  <Label className="text-gray-300 mb-2 block">
-                    测试服务器
-                  </Label>
-                  <Input
-                    value={testConfig.serverUrl}
-                    onChange={(e) => setTestConfig(prev => ({ 
-                      ...prev, 
-                      serverUrl: e.target.value 
-                    }))}
-                    className="input-dark text-white"
-                  />
-                </div>
-                
-                <div>
-                  <Label className="text-gray-300 mb-2 block">
-                    下载测试大小: {testConfig.downloadSize} MB
-                  </Label>
-                  <Slider
-                    value={[testConfig.downloadSize]}
-                    onValueChange={(v) => setTestConfig(prev => ({ 
-                      ...prev, 
-                      downloadSize: v[0] 
-                    }))}
-                    max={100}
-                    min={10}
-                    step={10}
-                    className="slider-dark"
-                  />
-                </div>
-                
-                <div>
-                  <Label className="text-gray-300 mb-2 block">
-                    并发数: {testConfig.concurrent}
-                  </Label>
-                  <Slider
-                    value={[testConfig.concurrent]}
-                    onValueChange={(v) => setTestConfig(prev => ({ 
-                      ...prev, 
-                      concurrent: v[0] 
-                    }))}
-                    max={16}
-                    min={1}
-                    step={1}
-                    className="slider-dark"
-                  />
-                </div>
-                
-                <div>
-                  <Label className="text-gray-300 mb-2 block">
-                    超时时间: {testConfig.timeout} 秒
-                  </Label>
-                  <Slider
-                    value={[testConfig.timeout]}
-                    onValueChange={(v) => setTestConfig(prev => ({ 
-                      ...prev, 
-                      timeout: v[0] 
-                    }))}
-                    max={30}
-                    min={5}
-                    step={5}
-                    className="slider-dark"
-                  />
-                </div>
-              </div>
+              {/* 速度测试配置 - 条件显示 */}
+              {(testConfig.testMode === "both" || testConfig.testMode === "speed_only") && (
+                <SpeedTestConfig 
+                  testConfig={testConfig} 
+                  setTestConfig={setTestConfig}
+                  filterConfig={filterConfig}
+                  setFilterConfig={setFilterConfig}
+                />
+              )}
               
-              {/* 解锁检测配置 */}
-              <div className="mt-6 pt-6 border-t border-gray-700">
-                <h4 className="text-gray-300 text-lg font-medium mb-4">流媒体解锁检测</h4>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  <div>
-                    <Label className="text-gray-300 mb-2 block">
-                      测试模式
-                    </Label>
-                    <select
-                      value={testConfig.testMode}
-                      onChange={(e) => setTestConfig(prev => ({ 
-                        ...prev, 
-                        testMode: e.target.value 
-                      }))}
-                      className="w-full p-2 rounded border border-gray-600 bg-gray-800 text-white"
-                    >
-                      <option value="both">全面测试（测速+解锁）</option>
-                      <option value="speed_only">仅测速</option>
-                      <option value="unlock_only">仅解锁检测</option>
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <Label className="text-gray-300 mb-2 flex items-center gap-2">
-                      <Switch
-                        checked={testConfig.unlockEnabled}
-                        onCheckedChange={(checked) => setTestConfig(prev => ({ 
-                          ...prev, 
-                          unlockEnabled: checked 
-                        }))}
-                        className="switch-dark"
-                      />
-                      启用解锁检测
-                    </Label>
-                  </div>
-                  
-                  <div>
-                    <Label className="text-gray-300 mb-2 block">
-                      解锁检测并发数: {testConfig.unlockConcurrent}
-                    </Label>
-                    <Slider
-                      value={[testConfig.unlockConcurrent]}
-                      onValueChange={(v) => setTestConfig(prev => ({ 
-                        ...prev, 
-                        unlockConcurrent: v[0] 
-                      }))}
-                      max={10}
-                      min={1}
-                      step={1}
-                      className="slider-dark"
-                      disabled={!testConfig.unlockEnabled}
-                    />
-                  </div>
-                </div>
-                
-                {testConfig.unlockEnabled && (
-                  <div className="mt-4">
-                    <Label className="text-gray-300 mb-2 block">
-                      检测平台
-                    </Label>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-                      {["Netflix", "YouTube", "Disney+", "ChatGPT", "Spotify", "Bilibili"].map((platform) => (
-                        <label key={platform} className="flex items-center space-x-2 cursor-pointer">
-                          <Checkbox
-                            checked={testConfig.unlockPlatforms.includes(platform)}
-                            onCheckedChange={(checked) => {
-                              setTestConfig(prev => ({
-                                ...prev,
-                                unlockPlatforms: checked
-                                  ? [...prev.unlockPlatforms, platform]
-                                  : prev.unlockPlatforms.filter(p => p !== platform)
-                              }))
-                            }}
-                            className="checkbox-dark"
-                          />
-                          <span className="text-gray-300 text-sm">{platform}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
+              {/* 解锁检测配置 - 条件显示 */}
+              {(testConfig.testMode === "both" || testConfig.testMode === "unlock_only") && (
+                <UnlockTestConfig 
+                  testConfig={testConfig} 
+                  setTestConfig={setTestConfig}
+                  hasSpeedConfig={testConfig.testMode === "both"}
+                />
+              )}
             </div>
           </Card>
         </details>
@@ -840,6 +979,7 @@ export default function SpeedTestPro() {
             completeData={testCompleteData}
             cancelledData={testCancelledData}
             isConnected={isConnected}
+            testMode={testConfig.testMode}
           />
         )}
       </div>

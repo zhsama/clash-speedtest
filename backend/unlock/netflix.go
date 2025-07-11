@@ -23,9 +23,9 @@ func NewNetflixDetector() *NetflixDetector {
 // Detect 检测Netflix解锁状态
 func (d *NetflixDetector) Detect(proxy constant.Proxy, timeout time.Duration) *UnlockResult {
 	d.logDetectionStart(proxy)
-	
+
 	client := createHTTPClient(proxy, timeout)
-	
+
 	// 访问Netflix原创内容页面进行检测
 	resp, err := makeRequest(client, "GET", "https://www.netflix.com/title/81280792", nil)
 	if err != nil {
@@ -34,21 +34,21 @@ func (d *NetflixDetector) Detect(proxy constant.Proxy, timeout time.Duration) *U
 		return result
 	}
 	defer resp.Body.Close()
-	
+
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		result := d.createErrorResult("Failed to read Netflix response", err)
 		d.logDetectionResult(proxy, result)
 		return result
 	}
-	
+
 	bodyStr := string(body)
-	
+
 	// 分析响应内容
 	var result *UnlockResult
-	if strings.Contains(bodyStr, "Not Available") || 
-	   strings.Contains(bodyStr, "page-404") || 
-	   strings.Contains(bodyStr, "NSEZ-403") {
+	if strings.Contains(bodyStr, "Not Available") ||
+		strings.Contains(bodyStr, "page-404") ||
+		strings.Contains(bodyStr, "NSEZ-403") {
 		result = d.createResult(StatusLocked, "", "Netflix content not available in this region")
 	} else if strings.Contains(bodyStr, "requestCountry") {
 		// 尝试提取国家代码
@@ -59,7 +59,7 @@ func (d *NetflixDetector) Detect(proxy constant.Proxy, timeout time.Duration) *U
 	} else {
 		result = d.createResult(StatusFailed, "", "Unable to determine Netflix status")
 	}
-	
+
 	d.logDetectionResult(proxy, result)
 	return result
 }

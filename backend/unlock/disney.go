@@ -23,9 +23,9 @@ func NewDisneyDetector() *DisneyDetector {
 // Detect 检测Disney+解锁状态
 func (d *DisneyDetector) Detect(proxy constant.Proxy, timeout time.Duration) *UnlockResult {
 	d.logDetectionStart(proxy)
-	
+
 	client := createHTTPClient(proxy, timeout)
-	
+
 	// 访问Disney+主页
 	resp, err := makeRequest(client, "GET", "https://www.disneyplus.com", nil)
 	if err != nil {
@@ -34,14 +34,14 @@ func (d *DisneyDetector) Detect(proxy constant.Proxy, timeout time.Duration) *Un
 		return result
 	}
 	defer resp.Body.Close()
-	
+
 	// 检查重定向URL
 	finalURL := resp.Request.URL.String()
-	
+
 	var result *UnlockResult
-	if strings.Contains(finalURL, "/unavailable") || 
-	   strings.Contains(finalURL, "/blocked") ||
-	   strings.Contains(finalURL, "/unsupported") {
+	if strings.Contains(finalURL, "/unavailable") ||
+		strings.Contains(finalURL, "/blocked") ||
+		strings.Contains(finalURL, "/unsupported") {
 		result = d.createResult(StatusLocked, "", "Disney+ not available in this region")
 	} else {
 		// 读取响应内容进行进一步检查
@@ -50,12 +50,12 @@ func (d *DisneyDetector) Detect(proxy constant.Proxy, timeout time.Duration) *Un
 			result = d.createErrorResult("Failed to read Disney+ response", err)
 		} else {
 			bodyStr := string(body)
-			if strings.Contains(bodyStr, "not available") || 
-			   strings.Contains(bodyStr, "access denied") {
+			if strings.Contains(bodyStr, "not available") ||
+				strings.Contains(bodyStr, "access denied") {
 				result = d.createResult(StatusLocked, "", "Disney+ blocked in this region")
-			} else if strings.Contains(bodyStr, "sign up") || 
-					  strings.Contains(bodyStr, "subscribe") ||
-					  strings.Contains(bodyStr, "bundle") {
+			} else if strings.Contains(bodyStr, "sign up") ||
+				strings.Contains(bodyStr, "subscribe") ||
+				strings.Contains(bodyStr, "bundle") {
 				// 提取地区信息
 				region := d.extractDisneyRegion(finalURL, bodyStr)
 				result = d.createResult(StatusUnlocked, region, "Disney+ available")
@@ -64,7 +64,7 @@ func (d *DisneyDetector) Detect(proxy constant.Proxy, timeout time.Duration) *Un
 			}
 		}
 	}
-	
+
 	d.logDetectionResult(proxy, result)
 	return result
 }
@@ -87,7 +87,7 @@ func (d *DisneyDetector) extractDisneyRegion(url, body string) string {
 	if strings.Contains(url, ".com.au/") {
 		return "AU"
 	}
-	
+
 	// 从内容中提取地区信息
 	if strings.Contains(body, `"market":"US"`) {
 		return "US"
@@ -98,6 +98,6 @@ func (d *DisneyDetector) extractDisneyRegion(url, body string) string {
 	if strings.Contains(body, `"market":"GB"`) {
 		return "GB"
 	}
-	
+
 	return ""
 }

@@ -23,9 +23,9 @@ func NewYouTubeDetector() *YouTubeDetector {
 // Detect 检测YouTube Premium解锁状态
 func (d *YouTubeDetector) Detect(proxy constant.Proxy, timeout time.Duration) *UnlockResult {
 	d.logDetectionStart(proxy)
-	
+
 	client := createHTTPClient(proxy, timeout)
-	
+
 	// 访问YouTube Premium页面
 	resp, err := makeRequest(client, "GET", "https://www.youtube.com/premium", nil)
 	if err != nil {
@@ -34,19 +34,19 @@ func (d *YouTubeDetector) Detect(proxy constant.Proxy, timeout time.Duration) *U
 		return result
 	}
 	defer resp.Body.Close()
-	
+
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		result := d.createErrorResult("Failed to read YouTube response", err)
 		d.logDetectionResult(proxy, result)
 		return result
 	}
-	
+
 	bodyStr := string(body)
-	
+
 	var result *UnlockResult
-	if strings.Contains(bodyStr, "Premium is not available") || 
-	   strings.Contains(bodyStr, "isn't available") {
+	if strings.Contains(bodyStr, "Premium is not available") ||
+		strings.Contains(bodyStr, "isn't available") {
 		result = d.createResult(StatusLocked, "", "YouTube Premium not available in this region")
 	} else if strings.Contains(bodyStr, "countryCode") {
 		// 尝试提取国家代码
@@ -57,7 +57,7 @@ func (d *YouTubeDetector) Detect(proxy constant.Proxy, timeout time.Duration) *U
 	} else {
 		result = d.createResult(StatusFailed, "", "Unable to determine YouTube Premium status")
 	}
-	
+
 	d.logDetectionResult(proxy, result)
 	return result
 }
@@ -76,12 +76,12 @@ func (d *YouTubeDetector) extractYouTubeRegion(body string) string {
 		`"countryCode":"TW"`: "TW",
 		`"countryCode":"HK"`: "HK",
 	}
-	
+
 	for pattern, region := range regions {
 		if strings.Contains(body, pattern) {
 			return region
 		}
 	}
-	
+
 	return ""
 }

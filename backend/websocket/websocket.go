@@ -25,13 +25,13 @@ const (
 	MessageTypeError         MessageType = "error"
 	MessageTypeStopTest      MessageType = "stop_test"
 	// 新增细化的进度消息类型
-	MessageTypeLatencyStart  MessageType = "latency_start"
-	MessageTypeLatencyResult MessageType = "latency_result"
-	MessageTypeDownloadStart MessageType = "download_start"
+	MessageTypeLatencyStart   MessageType = "latency_start"
+	MessageTypeLatencyResult  MessageType = "latency_result"
+	MessageTypeDownloadStart  MessageType = "download_start"
 	MessageTypeDownloadResult MessageType = "download_result"
-	MessageTypeUploadStart   MessageType = "upload_start"
-	MessageTypeUploadResult  MessageType = "upload_result"
-	MessageTypeProxySkipped  MessageType = "proxy_skipped"
+	MessageTypeUploadStart    MessageType = "upload_start"
+	MessageTypeUploadResult   MessageType = "upload_result"
+	MessageTypeProxySkipped   MessageType = "proxy_skipped"
 )
 
 // WebSocketMessage represents a message sent via WebSocket
@@ -67,32 +67,32 @@ type TestProgressData struct {
 	ProgressPercent float64 `json:"progress_percent"`
 	Status          string  `json:"status"`
 	// 新增详细进度信息
-	CurrentStage    string  `json:"current_stage,omitempty"`    // "latency", "download", "upload"
-	StageProgress   float64 `json:"stage_progress,omitempty"`   // 当前阶段进度 0-100
-	EstimatedTime   int     `json:"estimated_time,omitempty"`   // 预计剩余时间(秒)
+	CurrentStage  string  `json:"current_stage,omitempty"`  // "latency", "download", "upload"
+	StageProgress float64 `json:"stage_progress,omitempty"` // 当前阶段进度 0-100
+	EstimatedTime int     `json:"estimated_time,omitempty"` // 预计剩余时间(秒)
 }
 
 // LatencyTestData contains latency test specific data
 type LatencyTestData struct {
-	ProxyName       string `json:"proxy_name"`
-	ProxyType       string `json:"proxy_type"`
-	AttemptCount    int    `json:"attempt_count"`    // 当前尝试次数
-	TotalAttempts   int    `json:"total_attempts"`   // 总尝试次数
-	CurrentLatency  int64  `json:"current_latency"`  // 当前延迟(ms)
-	AverageLatency  int64  `json:"average_latency"`  // 平均延迟(ms)
-	PacketLossRate  float64 `json:"packet_loss_rate"` // 当前丢包率
+	ProxyName      string  `json:"proxy_name"`
+	ProxyType      string  `json:"proxy_type"`
+	AttemptCount   int     `json:"attempt_count"`    // 当前尝试次数
+	TotalAttempts  int     `json:"total_attempts"`   // 总尝试次数
+	CurrentLatency int64   `json:"current_latency"`  // 当前延迟(ms)
+	AverageLatency int64   `json:"average_latency"`  // 平均延迟(ms)
+	PacketLossRate float64 `json:"packet_loss_rate"` // 当前丢包率
 }
 
 // BandwidthTestData contains bandwidth test specific data
 type BandwidthTestData struct {
-	ProxyName       string  `json:"proxy_name"`
-	ProxyType       string  `json:"proxy_type"`
-	TestType        string  `json:"test_type"`        // "download" or "upload"
-	BytesTransferred int64  `json:"bytes_transferred"` // 已传输字节数
-	TotalBytes      int64   `json:"total_bytes"`      // 总字节数
-	CurrentSpeed    float64 `json:"current_speed"`    // 当前速度(bytes/s)
-	ElapsedTime     int64   `json:"elapsed_time"`     // 已用时间(ms)
-	Concurrent      int     `json:"concurrent"`       // 并发数
+	ProxyName        string  `json:"proxy_name"`
+	ProxyType        string  `json:"proxy_type"`
+	TestType         string  `json:"test_type"`         // "download" or "upload"
+	BytesTransferred int64   `json:"bytes_transferred"` // 已传输字节数
+	TotalBytes       int64   `json:"total_bytes"`       // 总字节数
+	CurrentSpeed     float64 `json:"current_speed"`     // 当前速度(bytes/s)
+	ElapsedTime      int64   `json:"elapsed_time"`      // 已用时间(ms)
+	Concurrent       int     `json:"concurrent"`        // 并发数
 }
 
 // ProxySkippedData contains information about skipped proxies
@@ -107,7 +107,7 @@ type ProxySkippedData struct {
 type TestResultData struct {
 	ProxyName         string  `json:"proxy_name"`
 	ProxyType         string  `json:"proxy_type"`
-	ProxyIP           string  `json:"proxy_ip,omitempty"`      // 新增代理IP地址
+	ProxyIP           string  `json:"proxy_ip,omitempty"` // 新增代理IP地址
 	Latency           int64   `json:"latency_ms"`
 	Jitter            int64   `json:"jitter_ms"`
 	PacketLoss        float64 `json:"packet_loss"`
@@ -117,9 +117,9 @@ type TestResultData struct {
 	UploadSpeedMbps   float64 `json:"upload_speed_mbps"`
 	Status            string  `json:"status"` // "success", "failed", "timeout"
 	// 新增错误诊断字段
-	ErrorStage        string  `json:"error_stage,omitempty"`   // 错误阶段
-	ErrorCode         string  `json:"error_code,omitempty"`    // 错误代码  
-	ErrorMessage      string  `json:"error_message,omitempty"` // 错误消息
+	ErrorStage   string `json:"error_stage,omitempty"`   // 错误阶段
+	ErrorCode    string `json:"error_code,omitempty"`    // 错误代码
+	ErrorMessage string `json:"error_message,omitempty"` // 错误消息
 }
 
 // TestCompleteData contains summary information when all tests are done
@@ -190,7 +190,7 @@ func (h *Hub) Run() {
 			h.mu.Lock()
 			h.clients[client.id] = client
 			h.mu.Unlock()
-			logger.Logger.Info("WebSocket client connected", 
+			logger.Logger.Info("WebSocket client connected",
 				slog.String("client_id", client.id),
 				slog.Int("total_clients", len(h.clients)),
 			)
@@ -202,7 +202,7 @@ func (h *Hub) Run() {
 				client.close()
 			}
 			h.mu.Unlock()
-			logger.Logger.Info("WebSocket client disconnected", 
+			logger.Logger.Info("WebSocket client disconnected",
 				slog.String("client_id", client.id),
 				slog.Int("total_clients", len(h.clients)),
 			)
@@ -236,7 +236,7 @@ func (h *Hub) BroadcastMessage(msgType MessageType, data any) {
 		return
 	}
 
-	logger.Logger.Debug("Broadcasting WebSocket message", 
+	logger.Logger.Debug("Broadcasting WebSocket message",
 		slog.String("message_type", string(msgType)),
 		slog.Int("clients_count", len(h.clients)),
 	)
@@ -259,7 +259,7 @@ func (c *Client) sendMessage(message []byte) bool {
 
 	err := wsutil.WriteServerMessage(c.conn, ws.OpText, message)
 	if err != nil {
-		logger.Logger.Debug("Failed to send WebSocket message", 
+		logger.Logger.Debug("Failed to send WebSocket message",
 			slog.String("client_id", c.id),
 			slog.String("error", err.Error()),
 		)
@@ -272,7 +272,7 @@ func (c *Client) sendMessage(message []byte) bool {
 func (c *Client) close() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	
+
 	if !c.closed {
 		c.closed = true
 		c.conn.Close()
@@ -306,7 +306,7 @@ func (h *Hub) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		for {
 			msgData, _, err := wsutil.ReadClientData(conn)
 			if err != nil {
-				logger.Logger.Debug("WebSocket client disconnected", 
+				logger.Logger.Debug("WebSocket client disconnected",
 					slog.String("client_id", clientID),
 					slog.String("error", err.Error()),
 				)
@@ -328,6 +328,6 @@ func (h *Hub) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 // generateClientID generates a unique client ID
 func generateClientID() string {
-	return time.Now().Format("20060102150405") + "-" + 
-		   time.Now().Format("000000")[3:]
+	return time.Now().Format("20060102150405") + "-" +
+		time.Now().Format("000000")[3:]
 }

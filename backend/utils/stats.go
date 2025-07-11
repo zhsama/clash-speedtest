@@ -10,54 +10,54 @@ import (
 
 // TestStatistics contains comprehensive statistics for speed test results
 type TestStatistics struct {
-	TotalProxies      int                    `json:"total_proxies"`
-	TestedProxies     int                    `json:"tested_proxies"`
-	SuccessfulProxies int                    `json:"successful_proxies"`
-	FailedProxies     int                    `json:"failed_proxies"`
-	SkippedProxies    int                    `json:"skipped_proxies"`
-	
+	TotalProxies      int `json:"total_proxies"`
+	TestedProxies     int `json:"tested_proxies"`
+	SuccessfulProxies int `json:"successful_proxies"`
+	FailedProxies     int `json:"failed_proxies"`
+	SkippedProxies    int `json:"skipped_proxies"`
+
 	// 时间统计
-	StartTime         time.Time             `json:"start_time"`
-	EndTime           time.Time             `json:"end_time"`
-	TotalDuration     time.Duration         `json:"total_duration"`
-	AverageTestTime   time.Duration         `json:"average_test_time"`
-	
+	StartTime       time.Time     `json:"start_time"`
+	EndTime         time.Time     `json:"end_time"`
+	TotalDuration   time.Duration `json:"total_duration"`
+	AverageTestTime time.Duration `json:"average_test_time"`
+
 	// 延迟统计
-	LatencyStats      *LatencyStatistics    `json:"latency_stats"`
-	
+	LatencyStats *LatencyStatistics `json:"latency_stats"`
+
 	// 速度统计
-	DownloadStats     *SpeedStatistics      `json:"download_stats"`
-	UploadStats       *SpeedStatistics      `json:"upload_stats"`
-	
+	DownloadStats *SpeedStatistics `json:"download_stats"`
+	UploadStats   *SpeedStatistics `json:"upload_stats"`
+
 	// 协议分布
-	ProtocolStats     map[string]int        `json:"protocol_stats"`
-	
+	ProtocolStats map[string]int `json:"protocol_stats"`
+
 	// 地理分布
-	CountryStats      map[string]int        `json:"country_stats"`
-	
+	CountryStats map[string]int `json:"country_stats"`
+
 	// 最佳节点
-	BestLatencyProxy  *ProxyRanking         `json:"best_latency_proxy"`
-	BestDownloadProxy *ProxyRanking         `json:"best_download_proxy"`
-	BestUploadProxy   *ProxyRanking         `json:"best_upload_proxy"`
-	
+	BestLatencyProxy  *ProxyRanking `json:"best_latency_proxy"`
+	BestDownloadProxy *ProxyRanking `json:"best_download_proxy"`
+	BestUploadProxy   *ProxyRanking `json:"best_upload_proxy"`
+
 	// 错误统计
-	ErrorStats        map[string]int        `json:"error_stats"`
+	ErrorStats map[string]int `json:"error_stats"`
 }
 
 // LatencyStatistics contains latency-related statistics
 type LatencyStatistics struct {
-	Mean       float64 `json:"mean_ms"`
-	Median     float64 `json:"median_ms"`
-	Min        float64 `json:"min_ms"`
-	Max        float64 `json:"max_ms"`
-	StdDev     float64 `json:"std_dev_ms"`
-	P95        float64 `json:"p95_ms"`
-	P99        float64 `json:"p99_ms"`
-	
+	Mean   float64 `json:"mean_ms"`
+	Median float64 `json:"median_ms"`
+	Min    float64 `json:"min_ms"`
+	Max    float64 `json:"max_ms"`
+	StdDev float64 `json:"std_dev_ms"`
+	P95    float64 `json:"p95_ms"`
+	P99    float64 `json:"p99_ms"`
+
 	// 抖动统计
 	JitterMean float64 `json:"jitter_mean_ms"`
 	JitterMax  float64 `json:"jitter_max_ms"`
-	
+
 	// 丢包统计
 	PacketLossMean float64 `json:"packet_loss_mean_percent"`
 	PacketLossMax  float64 `json:"packet_loss_max_percent"`
@@ -65,19 +65,19 @@ type LatencyStatistics struct {
 
 // SpeedStatistics contains speed-related statistics
 type SpeedStatistics struct {
-	Mean       float64 `json:"mean_mbps"`
-	Median     float64 `json:"median_mbps"`
-	Min        float64 `json:"min_mbps"`
-	Max        float64 `json:"max_mbps"`
-	StdDev     float64 `json:"std_dev_mbps"`
-	P95        float64 `json:"p95_mbps"`
-	P99        float64 `json:"p99_mbps"`
-	
+	Mean   float64 `json:"mean_mbps"`
+	Median float64 `json:"median_mbps"`
+	Min    float64 `json:"min_mbps"`
+	Max    float64 `json:"max_mbps"`
+	StdDev float64 `json:"std_dev_mbps"`
+	P95    float64 `json:"p95_mbps"`
+	P99    float64 `json:"p99_mbps"`
+
 	// 分级统计
-	Excellent  int `json:"excellent_count"`  // > 100 Mbps
-	Good       int `json:"good_count"`       // 50-100 Mbps
-	Average    int `json:"average_count"`    // 10-50 Mbps
-	Poor       int `json:"poor_count"`       // < 10 Mbps
+	Excellent int `json:"excellent_count"` // > 100 Mbps
+	Good      int `json:"good_count"`      // 50-100 Mbps
+	Average   int `json:"average_count"`   // 10-50 Mbps
+	Poor      int `json:"poor_count"`      // < 10 Mbps
 }
 
 // ProxyRanking represents a ranked proxy result
@@ -102,8 +102,8 @@ type TestResult struct {
 	Latency       time.Duration
 	Jitter        time.Duration
 	PacketLoss    float64
-	DownloadSpeed float64  // bytes per second
-	UploadSpeed   float64  // bytes per second
+	DownloadSpeed float64 // bytes per second
+	UploadSpeed   float64 // bytes per second
 	Success       bool
 	ErrorType     string
 	TestDuration  time.Duration
@@ -151,30 +151,30 @@ func (sc *StatisticsCalculator) Calculate() *TestStatistics {
 	for _, result := range sc.results {
 		// 统计协议分布
 		stats.ProtocolStats[result.ProxyType]++
-		
+
 		// 统计国家分布
 		if result.Country != "" {
 			stats.CountryStats[result.Country]++
 		}
-		
+
 		if result.Success {
 			stats.SuccessfulProxies++
 			successResults = append(successResults, result)
-			
+
 			if result.Latency > 0 {
 				latencies = append(latencies, float64(result.Latency.Milliseconds()))
 				jitters = append(jitters, float64(result.Jitter.Milliseconds()))
 				packetLosses = append(packetLosses, result.PacketLoss)
 			}
-			
+
 			if result.DownloadSpeed > 0 {
 				downloadSpeeds = append(downloadSpeeds, result.DownloadSpeed/(1024*1024)) // Convert to Mbps
 			}
-			
+
 			if result.UploadSpeed > 0 {
 				uploadSpeeds = append(uploadSpeeds, result.UploadSpeed/(1024*1024)) // Convert to Mbps
 			}
-			
+
 			if result.TestDuration > 0 {
 				testDurations = append(testDurations, result.TestDuration)
 			}
@@ -391,16 +391,16 @@ func calculatePercentile(values []float64, percentile int) float64 {
 	if percentile >= 100 {
 		return values[len(values)-1]
 	}
-	
+
 	index := float64(percentile) / 100.0 * float64(len(values)-1)
 	if index == float64(int(index)) {
 		return values[int(index)]
 	}
-	
+
 	lower := int(math.Floor(index))
 	upper := int(math.Ceil(index))
 	weight := index - float64(lower)
-	
+
 	return values[lower]*(1-weight) + values[upper]*weight
 }
 
@@ -409,11 +409,11 @@ func FormatDuration(d time.Duration) string {
 	if d == 0 {
 		return "0s"
 	}
-	
+
 	hours := int(d.Hours())
 	minutes := int(d.Minutes()) % 60
 	seconds := int(d.Seconds()) % 60
-	
+
 	if hours > 0 {
 		return fmt.Sprintf("%dh %dm %ds", hours, minutes, seconds)
 	} else if minutes > 0 {
@@ -434,21 +434,21 @@ func (stats *TestStatistics) ToJSON() (string, error) {
 // GetSummary returns a brief summary of the statistics
 func (stats *TestStatistics) GetSummary() string {
 	successRate := float64(stats.SuccessfulProxies) / float64(stats.TotalProxies) * 100
-	
+
 	summary := fmt.Sprintf("Test Summary: %d/%d proxies tested successfully (%.1f%%)",
 		stats.SuccessfulProxies, stats.TotalProxies, successRate)
-	
+
 	if stats.LatencyStats != nil {
 		summary += fmt.Sprintf(", Avg Latency: %.1fms", stats.LatencyStats.Mean)
 	}
-	
+
 	if stats.DownloadStats != nil {
 		summary += fmt.Sprintf(", Avg Download: %.1f Mbps", stats.DownloadStats.Mean)
 	}
-	
+
 	if stats.UploadStats != nil {
 		summary += fmt.Sprintf(", Avg Upload: %.1f Mbps", stats.UploadStats.Mean)
 	}
-	
+
 	return summary
 }

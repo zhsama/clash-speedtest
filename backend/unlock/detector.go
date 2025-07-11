@@ -14,9 +14,9 @@ import (
 type TestMode string
 
 const (
-	TestModeSpeedOnly  TestMode = "speed_only"   // 仅测速
-	TestModeUnlockOnly TestMode = "unlock_only"  // 仅解锁
-	TestModeBoth       TestMode = "both"         // 两者都测（默认）
+	TestModeSpeedOnly  TestMode = "speed_only"  // 仅测速
+	TestModeUnlockOnly TestMode = "unlock_only" // 仅解锁
+	TestModeBoth       TestMode = "both"        // 两者都测（默认）
 )
 
 // UnlockStatus 解锁状态枚举
@@ -31,12 +31,12 @@ const (
 
 // UnlockResult 单个平台的解锁检测结果
 type UnlockResult struct {
-	Platform  string       `json:"platform"`      // 平台名称
-	Status    UnlockStatus `json:"status"`        // 状态
-	Region    string       `json:"region"`        // 解锁地区
-	Message   string       `json:"message"`       // 额外信息
-	Latency   int64        `json:"latency_ms"`    // 检测延迟
-	CheckedAt time.Time    `json:"checked_at"`    // 检测时间
+	Platform  string       `json:"platform"`   // 平台名称
+	Status    UnlockStatus `json:"status"`     // 状态
+	Region    string       `json:"region"`     // 解锁地区
+	Message   string       `json:"message"`    // 额外信息
+	Latency   int64        `json:"latency_ms"` // 检测延迟
+	CheckedAt time.Time    `json:"checked_at"` // 检测时间
 }
 
 // UnlockTestConfig 解锁检测配置
@@ -101,10 +101,10 @@ func NewDetector(config *UnlockTestConfig) *Detector {
 		detectors: make(map[string]UnlockDetector),
 		cache:     NewUnlockCache(),
 	}
-	
+
 	// 注册默认检测器
 	detector.registerDefaultDetectors()
-	
+
 	return detector
 }
 
@@ -123,7 +123,7 @@ func (d *Detector) registerDefaultDetectors() {
 // Register 注册平台检测器
 func (d *Detector) Register(name string, detector UnlockDetector) {
 	d.detectors[name] = detector
-	logger.Logger.Debug("Registered unlock detector", 
+	logger.Logger.Debug("Registered unlock detector",
 		slog.String("platform", name),
 		slog.Int("priority", detector.GetPriority()),
 	)
@@ -143,22 +143,22 @@ func (d *Detector) DetectAll(proxy constant.Proxy, platforms []string) []UnlockR
 	if !d.config.Enabled {
 		return []UnlockResult{}
 	}
-	
+
 	logger.Logger.Info("Starting unlock detection",
 		slog.String("proxy_name", proxy.Name()),
 		slog.Int("platform_count", len(platforms)),
 		slog.Int("concurrent", d.config.Concurrent),
 	)
-	
+
 	start := time.Now()
 	results := d.executeDetection(proxy, platforms)
-	
+
 	logger.Logger.Info("Unlock detection completed",
 		slog.String("proxy_name", proxy.Name()),
 		slog.Int("detected_platforms", len(results)),
 		slog.String("duration", time.Since(start).String()),
 	)
-	
+
 	return results
 }
 
@@ -166,33 +166,33 @@ func (d *Detector) DetectAll(proxy constant.Proxy, platforms []string) []UnlockR
 func (d *Detector) executeDetection(proxy constant.Proxy, platforms []string) []UnlockResult {
 	results := make([]UnlockResult, 0, len(platforms))
 	resultsChan := make(chan UnlockResult, len(platforms))
-	
+
 	var wg sync.WaitGroup
 	controller := NewConcurrencyController(d.config.Concurrent)
-	
+
 	// 按优先级排序平台
 	sortedPlatforms := d.sortByPriority(platforms)
-	
+
 	for _, platform := range sortedPlatforms {
 		wg.Add(1)
 		go func(p string) {
 			defer wg.Done()
 			controller.Acquire()
 			defer controller.Release()
-			
+
 			result := d.detectPlatform(proxy, p)
 			resultsChan <- *result
 		}(platform)
 	}
-	
+
 	wg.Wait()
 	close(resultsChan)
-	
+
 	// 收集结果
 	for result := range resultsChan {
 		results = append(results, result)
 	}
-	
+
 	return results
 }
 
@@ -201,13 +201,13 @@ func (d *Detector) detectPlatform(proxy constant.Proxy, platform string) *Unlock
 	// 检查缓存
 	cacheKey := fmt.Sprintf("%s:%s", proxy.Name(), platform)
 	if cached := d.cache.Get(cacheKey); cached != nil {
-		logger.Logger.Debug("Using cached unlock result", 
+		logger.Logger.Debug("Using cached unlock result",
 			slog.String("proxy_name", proxy.Name()),
 			slog.String("platform", platform),
 		)
 		return cached
 	}
-	
+
 	detector, exists := d.detectors[platform]
 	if !exists {
 		return &UnlockResult{
@@ -217,56 +217,56 @@ func (d *Detector) detectPlatform(proxy constant.Proxy, platform string) *Unlock
 			CheckedAt: time.Now(),
 		}
 	}
-	
-	logger.Logger.Debug("Starting platform detection", 
+
+	logger.Logger.Debug("Starting platform detection",
 		slog.String("proxy_name", proxy.Name()),
 		slog.String("platform", platform),
 	)
-	
+
 	start := time.Now()
 	timeout := time.Duration(d.config.Timeout) * time.Second
-	
+
 	var result *UnlockResult
 	if d.config.RetryOnError {
 		result = d.detectWithRetry(detector, proxy, timeout, 2)
 	} else {
 		result = detector.Detect(proxy, timeout)
 	}
-	
+
 	result.Latency = time.Since(start).Milliseconds()
 	result.CheckedAt = time.Now()
-	
+
 	// 缓存结果
 	d.cache.Set(cacheKey, result)
-	
-	logger.Logger.Debug("Platform detection completed", 
+
+	logger.Logger.Debug("Platform detection completed",
 		slog.String("proxy_name", proxy.Name()),
 		slog.String("platform", platform),
 		slog.String("status", string(result.Status)),
 		slog.String("region", result.Region),
 		slog.Int64("latency_ms", result.Latency),
 	)
-	
+
 	return result
 }
 
 // detectWithRetry 带重试的检测
 func (d *Detector) detectWithRetry(detector UnlockDetector, proxy constant.Proxy, timeout time.Duration, maxRetries int) *UnlockResult {
 	var lastResult *UnlockResult
-	
+
 	for i := 0; i <= maxRetries; i++ {
 		result := detector.Detect(proxy, timeout)
-		
+
 		if result.Status != StatusError {
 			return result
 		}
-		
+
 		lastResult = result
-		
+
 		// 指数退避
 		if i < maxRetries {
 			sleepDuration := time.Duration(1<<uint(i)) * time.Second
-			logger.Logger.Debug("Retrying platform detection", 
+			logger.Logger.Debug("Retrying platform detection",
 				slog.String("platform", detector.GetPlatformName()),
 				slog.Int("attempt", i+1),
 				slog.String("sleep_duration", sleepDuration.String()),
@@ -274,7 +274,7 @@ func (d *Detector) detectWithRetry(detector UnlockDetector, proxy constant.Proxy
 			time.Sleep(sleepDuration)
 		}
 	}
-	
+
 	lastResult.Message = fmt.Sprintf("Failed after %d retries: %s", maxRetries, lastResult.Message)
 	return lastResult
 }
@@ -285,9 +285,9 @@ func (d *Detector) sortByPriority(platforms []string) []string {
 		name     string
 		priority int
 	}
-	
+
 	prioritized := make([]platformPriority, 0, len(platforms))
-	
+
 	for _, platform := range platforms {
 		priority := 3 // 默认低优先级
 		if detector, exists := d.detectors[platform]; exists {
@@ -298,7 +298,7 @@ func (d *Detector) sortByPriority(platforms []string) []string {
 			priority: priority,
 		})
 	}
-	
+
 	// 排序：优先级数字越小越优先
 	for i := 0; i < len(prioritized)-1; i++ {
 		for j := i + 1; j < len(prioritized); j++ {
@@ -307,12 +307,12 @@ func (d *Detector) sortByPriority(platforms []string) []string {
 			}
 		}
 	}
-	
+
 	result := make([]string, len(prioritized))
 	for i, p := range prioritized {
 		result[i] = p.name
 	}
-	
+
 	return result
 }
 
@@ -321,7 +321,7 @@ func GetUnlockSummary(results []UnlockResult) string {
 	if len(results) == 0 {
 		return "N/A"
 	}
-	
+
 	var unlocked []string
 	for _, result := range results {
 		if result.Status == StatusUnlocked {
@@ -332,11 +332,11 @@ func GetUnlockSummary(results []UnlockResult) string {
 			}
 		}
 	}
-	
+
 	if len(unlocked) == 0 {
 		return "None"
 	}
-	
+
 	// 限制摘要长度
 	summary := ""
 	for i, item := range unlocked {
@@ -344,14 +344,14 @@ func GetUnlockSummary(results []UnlockResult) string {
 			summary += ", "
 		}
 		summary += item
-		
+
 		// 如果摘要太长，截断并添加省略号
 		if len(summary) > 100 && i < len(unlocked)-1 {
 			summary += "..."
 			break
 		}
 	}
-	
+
 	return summary
 }
 

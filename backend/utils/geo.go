@@ -95,8 +95,8 @@ func (g *GeoService) GetLocationByIP(ip string) (*GeoLocation, error) {
 	}
 
 	url := fmt.Sprintf("%s/%s?fields=status,message,country,countryCode,region,regionName,city,zip,lat,lon,timezone,isp,org,as,query", g.baseURL, ip)
-	
-	logger.Logger.Debug("Fetching geo location", 
+
+	logger.Logger.Debug("Fetching geo location",
 		slog.String("ip", ip),
 		slog.String("url", url),
 	)
@@ -122,7 +122,7 @@ func (g *GeoService) GetLocationByIP(ip string) (*GeoLocation, error) {
 		return nil, fmt.Errorf("geo API returned error for IP %s: %s", ip, location.Message)
 	}
 
-	logger.Logger.Debug("Geo location fetched successfully", 
+	logger.Logger.Debug("Geo location fetched successfully",
 		slog.String("ip", ip),
 		slog.String("country", location.Country),
 		slog.String("city", location.City),
@@ -188,7 +188,7 @@ func ExtractIPFromServer(server string) string {
 	// Try to resolve domain name to IP
 	ips, err := net.LookupIP(server)
 	if err != nil {
-		logger.Logger.Debug("Failed to resolve domain to IP", 
+		logger.Logger.Debug("Failed to resolve domain to IP",
 			slog.String("domain", server),
 			slog.String("error", err.Error()),
 		)

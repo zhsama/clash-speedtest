@@ -21,12 +21,12 @@ func createHTTPClient(proxy constant.Proxy, timeout time.Duration) *http.Client 
 			if err != nil {
 				return nil, err
 			}
-			
+
 			var u16Port uint16
 			if portNum, err := strconv.ParseUint(port, 10, 16); err == nil {
 				u16Port = uint16(portNum)
 			}
-			
+
 			return proxy.DialContext(ctx, &constant.Metadata{
 				Host:    host,
 				DstPort: u16Port,
@@ -35,7 +35,7 @@ func createHTTPClient(proxy constant.Proxy, timeout time.Duration) *http.Client 
 		TLSHandshakeTimeout:   timeout,
 		ResponseHeaderTimeout: timeout,
 	}
-	
+
 	return &http.Client{
 		Timeout:   timeout,
 		Transport: transport,
@@ -55,15 +55,15 @@ func makeRequest(client *http.Client, method, url string, headers map[string]str
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// 设置默认的User-Agent
 	req.Header.Set("User-Agent", getRandomUserAgent())
-	
+
 	// 设置额外的请求头
 	for key, value := range headers {
 		req.Header.Set(key, value)
 	}
-	
+
 	// 设置通用请求头以模拟真实浏览器
 	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8")
 	req.Header.Set("Accept-Language", "en-US,en;q=0.5")
@@ -71,7 +71,7 @@ func makeRequest(client *http.Client, method, url string, headers map[string]str
 	req.Header.Set("DNT", "1")
 	req.Header.Set("Connection", "keep-alive")
 	req.Header.Set("Upgrade-Insecure-Requests", "1")
-	
+
 	return client.Do(req)
 }
 
@@ -84,7 +84,7 @@ func getRandomUserAgent() string {
 		"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15",
 		"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0",
 	}
-	
+
 	// 简单的时间基准选择
 	index := int(time.Now().UnixNano()) % len(userAgents)
 	return userAgents[index]
@@ -140,7 +140,7 @@ func (b *BaseDetector) createErrorResult(message string, err error) *UnlockResul
 	if err != nil {
 		fullMessage = fmt.Sprintf("%s: %v", message, err)
 	}
-	
+
 	return &UnlockResult{
 		Platform: b.platformName,
 		Status:   StatusError,

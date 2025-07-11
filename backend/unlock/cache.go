@@ -22,10 +22,10 @@ func NewUnlockCache() *UnlockCache {
 	cache := &UnlockCache{
 		ttl: 30 * time.Minute, // 缓存有效期30分钟
 	}
-	
+
 	// 启动清理goroutine
 	go cache.startCleanup()
-	
+
 	return cache
 }
 
@@ -44,13 +44,13 @@ func (c *UnlockCache) Get(key string) *UnlockResult {
 	if !exists {
 		return nil
 	}
-	
+
 	cached := value.(*CachedResult)
 	if time.Now().After(cached.ExpiresAt) {
 		c.cache.Delete(key)
 		return nil
 	}
-	
+
 	return cached.Result
 }
 
@@ -66,7 +66,7 @@ func (c *UnlockCache) Clear() {
 func (c *UnlockCache) startCleanup() {
 	ticker := time.NewTicker(10 * time.Minute) // 每10分钟清理一次
 	defer ticker.Stop()
-	
+
 	for range ticker.C {
 		c.cleanupExpired()
 	}
@@ -76,7 +76,7 @@ func (c *UnlockCache) startCleanup() {
 func (c *UnlockCache) cleanupExpired() {
 	now := time.Now()
 	var keysToDelete []interface{}
-	
+
 	c.cache.Range(func(key, value interface{}) bool {
 		cached := value.(*CachedResult)
 		if now.After(cached.ExpiresAt) {
@@ -84,7 +84,7 @@ func (c *UnlockCache) cleanupExpired() {
 		}
 		return true
 	})
-	
+
 	for _, key := range keysToDelete {
 		c.cache.Delete(key)
 	}

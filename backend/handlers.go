@@ -9,6 +9,7 @@ import (
 
 	"github.com/faceair/clash-speedtest/logger"
 	"github.com/faceair/clash-speedtest/speedtester"
+	"github.com/faceair/clash-speedtest/utils"
 )
 
 // generateTaskID generates a unique task ID
@@ -42,4 +43,47 @@ func sendSuccess(w http.ResponseWriter, results []*speedtester.Result) {
 		Success: true,
 		Results: results,
 	})
+}
+
+// handleTUNCheck handles TUN mode detection requests
+func handleTUNCheck(w http.ResponseWriter, r *http.Request) {
+	logger.Logger.Info("TUN 模式检测请求")
+	
+	status := utils.CheckTUNMode()
+	
+	w.Header().Set("Content-Type", "application/json")
+	
+	response := map[string]any{
+		"success":    true,
+		"tun_status": status,
+		"warning":    "",
+	}
+	
+	// 如果检测到 TUN 模式启用，添加警告信息
+	if status.Enabled {
+		warning := "检测到系统已启用 TUN 模式！"
+		if status.ActiveInterface != nil {
+			warning += fmt.Sprintf(" 活动接口: %s", status.ActiveInterface.Name)
+		}
+		if len(status.ProxyProcesses) > 0 {
+			warning += fmt.Sprintf(" 检测到代理进程: %s", status.ProxyProcesses[0].Name)
+		}
+		warning += " 建议在进行速度测试前先关闭 TUN 模式，以获得更准确的测试结果。"
+		
+		response["warning"] = warning
+		
+		logger.Logger.Warn("检测到 TUN 模式已启用",
+			slog.String("active_interface", func() string {
+				if status.ActiveInterface != nil {
+					return status.ActiveInterface.Name
+				}
+				return "unknown"
+			}()),
+			slog.Int("proxy_processes", len(status.ProxyProcesses)),
+		)
+	} else {
+		logger.Logger.Info("未检测到 TUN 模式")
+	}
+	
+	json.NewEncoder(w).Encode(response)
 }

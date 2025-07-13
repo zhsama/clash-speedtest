@@ -20,6 +20,7 @@ import {
 } from "lucide-react"
 import ClientIcon from "./ClientIcon"
 import RealTimeProgressTable from "./RealTimeProgressTable"
+import TUNWarning from "./TUNWarning"
 import { useWebSocket } from "../hooks/useWebSocket"
 import { config } from "@/lib/env"
 import {
@@ -305,6 +306,7 @@ export default function SpeedTestPro() {
   const [loading, setLoading] = useState(false)
   const [testing, setTesting] = useState(false)
   const [taskId, setTaskId] = useState<string | null>(null)
+  const [tunModeEnabled, setTunModeEnabled] = useState(false)
   
   const [filterConfig, setFilterConfig] = useState<FilterConfig>({
     includeNodes: [],
@@ -534,6 +536,23 @@ export default function SpeedTestPro() {
       return
     }
     
+    // 检查TUN模式状态
+    if (tunModeEnabled) {
+      toast.warning("检测到 TUN 模式已启用", {
+        description: "建议先关闭 TUN 模式以获得更准确的测试结果",
+        duration: 5000,
+      })
+      
+      // 可以选择是否继续测试
+      const confirmed = window.confirm(
+        "检测到系统已启用 TUN 模式，这可能影响测试结果的准确性。\n\n是否仍要继续测试？"
+      )
+      
+      if (!confirmed) {
+        return
+      }
+    }
+    
     setTesting(true)
     clearData()
     
@@ -621,6 +640,12 @@ export default function SpeedTestPro() {
           </h1>
           <p className="text-gray-400">专业的代理节点性能测试工具</p>
         </div>
+        
+        {/* TUN 模式检测警告 */}
+        <TUNWarning 
+          onTUNStatusChange={setTunModeEnabled}
+          showDetails={false}
+        />
         
         <Card className="glass-morphism border-gray-800 mb-6">
           <div className="p-6">

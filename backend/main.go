@@ -110,6 +110,7 @@ func main() {
 	http.HandleFunc("/api/export", loggingMiddleware(handleExportResults))
 	http.HandleFunc("/api/logs", loggingMiddleware(handleLogManagement))
 	http.HandleFunc("/api/health", loggingMiddleware(handleHealth))
+	http.HandleFunc("/api/tun-check", loggingMiddleware(handleTUNCheck))
 	http.HandleFunc("/ws", loggingMiddleware(wsHub.HandleWebSocket))
 
 	// Enable CORS

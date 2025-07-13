@@ -24,7 +24,7 @@ type TUNStatus struct {
 	DefaultRoute      *RouteInfo             `json:"default_route"`       // 默认路由信息
 	DetectionTime     time.Time              `json:"detection_time"`      // 检测时间
 	SystemInfo        SystemInfo             `json:"system_info"`         // 系统信息
-	AdditionalDetails map[string]interface{} `json:"additional_details"`  // 额外的检测信息
+	AdditionalDetails map[string]any `json:"additional_details"`  // 额外的检测信息
 }
 
 // TUNInterface 表示 TUN 网络接口信息
@@ -67,7 +67,7 @@ func CheckTUNMode() *TUNStatus {
 	
 	status := &TUNStatus{
 		DetectionTime:     time.Now(),
-		AdditionalDetails: make(map[string]interface{}),
+		AdditionalDetails: make(map[string]any),
 	}
 	
 	// 获取系统信息
@@ -335,7 +335,7 @@ func parseDefaultRoute(output, osType string) *RouteInfo {
 		// Windows 路由格式解析（简化）
 		for scanner.Scan() {
 			line := strings.TrimSpace(scanner.Text())
-			if strings.Contains(line, "0.0.0.0") && strings.Contains(line, "0.0.0.0") {
+			if strings.Contains(line, "0.0.0.0") && strings.Contains(line, "255.255.255.255") {
 				// 简化的 Windows 路由解析
 				fields := strings.Fields(line)
 				if len(fields) >= 3 {
@@ -400,10 +400,10 @@ func determineTUNModeStatus(status *TUNStatus) bool {
 }
 
 // GetTUNModeDetails 获取 TUN 模式的详细信息（简化版本）
-func GetTUNModeDetails() map[string]interface{} {
+func GetTUNModeDetails() map[string]any {
 	status := CheckTUNMode()
 	
-	return map[string]interface{}{
+	return map[string]any{
 		"enabled":            status.Enabled,
 		"interface_count":    len(status.Interfaces),
 		"active_interface":   status.ActiveInterface,

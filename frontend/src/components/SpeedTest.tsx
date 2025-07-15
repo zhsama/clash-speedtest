@@ -71,11 +71,11 @@ const SpeedTestConfig = ({ testConfig, setTestConfig, filterConfig, setFilterCon
   setFilterConfig: React.Dispatch<React.SetStateAction<FilterConfig>>;
 }) => (
   <div className="form-element">
-    <h4 className="form-element-label flex items-center gap-2">
-      <ClientIcon icon={Download} className="h-5 w-5 text-shamrock-400" />
+    <h4 className="text-lg font-semibold text-lavender-50 flex items-center gap-2 mb-2">
+      <ClientIcon icon={Download} className="h-5 w-5 text-lavender-400" />
       服务器测速配置
     </h4>
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 component-gap form-element">
+    <div className="space-y-2">
       <div>
         <label className="form-element-label">
           测试服务器
@@ -144,12 +144,12 @@ const SpeedTestConfig = ({ testConfig, setTestConfig, filterConfig, setFilterCon
     </div>
 
     {/* 速度过滤条件 */}
-    <div className="border-t border-shamrock-700 pt-4">
-      <h5 className="form-element-label flex items-center gap-2">
-        <ClientIcon icon={Filter} className="h-4 w-4 text-shamrock-400" />
+    <div className="border-t border-lavender-600 pt-4 mt-4">
+      <h4 className="text-lg font-semibold text-lavender-50 flex items-center gap-2 mb-2">
+        <ClientIcon icon={Filter} className="h-4 w-4 text-lavender-400" />
         速度过滤条件
-      </h5>
-      <div className="grid grid-cols-1 md:grid-cols-3 component-gap">
+      </h4>
+      <div className="space-y-2">
         <div>
           <label className="form-element-label">
             最低下载速度: {filterConfig.minDownloadSpeed} MB/s
@@ -211,13 +211,13 @@ const UnlockTestConfig = ({ testConfig, setTestConfig, hasSpeedConfig }: {
   setTestConfig: React.Dispatch<React.SetStateAction<TestConfig>>;
   hasSpeedConfig: boolean;
 }) => (
-  <div className={`form-element ${hasSpeedConfig ? "border-t border-shamrock-700 pt-4" : ""}`}>
-    <h4 className="form-element-label flex items-center gap-2">
-      <ClientIcon icon={Globe} className="h-5 w-5 text-shamrock-400" />
+  <div className={`form-element ${hasSpeedConfig ? "border-t border-lavender-700 pt-4" : ""}`}>
+    <h4 className="text-lg font-semibold text-lavender-50 flex items-center gap-2 mb-2">
+      <ClientIcon icon={Globe} className="h-5 w-5 text-lavender-400" />
       流媒体解锁检测
     </h4>
     
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 component-gap">
+    <div className="space-y-2">
       <div>
         <label className="form-element-label">
           解锁检测并发数: {testConfig.unlockConcurrent}
@@ -272,7 +272,7 @@ const UnlockTestConfig = ({ testConfig, setTestConfig, hasSpeedConfig }: {
               }}
               className="checkbox-dark"
             />
-            <span className="text-shamrock-100 text-sm truncate">{platform}</span>
+            <span className="text-lavender-100 text-sm truncate">{platform}</span>
           </label>
         ))}
       </div>
@@ -648,7 +648,7 @@ export default function SpeedTestPro() {
           <h1 className="text-4xl font-bold mb-3">
             <span className="text-gradient">Clash SpeedTest Pro</span>
           </h1>
-          <p className="text-shamrock-400">专业的代理节点性能测试工具</p>
+          <p className="text-lavender-400">专业的代理节点性能测试工具</p>
         </div>
         
         {/* TUN 模式检测警告 */}
@@ -660,18 +660,18 @@ export default function SpeedTestPro() {
         {/* 配置获取 */}
         <Card className="card-standard">
           <div className="flex items-center gap-2 form-element">
-            <ClientIcon icon={Globe} className="h-5 w-5 text-shamrock-400" />
-            <h2 className="text-lg font-semibold text-shamrock-50">配置获取</h2>
+            <ClientIcon icon={Globe} className="h-5 w-5 text-lavender-400" />
+            <h2 className="text-lg font-semibold text-lavender-50">配置获取</h2>
             <div className="ml-auto">
               {isConnected ? (
                 <div className="status-indicator">
                   <div className="status-dot success animate-pulse" />
-                  <span className="text-shamrock-300 text-sm">WebSocket 已连接</span>
+                  <span className="text-lavender-300 text-sm">WebSocket 已连接</span>
                 </div>
               ) : (
                 <div className="status-indicator">
                   <div className="status-dot error" />
-                  <span className="text-shamrock-300 text-sm">WebSocket 未连接</span>
+                  <span className="text-lavender-300 text-sm">WebSocket 未连接</span>
                 </div>
               )}
             </div>
@@ -713,7 +713,7 @@ export default function SpeedTestPro() {
                 符合条件: {filteredNodes.length}
               </span>
               {testing && (
-                <span className="badge-standard bg-shamrock-600 text-shamrock-50">
+                <span className="badge-standard bg-lavender-600 text-lavender-50">
                   测试中...
                 </span>
               )}
@@ -726,39 +726,39 @@ export default function SpeedTestPro() {
           {/* 左侧面板 - 节点列表和测试结果 */}
           <div className="lg:col-span-2 space-y-6">
             {/* 节点列表预览 */}
-            {nodes.length > 0 && (
-              <Card className="card-standard">
-                <div className="flex items-center justify-between form-element">
-                  <h2 className="text-lg font-semibold text-shamrock-50 flex items-center gap-2">
-                    <ClientIcon icon={ServerCog} className="h-5 w-5 text-shamrock-400" />
-                    节点列表 {testing ? '(测试中)' : '(预览)'}
-                  </h2>
-                  <Button
-                    onClick={() => applyFilters()}
-                    variant="outline"
-                    size="sm"
-                    className="button-standard"
-                    disabled={testing}
-                  >
-                    <ClientIcon icon={RefreshCw} className="h-4 w-4 mr-1" />
-                    刷新过滤
-                  </Button>
-                </div>
-                
-                <div className="table-standard max-h-96 overflow-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>节点名称</TableHead>
-                        <TableHead>类型</TableHead>
-                        <TableHead>服务器</TableHead>
-                        <TableHead>端口</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredNodes.map((node, index) => (
+            <Card className="card-standard">
+              <div className="flex items-center justify-between form-element">
+                <h2 className="text-lg font-semibold text-lavender-50 flex items-center gap-2">
+                  <ClientIcon icon={ServerCog} className="h-5 w-5 text-lavender-400" />
+                  节点列表 {testing ? '(测试中)' : '(预览)'}
+                </h2>
+                <Button
+                  onClick={() => applyFilters()}
+                  variant="outline"
+                  size="sm"
+                  className="button-standard"
+                  disabled={testing}
+                >
+                  <ClientIcon icon={RefreshCw} className="h-4 w-4 mr-1" />
+                  刷新过滤
+                </Button>
+              </div>
+              
+              <div className="table-standard max-h-96 overflow-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>节点名称</TableHead>
+                      <TableHead>类型</TableHead>
+                      <TableHead>服务器</TableHead>
+                      <TableHead>端口</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredNodes.length > 0 ? (
+                      filteredNodes.map((node, index) => (
                         <TableRow key={`${node.name}-${index}`}>
-                          <TableCell className="font-medium text-shamrock-50">
+                          <TableCell className="font-medium text-lavender-50">
                             <div className="truncate max-w-xs" title={node.name}>
                               {node.name}
                             </div>
@@ -768,19 +768,25 @@ export default function SpeedTestPro() {
                               {node.type}
                             </span>
                           </TableCell>
-                          <TableCell className="text-shamrock-300 font-mono text-sm">
+                          <TableCell className="text-lavender-300 font-mono text-sm">
                             {node.server}
                           </TableCell>
-                          <TableCell className="text-shamrock-300">
+                          <TableCell className="text-lavender-300">
                             {node.port}
                           </TableCell>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </Card>
-            )}
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center text-lavender-400 py-8">
+                          {nodes.length === 0 ? "暂无节点信息" : "没有符合条件的节点"}
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </Card>
 
             {/* 实时测试结果 */}
             {(testing || testResults.length > 0 || testCompleteData || testCancelledData) && (
@@ -796,16 +802,16 @@ export default function SpeedTestPro() {
           </div>
 
           {/* 右侧面板 - 测试配置和控制 */}
-          <div className="space-y-6">
+          <div className="space-y-4">
             {/* 测试配置 */}
             <Card className="card-standard">
-              <div className="flex items-center gap-2 form-element">
-                <ClientIcon icon={Filter} className="h-5 w-5 text-shamrock-400" />
-                <h2 className="text-lg font-semibold text-shamrock-50">测试配置</h2>
+              <div className="flex items-center gap-2 mb-2">
+                <ClientIcon icon={Filter} className="h-5 w-5 text-lavender-400" />
+                <h2 className="text-lg font-semibold text-lavender-50">测试配置</h2>
               </div>
               
               {/* 测试模式选择器 */}
-              <div className="form-element">
+              <div className="space-y-2">
                 <label className="form-element-label">
                   测试模式
                 </label>
@@ -821,7 +827,7 @@ export default function SpeedTestPro() {
                   <option value="speed_only">仅测速</option>
                   <option value="unlock_only">仅解锁检测</option>
                 </select>
-                <p className="text-sm text-shamrock-400 mt-2">
+                <p className="text-sm text-lavender-400 mt-2">
                   {testConfig.testMode === "both" && "同时进行速度测试和流媒体解锁检测"}
                   {testConfig.testMode === "speed_only" && "只进行网络速度测试，跳过解锁检测"}
                   {testConfig.testMode === "unlock_only" && "只进行流媒体解锁检测，跳过速度测试"}
@@ -851,12 +857,11 @@ export default function SpeedTestPro() {
 
             {/* 节点过滤条件 */}
             <Card className="card-standard">
-              <h3 className="form-element-label flex items-center gap-2">
-                <ClientIcon icon={Filter} className="h-4 w-4 text-shamrock-400" />
-                节点过滤条件
-              </h3>
+              <h4 className="text-lg font-semibold text-lavender-50 flex items-center gap-2 mb-2">
+                <ClientIcon icon={Filter} className="h-4 w-4 text-lavender-400" />
+                「方案选单」              </h4>
             
-              <div className="space-y-4">
+              <div className="space-y-2">
                 <div>
                   <label className="form-element-label">
                     包含节点 (逗号分隔)
@@ -901,7 +906,7 @@ export default function SpeedTestPro() {
                           />
                           <label 
                             htmlFor={`protocol-${protocol}`} 
-                            className="text-sm text-shamrock-100 cursor-pointer truncate"
+                            className="text-sm text-lavender-100 cursor-pointer truncate"
                           >
                             {protocol}
                           </label>
@@ -921,7 +926,7 @@ export default function SpeedTestPro() {
                     }))}
                     className="switch-dark"
                   />
-                  <label htmlFor="stashCompatible" className="text-shamrock-100">
+                  <label htmlFor="stashCompatible" className="text-lavender-100">
                     Stash 兼容模式
                   </label>
                 </div>
@@ -930,7 +935,7 @@ export default function SpeedTestPro() {
 
             {/* 高级配置 */}
             <details>
-              <summary className="cursor-pointer text-shamrock-300 hover:text-shamrock-100 transition-colors">
+              <summary className="cursor-pointer text-lavender-300 hover:text-lavender-100 transition-colors">
                 高级测试配置
               </summary>
               <Card className="card-standard mt-4">

@@ -86,7 +86,7 @@ export default function RealTimeProgressTable({
     else if (speedMbps >= 5) colorClass = "bg-orange-500";
     
     return (
-      <div className="w-full mt-1 bg-shamrock-800 rounded-full h-2">
+      <div className="w-full mt-1 bg-lavender-800 rounded-full h-2">
         <div 
           className={`h-full rounded-full transition-all duration-300 ${colorClass}`}
           style={{ width: `${percentage}%` }}
@@ -102,7 +102,7 @@ export default function RealTimeProgressTable({
       case "failed":
         return <XCircle className="h-4 w-4 text-red-400" />;
       default:
-        return <Loader2 className="h-4 w-4 text-shamrock-400 animate-spin" />;
+        return <Loader2 className="h-4 w-4 text-lavender-400 animate-spin" />;
     }
   };
 
@@ -121,7 +121,7 @@ export default function RealTimeProgressTable({
   // 获取解锁结果的格式化显示
   const formatUnlockResults = (unlockResults: UnlockResult[]) => {
     if (!unlockResults || unlockResults.length === 0) {
-      return <span className="text-shamrock-500 text-xs">-</span>
+      return <span className="text-lavender-500 text-xs">-</span>
     }
 
     const supported = unlockResults.filter(r => r.supported)
@@ -165,7 +165,7 @@ export default function RealTimeProgressTable({
   // 获取解锁摘要的格式化显示
   const formatUnlockSummary = (unlockSummary: any) => {
     if (!unlockSummary) {
-      return <span className="text-shamrock-500 text-xs">-</span>
+      return <span className="text-lavender-500 text-xs">-</span>
     }
 
     const { supported_platforms = [], total_tested = 0, total_supported = 0 } = unlockSummary
@@ -253,7 +253,7 @@ export default function RealTimeProgressTable({
         priority: 2,
         width: "min-w-48",
         formatter: (value) => (
-          <div className="truncate max-w-xs font-medium text-shamrock-50" title={value}>
+          <div className="truncate max-w-xs font-medium text-lavender-50" title={value}>
             {value}
           </div>
         )
@@ -278,7 +278,7 @@ export default function RealTimeProgressTable({
         icon: Globe,
         width: "w-32",
         formatter: (value) => (
-          <span className="text-shamrock-400 font-mono text-xs">
+          <span className="text-lavender-400 font-mono text-xs">
             {value || '-'}
           </span>
         )
@@ -338,7 +338,7 @@ export default function RealTimeProgressTable({
         priority: 8,
         width: "w-20",
         formatter: (value) => (
-          <span className="text-shamrock-400">
+          <span className="text-lavender-400">
             {value.toFixed(1)}%
           </span>
         )
@@ -387,7 +387,7 @@ export default function RealTimeProgressTable({
                 </Badge>
               )}
             </div>
-            <div className="text-xs text-shamrock-500 truncate" title={value}>
+            <div className="text-xs text-lavender-500 truncate" title={value}>
               {value}
             </div>
           </div>
@@ -506,13 +506,13 @@ export default function RealTimeProgressTable({
       {progress && (
         <Card className="card-standard">
           <div className="flex items-center justify-between form-element">
-            <h3 className="text-lg font-semibold text-shamrock-50 flex items-center gap-2">
-              <ClientIcon icon={TrendingUp} className="h-5 w-5 text-shamrock-400" />
+            <h3 className="text-lg font-semibold text-lavender-50 flex items-center gap-2">
+              <ClientIcon icon={TrendingUp} className="h-5 w-5 text-lavender-400" />
               测试进度
             </h3>
             <div className="flex items-center gap-2">
               <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`} />
-              <span className="text-sm text-shamrock-400">
+              <span className="text-sm text-lavender-400">
                 {isConnected ? '已连接' : '未连接'}
               </span>
             </div>
@@ -520,22 +520,22 @@ export default function RealTimeProgressTable({
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 form-element">
             <div className="text-center">
-              <div className="text-2xl font-bold text-shamrock-50">{progress.completed_count}</div>
-              <div className="text-sm text-shamrock-400">已完成</div>
+              <div className="text-2xl font-bold text-lavender-50">{progress.completed_count}</div>
+              <div className="text-sm text-lavender-400">已完成</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-shamrock-50">{progress.total_count}</div>
-              <div className="text-sm text-shamrock-400">总数</div>
+              <div className="text-2xl font-bold text-lavender-50">{progress.total_count}</div>
+              <div className="text-sm text-lavender-400">总数</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-shamrock-500">{progress.progress_percent.toFixed(1)}%</div>
-              <div className="text-sm text-shamrock-400">进度</div>
+              <div className="text-2xl font-bold text-lavender-500">{progress.progress_percent.toFixed(1)}%</div>
+              <div className="text-sm text-lavender-400">进度</div>
             </div>
           </div>
 
-          <div className="w-full bg-shamrock-800 rounded-full h-3 overflow-hidden form-element">
+          <div className="w-full bg-lavender-800 rounded-full h-3 overflow-hidden form-element">
             <div
-              className="h-full bg-shamrock-500 transition-all duration-300 ease-out"
+              className="h-full bg-lavender-500 transition-all duration-300 ease-out"
               style={{ width: `${progress.progress_percent}%` }}
             />
           </div>
@@ -543,8 +543,8 @@ export default function RealTimeProgressTable({
           <div className="space-y-2">
             {progress.current_proxy && (
               <div className="text-center">
-                <span className="text-sm text-shamrock-400">当前测试: </span>
-                <span className="text-sm text-shamrock-50 font-medium">{progress.current_proxy}</span>
+                <span className="text-sm text-lavender-400">当前测试: </span>
+                <span className="text-sm text-lavender-50 font-medium">{progress.current_proxy}</span>
               </div>
             )}
             {getCurrentStageDisplay(progress) && (
@@ -559,7 +559,7 @@ export default function RealTimeProgressTable({
       {/* Completion Summary */}
       {completeData && (
         <Card className="card-standard">
-          <h3 className="text-lg font-semibold text-shamrock-50 form-element flex items-center gap-2">
+          <h3 className="text-lg font-semibold text-lavender-50 form-element flex items-center gap-2">
             <ClientIcon icon={CheckCircle} className="h-5 w-5 text-green-400" />
             测试完成
             {testMode !== "both" && (
@@ -576,7 +576,7 @@ export default function RealTimeProgressTable({
             {getCompletionSummary(completeData, testMode).map((stat, index) => (
               <div key={index} className="text-center">
                 <div className={`text-xl font-bold ${stat.color}`}>{stat.value}</div>
-                <div className="text-xs text-shamrock-400">{stat.label}</div>
+                <div className="text-xs text-lavender-400">{stat.label}</div>
               </div>
             ))}
           </div>
@@ -585,8 +585,8 @@ export default function RealTimeProgressTable({
             const bestNode = getBestNodeInfo(completeData, testMode);
             return bestNode && (
               <div className="text-center text-sm">
-                <span className="text-shamrock-400">最佳节点: </span>
-                <span className="text-shamrock-50 font-medium">{bestNode.name}</span>
+                <span className="text-lavender-400">最佳节点: </span>
+                <span className="text-lavender-50 font-medium">{bestNode.name}</span>
                 <span className="text-green-400 ml-2">({bestNode.metric})</span>
               </div>
             );
@@ -597,7 +597,7 @@ export default function RealTimeProgressTable({
       {/* Cancellation Summary */}
       {cancelledData && (
         <Card className="card-standard">
-          <h3 className="text-lg font-semibold text-shamrock-50 form-element flex items-center gap-2">
+          <h3 className="text-lg font-semibold text-lavender-50 form-element flex items-center gap-2">
             <ClientIcon icon={XCircle} className="h-5 w-5 text-orange-400" />
             测试已取消
           </h3>
@@ -605,20 +605,20 @@ export default function RealTimeProgressTable({
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 form-element">
             <div className="text-center">
               <div className="text-xl font-bold text-orange-400">{cancelledData.completed_tests}</div>
-              <div className="text-xs text-shamrock-400">已完成</div>
+              <div className="text-xs text-lavender-400">已完成</div>
             </div>
             <div className="text-center">
-              <div className="text-xl font-bold text-shamrock-400">{cancelledData.total_tests}</div>
-              <div className="text-xs text-shamrock-400">总数</div>
+              <div className="text-xl font-bold text-lavender-400">{cancelledData.total_tests}</div>
+              <div className="text-xs text-lavender-400">总数</div>
             </div>
             <div className="text-center">
-              <div className="text-xl font-bold text-shamrock-500">{cancelledData.partial_duration}</div>
-              <div className="text-xs text-shamrock-400">用时</div>
+              <div className="text-xl font-bold text-lavender-500">{cancelledData.partial_duration}</div>
+              <div className="text-xs text-lavender-400">用时</div>
             </div>
           </div>
 
           <div className="text-center text-sm">
-            <span className="text-shamrock-400">取消原因: </span>
+            <span className="text-lavender-400">取消原因: </span>
             <span className="text-orange-400 font-medium">{cancelledData.message}</span>
           </div>
         </Card>
@@ -629,7 +629,7 @@ export default function RealTimeProgressTable({
         <Card className="card-standard">
           <div className="form-element">
             <div className="flex justify-between items-center form-element">
-              <h2 className="text-xl font-bold text-shamrock-50">实时测试结果</h2>
+              <h2 className="text-xl font-bold text-lavender-50">实时测试结果</h2>
               <div className="flex items-center gap-3">
                 <Badge variant="outline" className="badge-standard">
                   {results.length} 个结果
@@ -650,7 +650,7 @@ export default function RealTimeProgressTable({
                 <TableHeader>
                   <TableRow>
                     {visibleColumns.map((column) => (
-                      <TableHead key={column.key} className={`text-shamrock-400 ${column.width || ''}`}>
+                      <TableHead key={column.key} className={`text-lavender-400 ${column.width || ''}`}>
                         <div className="flex items-center gap-1">
                           {column.icon && <ClientIcon icon={column.icon} className="h-4 w-4" />}
                           {column.header}
@@ -672,7 +672,7 @@ export default function RealTimeProgressTable({
                             : (() => {
                                 const value = result[column.key as keyof TestResultData];
                                 if (Array.isArray(value) || typeof value === 'object') {
-                                  return <span className="text-shamrock-500 text-xs">-</span>;
+                                  return <span className="text-lavender-500 text-xs">-</span>;
                                 }
                                 return value;
                               })()
@@ -692,9 +692,9 @@ export default function RealTimeProgressTable({
       {results.length === 0 && !progress && (
         <Card className="card-standard">
           <div className="text-center py-12">
-            <ClientIcon icon={Zap} className="h-12 w-12 text-shamrock-600 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-shamrock-400 mb-2">等待测试开始</h3>
-            <p className="text-sm text-shamrock-500">
+            <ClientIcon icon={Zap} className="h-12 w-12 text-lavender-600 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-lavender-400 mb-2">等待测试开始</h3>
+            <p className="text-sm text-lavender-500">
               {`点击"开始测试"按钮开始代理${testMode === "speed_only" ? "速度" : testMode === "unlock_only" ? "解锁" : "速度和解锁"}测试，结果将在此处实时显示`}
             </p>
           </div>

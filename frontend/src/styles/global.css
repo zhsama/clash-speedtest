@@ -2,74 +2,87 @@
 
 @layer base {
   :root {
-    --shamrock-50: 144 85% 90%;
-    --shamrock-100: 147 88% 77%;
-    --shamrock-200: 149 69% 67%;
-    --shamrock-300: 149 55% 61%;
-    --shamrock-400: 149 40% 54%;
-    --shamrock-500: 150 35% 45%;
-    --shamrock-600: 150 37% 36%;
-    --shamrock-700: 149 39% 27%;
-    --shamrock-800: 149 41% 18%;
-    --shamrock-900: 150 52% 9%;
-    --shamrock-950: 148 60% 5%;
-    
+    --lavender-50: 144 85% 90%;
+    --lavender-100: 147 88% 77%;
+    --lavender-200: 149 69% 67%;
+    --lavender-300: 149 55% 61%;
+    --lavender-400: 149 40% 54%;
+    --lavender-500: 150 35% 45%;
+    --lavender-600: 150 37% 36%;
+    --lavender-700: 149 39% 27%;
+    --lavender-800: 149 41% 18%;
+    --lavender-900: 150 52% 9%;
+    --lavender-950: 148 60% 5%;
+
+    /* 优雅薰衣草紫配色 */
+    --lavender-50: 280 44% 98%;
+    --lavender-100: 280 40% 95%;
+    --lavender-200: 280 35% 90%;
+    --lavender-300: 280 30% 82%;
+    --lavender-400: 280 25% 74%;
+    --lavender-500: 280 20% 66%;
+    --lavender-600: 280 18% 58%;
+    --lavender-700: 280 20% 48%;
+    --lavender-800: 280 25% 38%;
+    --lavender-900: 280 30% 28%;
+    --lavender-950: 280 35% 18%;
+
     /* 统一间距标准 */
-    --spacing-xs: 0.25rem;    /* 4px */
-    --spacing-sm: 0.5rem;     /* 8px */
-    --spacing-md: 1rem;       /* 16px */
-    --spacing-lg: 1.5rem;     /* 24px */
-    --spacing-xl: 2rem;       /* 32px */
-    --spacing-2xl: 3rem;      /* 48px */
-    
+    --spacing-xs: 0.25rem; /* 4px */
+    --spacing-sm: 0.5rem; /* 8px */
+    --spacing-md: 1rem; /* 16px */
+    --spacing-lg: 1.5rem; /* 24px */
+    --spacing-xl: 2rem; /* 32px */
+    --spacing-2xl: 3rem; /* 48px */
+
     /* 组件间距 */
     --component-gap: var(--spacing-lg);
     --section-gap: var(--spacing-xl);
     --card-padding: var(--spacing-lg);
     --form-element-spacing: var(--spacing-md);
-    
+
     --background: 0 0% 100%;
-    --foreground: var(--shamrock-950);
+    --foreground: var(--lavender-950);
     --card: 0 0% 100%;
-    --card-foreground: var(--shamrock-950);
+    --card-foreground: var(--lavender-950);
     --popover: 0 0% 100%;
-    --popover-foreground: var(--shamrock-950);
-    --primary: var(--shamrock-600);
-    --primary-foreground: var(--shamrock-50);
-    --secondary: var(--shamrock-100);
-    --secondary-foreground: var(--shamrock-800);
-    --muted: var(--shamrock-100);
-    --muted-foreground: var(--shamrock-600);
-    --accent: var(--shamrock-200);
-    --accent-foreground: var(--shamrock-800);
+    --popover-foreground: var(--lavender-950);
+    --primary: var(--lavender-600);
+    --primary-foreground: var(--lavender-50);
+    --secondary: var(--lavender-100);
+    --secondary-foreground: var(--lavender-800);
+    --muted: var(--lavender-100);
+    --muted-foreground: var(--lavender-600);
+    --accent: var(--lavender-200);
+    --accent-foreground: var(--lavender-800);
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: var(--shamrock-200);
-    --input: var(--shamrock-200);
-    --ring: var(--shamrock-500);
+    --border: var(--lavender-200);
+    --input: var(--lavender-200);
+    --ring: var(--lavender-500);
     --radius: 0.5rem;
   }
 
   .dark {
-    --background: var(--shamrock-950);
-    --foreground: var(--shamrock-50);
-    --card: var(--shamrock-900);
-    --card-foreground: var(--shamrock-50);
-    --popover: var(--shamrock-900);
-    --popover-foreground: var(--shamrock-50);
-    --primary: var(--shamrock-400);
-    --primary-foreground: var(--shamrock-950);
-    --secondary: var(--shamrock-800);
-    --secondary-foreground: var(--shamrock-100);
-    --muted: var(--shamrock-800);
-    --muted-foreground: var(--shamrock-400);
-    --accent: var(--shamrock-700);
-    --accent-foreground: var(--shamrock-100);
+    --background: 0 0% 0%;
+    --foreground: var(--lavender-50);
+    --card: 0 0% 5%;
+    --card-foreground: var(--lavender-50);
+    --popover: 0 0% 5%;
+    --popover-foreground: var(--lavender-50);
+    --primary: var(--lavender-400);
+    --primary-foreground: var(--lavender-950);
+    --secondary: var(--lavender-800);
+    --secondary-foreground: var(--lavender-100);
+    --muted: var(--lavender-800);
+    --muted-foreground: var(--lavender-400);
+    --accent: var(--lavender-700);
+    --accent-foreground: var(--lavender-100);
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: var(--shamrock-50);
-    --border: var(--shamrock-700);
-    --input: var(--shamrock-700);
-    --ring: var(--shamrock-400);
+    --destructive-foreground: var(--lavender-50);
+    --border: var(--lavender-700);
+    --input: var(--lavender-700);
+    --ring: var(--lavender-400);
   }
 }
 
@@ -89,11 +102,11 @@
   .dark body {
     background: linear-gradient(
       180deg,
-      hsl(var(--shamrock-950)) 0%,
-      hsl(var(--shamrock-900)) 50%,
-      hsl(var(--shamrock-950)) 100%
+      hsl(0 0% 0%) 0%,
+      hsl(0 0% 3%) 50%,
+      hsl(0 0% 0%) 100%
     );
-    color: hsl(var(--shamrock-50));
+    color: hsl(var(--lavender-50));
     min-height: 100vh;
   }
 }
@@ -104,169 +117,169 @@
   .component-gap {
     gap: var(--component-gap);
   }
-  
+
   .section-gap {
     gap: var(--section-gap);
   }
-  
+
   /* 统一卡片样式 */
   .card-standard {
-    background: hsla(var(--shamrock-900), 0.6);
-    border: 1px solid hsl(var(--shamrock-500));
+    background: hsla(0, 0%, 8%, 0.8);
+    border: 1px solid hsl(var(--lavender-500));
     border-radius: var(--radius);
     padding: var(--card-padding);
   }
-  
+
   .card-standard:hover {
-    border-color: hsl(var(--shamrock-400));
+    border-color: hsl(var(--lavender-400));
   }
-  
+
   /* 统一表单元素样式 */
   .form-element {
     margin-bottom: var(--form-element-spacing);
   }
-  
+
   .form-element-label {
     display: block;
     margin-bottom: var(--spacing-sm);
-    color: hsl(var(--shamrock-100));
+    color: hsl(var(--lavender-100));
     font-size: 0.875rem;
     font-weight: 500;
   }
-  
+
   /* 统一输入框样式 */
   .input-standard {
-    background: hsla(var(--shamrock-900), 0.8);
-    border: 1px solid hsl(var(--shamrock-500));
+    background: hsla(0, 0%, 12%, 0.9);
+    border: 1px solid hsl(var(--lavender-500));
     border-radius: var(--radius);
-    color: hsl(var(--shamrock-50));
+    color: hsl(var(--lavender-50));
     padding: var(--spacing-sm) var(--spacing-md);
     transition: border-color 0.2s ease;
   }
-  
+
   .input-standard:focus {
-    border-color: hsl(var(--shamrock-400));
+    border-color: hsl(var(--lavender-400));
     outline: none;
-    box-shadow: 0 0 0 2px hsla(var(--shamrock-500), 0.2);
+    box-shadow: 0 0 0 2px hsla(var(--lavender-500), 0.2);
   }
-  
+
   .input-standard::placeholder {
-    color: hsl(var(--shamrock-400));
+    color: hsl(var(--lavender-400));
   }
-  
+
   /* 统一按钮样式 */
   .button-standard {
-    background: hsl(var(--shamrock-600));
-    border: 1px solid hsl(var(--shamrock-600));
+    background: hsl(var(--lavender-600));
+    border: 1px solid hsl(var(--lavender-600));
     border-radius: var(--radius);
-    color: hsl(var(--shamrock-50));
+    color: hsl(var(--lavender-50));
     padding: var(--spacing-sm) var(--spacing-md);
     font-size: 0.875rem;
     font-weight: 500;
     transition: all 0.2s ease;
   }
-  
+
   .button-standard:hover {
-    background: hsl(var(--shamrock-700));
-    border-color: hsl(var(--shamrock-700));
+    background: hsl(var(--lavender-700));
+    border-color: hsl(var(--lavender-700));
   }
-  
+
   .button-standard:disabled {
-    background: hsl(var(--shamrock-800));
-    border-color: hsl(var(--shamrock-800));
-    color: hsl(var(--shamrock-400));
+    background: hsl(var(--lavender-800));
+    border-color: hsl(var(--lavender-800));
+    color: hsl(var(--lavender-400));
     cursor: not-allowed;
   }
-  
+
   /* 统一表格样式 */
   .table-standard {
-    background: hsla(var(--shamrock-900), 0.4);
-    border: 1px solid hsl(var(--shamrock-500));
+    background: hsla(0, 0%, 6%, 0.6);
+    border: 1px solid hsl(var(--lavender-500));
     border-radius: var(--radius);
     overflow: hidden;
   }
-  
+
   .table-standard th {
-    background: hsla(var(--shamrock-800), 0.8);
-    color: hsl(var(--shamrock-300));
+    background: hsla(0, 0%, 10%, 0.9);
+    color: hsl(var(--lavender-300));
     font-weight: 500;
     padding: var(--spacing-sm) var(--spacing-md);
     text-align: left;
-    border-bottom: 1px solid hsl(var(--shamrock-500));
+    border-bottom: 1px solid hsl(var(--lavender-500));
   }
-  
+
   .table-standard td {
     padding: var(--spacing-sm) var(--spacing-md);
-    border-bottom: 1px solid hsla(var(--shamrock-500), 0.5);
+    border-bottom: 1px solid hsla(var(--lavender-500), 0.5);
   }
-  
+
   .table-standard tr:hover {
-    background: hsla(var(--shamrock-700), 0.2);
+    background: hsla(0, 0%, 15%, 0.3);
   }
-  
+
   /* 统一徽章样式 */
   .badge-standard {
-    background: hsla(var(--shamrock-800), 0.9);
-    border: 1px solid hsl(var(--shamrock-500));
+    background: hsla(var(--lavender-800), 0.9);
+    border: 1px solid hsl(var(--lavender-500));
     border-radius: calc(var(--radius) * 0.5);
-    color: hsl(var(--shamrock-200));
+    color: hsl(var(--lavender-200));
     padding: var(--spacing-xs) var(--spacing-sm);
     font-size: 0.75rem;
     font-weight: 500;
   }
-  
+
   /* 简化的渐变背景 */
   .bg-gradient-dark {
-    background: linear-gradient(
-      180deg,
-      hsl(var(--shamrock-950)) 0%,
-      hsl(var(--shamrock-900)) 100%
-    );
+    background: linear-gradient(180deg, hsl(0 0% 0%) 0%, hsl(0 0% 3%) 100%);
     min-height: 100vh;
   }
-  
+
   /* 简化的文本渐变 */
   .text-gradient {
-    background: linear-gradient(135deg, hsl(var(--shamrock-400)) 0%, hsl(var(--shamrock-300)) 100%);
+    background: linear-gradient(
+      135deg,
+      hsl(var(--lavender-400)) 0%,
+      hsl(var(--lavender-300)) 100%
+    );
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
   }
-  
+
   /* 移除复杂动画，保留基础过渡 */
   .progress-indicator {
-    background: hsl(var(--shamrock-500));
+    background: hsl(var(--lavender-500));
     height: 4px;
     border-radius: 2px;
     transition: width 0.3s ease;
   }
-  
+
   /* 状态指示器 */
   .status-indicator {
     display: inline-flex;
     align-items: center;
     gap: var(--spacing-xs);
   }
-  
+
   .status-dot {
     width: 8px;
     height: 8px;
     border-radius: 50%;
     background: currentColor;
   }
-  
+
   .status-dot.success {
-    color: hsl(var(--shamrock-400));
+    color: hsl(var(--lavender-400));
   }
-  
+
   .status-dot.error {
     color: hsl(var(--destructive));
   }
-  
+
   .status-dot.warning {
     color: hsl(45 93% 58%);
   }
-  
+
   /* 响应式间距 */
   @media (max-width: 768px) {
     :root {
@@ -283,69 +296,69 @@
 }
 
 .dark ::-webkit-scrollbar-track {
-  background: hsla(var(--shamrock-900), 0.3);
+  background: hsla(var(--lavender-900), 0.3);
 }
 
 .dark ::-webkit-scrollbar-thumb {
-  background: hsla(var(--shamrock-600), 0.5);
+  background: hsla(var(--lavender-600), 0.5);
   border-radius: calc(var(--radius) * 0.5);
 }
 
 .dark ::-webkit-scrollbar-thumb:hover {
-  background: hsla(var(--shamrock-500), 0.7);
+  background: hsla(var(--lavender-500), 0.7);
 }
 
 /* 保留必要的兼容性样式 */
 .glass-morphism {
-  background: hsla(var(--shamrock-900), 0.4);
-  border: 1px solid hsl(var(--shamrock-500));
+  background: hsla(0, 0%, 8%, 0.6);
+  border: 1px solid hsl(var(--lavender-500));
   border-radius: var(--radius);
   padding: var(--card-padding);
 }
 
 .input-dark {
-  background: hsla(var(--shamrock-900), 0.8);
-  border: 1px solid hsl(var(--shamrock-500));
-  color: hsl(var(--shamrock-50));
+  background: hsla(0, 0%, 12%, 0.9);
+  border: 1px solid hsl(var(--lavender-500));
+  color: hsl(var(--lavender-50));
   transition: border-color 0.2s ease;
 }
 
 .input-dark:focus {
-  border-color: hsl(var(--shamrock-400));
+  border-color: hsl(var(--lavender-400));
   outline: none;
-  box-shadow: 0 0 0 2px hsla(var(--shamrock-500), 0.1);
+  box-shadow: 0 0 0 2px hsla(var(--lavender-500), 0.1);
 }
 
 .button-gradient {
-  background: hsl(var(--shamrock-600));
-  border: 1px solid hsl(var(--shamrock-600));
-  color: hsl(var(--shamrock-50));
+  background: hsl(var(--lavender-600));
+  border: 1px solid hsl(var(--lavender-600));
+  color: hsl(var(--lavender-50));
   transition: all 0.2s ease;
 }
 
 .button-gradient:hover {
-  background: hsl(var(--shamrock-700));
-  border-color: hsl(var(--shamrock-700));
+  background: hsl(var(--lavender-700));
+  border-color: hsl(var(--lavender-700));
 }
 
 .table-dark {
-  background: hsla(var(--shamrock-900), 0.2);
-  border: 1px solid hsl(var(--shamrock-500));
+  background: hsla(0, 0%, 6%, 0.4);
+  border: 1px solid hsl(var(--lavender-500));
 }
 
 .table-row-dark {
-  border-bottom: 1px solid hsla(var(--shamrock-500), 0.3);
+  border-bottom: 1px solid hsla(var(--lavender-500), 0.3);
   transition: background-color 0.2s ease;
 }
 
 .table-row-dark:hover {
-  background: hsla(var(--shamrock-700), 0.1);
+  background: hsla(0, 0%, 15%, 0.2);
 }
 
 .badge-dark {
-  background: hsla(var(--shamrock-800), 0.8);
-  border: 1px solid hsl(var(--shamrock-500));
-  color: hsl(var(--shamrock-200));
+  background: hsla(var(--lavender-800), 0.8);
+  border: 1px solid hsl(var(--lavender-500));
+  color: hsl(var(--lavender-200));
   padding: var(--spacing-xs) var(--spacing-sm);
   font-size: 0.75rem;
   border-radius: calc(var(--radius) * 0.5);
@@ -353,62 +366,62 @@
 
 /* 测试模式选择器 */
 .test-mode-selector {
-  background: hsla(var(--shamrock-900), 0.8);
-  border: 1px solid hsl(var(--shamrock-500));
-  color: hsl(var(--shamrock-50));
+  background: hsla(0, 0%, 12%, 0.9);
+  border: 1px solid hsl(var(--lavender-500));
+  color: hsl(var(--lavender-50));
   padding: var(--spacing-sm) var(--spacing-md);
   border-radius: var(--radius);
   transition: border-color 0.2s ease;
 }
 
 .test-mode-selector:hover {
-  border-color: hsl(var(--shamrock-400));
+  border-color: hsl(var(--lavender-400));
 }
 
 .test-mode-selector:focus {
-  border-color: hsl(var(--shamrock-400));
+  border-color: hsl(var(--lavender-400));
   outline: none;
-  box-shadow: 0 0 0 2px hsla(var(--shamrock-500), 0.1);
+  box-shadow: 0 0 0 2px hsla(var(--lavender-500), 0.1);
 }
 
 /* 滑块样式 */
 .slider-dark [data-slot="slider-track"] {
-  background: hsl(var(--shamrock-800)) !important;
+  background: hsl(0 0% 15%) !important;
 }
 
 .slider-dark [data-slot="slider-range"] {
-  background: hsl(var(--shamrock-500)) !important;
+  background: hsl(var(--lavender-500)) !important;
 }
 
 .slider-dark [data-slot="slider-thumb"] {
-  background: hsl(var(--shamrock-500)) !important;
-  border: 2px solid hsl(var(--shamrock-50)) !important;
+  background: hsl(var(--lavender-500)) !important;
+  border: 2px solid hsl(var(--lavender-50)) !important;
 }
 
 .slider-dark [data-slot="slider-thumb"]:hover {
-  background: hsl(var(--shamrock-400)) !important;
+  background: hsl(var(--lavender-400)) !important;
 }
 
 /* 开关样式 */
 .switch-dark[data-state="unchecked"] {
-  background: hsl(var(--shamrock-800)) !important;
+  background: hsl(0 0% 15%) !important;
 }
 
 .switch-dark[data-state="checked"] {
-  background: hsl(var(--shamrock-500)) !important;
+  background: hsl(var(--lavender-500)) !important;
 }
 
 /* 复选框样式 */
 .checkbox-dark {
-  border-color: hsl(var(--shamrock-500)) !important;
-  background: hsla(var(--shamrock-900), 0.8) !important;
+  border-color: hsl(var(--lavender-500)) !important;
+  background: hsla(0, 0%, 12%, 0.9) !important;
 }
 
 .checkbox-dark[data-state="checked"] {
-  background: hsl(var(--shamrock-500)) !important;
-  border-color: hsl(var(--shamrock-500)) !important;
+  background: hsl(var(--lavender-500)) !important;
+  border-color: hsl(var(--lavender-500)) !important;
 }
 
 .checkbox-dark[data-state="checked"] svg {
-  color: hsl(var(--shamrock-50)) !important;
+  color: hsl(var(--lavender-50)) !important;
 }

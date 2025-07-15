@@ -125,9 +125,9 @@ export default function TUNWarning({ onTUNStatusChange, showDetails = false }: T
         <div className="flex items-center gap-2">
           <ClientIcon 
             icon={loading ? Loader2 : Network} 
-            className={`h-5 w-5 text-shamrock-400 ${loading ? 'animate-spin' : ''}`} 
+            className={`h-5 w-5 text-lavender-400 ${loading ? 'animate-spin' : ''}`} 
           />
-          <span className="text-shamrock-100">检测 TUN 模式状态...</span>
+          <span className="text-lavender-100">检测 TUN 模式状态...</span>
           {!loading && (
             <Button
               variant="outline"
@@ -210,7 +210,7 @@ export default function TUNWarning({ onTUNStatusChange, showDetails = false }: T
         </Button>
         
         {lastChecked && (
-          <span className="text-xs text-shamrock-400 ml-auto">
+          <span className="text-xs text-lavender-400 ml-auto">
             最后检测: {lastChecked.toLocaleTimeString('zh-CN')}
           </span>
         )}
@@ -220,7 +220,7 @@ export default function TUNWarning({ onTUNStatusChange, showDetails = false }: T
       {showDetailedInfo && (
         <Card className="card-standard">
           <h4 className="form-element-label flex items-center gap-2">
-            <ClientIcon icon={Network} className="h-4 w-4 text-shamrock-400" />
+            <ClientIcon icon={Network} className="h-4 w-4 text-lavender-400" />
             TUN 模式详细信息
           </h4>
 
@@ -229,20 +229,20 @@ export default function TUNWarning({ onTUNStatusChange, showDetails = false }: T
             <div className="form-element-label">系统信息</div>
             <div className="grid grid-cols-2 component-gap text-sm">
               <div>
-                <span className="text-shamrock-400">操作系统:</span>
-                <span className="text-shamrock-100 ml-2">{tunStatus.system_info.os}</span>
+                <span className="text-lavender-400">操作系统:</span>
+                <span className="text-lavender-100 ml-2">{tunStatus.system_info.os}</span>
               </div>
               <div>
-                <span className="text-shamrock-400">架构:</span>
-                <span className="text-shamrock-100 ml-2">{tunStatus.system_info.architecture}</span>
+                <span className="text-lavender-400">架构:</span>
+                <span className="text-lavender-100 ml-2">{tunStatus.system_info.architecture}</span>
               </div>
               <div>
-                <span className="text-shamrock-400">主机名:</span>
-                <span className="text-shamrock-100 ml-2">{tunStatus.system_info.hostname}</span>
+                <span className="text-lavender-400">主机名:</span>
+                <span className="text-lavender-100 ml-2">{tunStatus.system_info.hostname}</span>
               </div>
               <div>
-                <span className="text-shamrock-400">检测时间:</span>
-                <span className="text-shamrock-100 ml-2">{formatTime(tunStatus.detection_time)}</span>
+                <span className="text-lavender-400">检测时间:</span>
+                <span className="text-lavender-100 ml-2">{formatTime(tunStatus.detection_time)}</span>
               </div>
             </div>
           </div>
@@ -256,27 +256,27 @@ export default function TUNWarning({ onTUNStatusChange, showDetails = false }: T
                   <div 
                     key={index} 
                     className={`card-standard ${
-                      iface.is_up ? 'border-green-600 bg-green-500/10' : 'border-shamrock-600'
+                      iface.is_up ? 'border-green-600 bg-green-500/10' : 'border-lavender-600'
                     }`}
                   >
                     <div className="flex items-center justify-between form-element">
-                      <span className="font-medium text-shamrock-100">{iface.name}</span>
+                      <span className="font-medium text-lavender-100">{iface.name}</span>
                       <div className="flex component-gap">
                         <span className={`badge-standard ${
                           iface.is_up 
                             ? 'border-green-500 text-green-400' 
-                            : 'border-shamrock-500 text-shamrock-400'
+                            : 'border-lavender-500 text-lavender-400'
                         }`}>
                           {iface.is_up ? '启用' : '禁用'}
                         </span>
                         {iface.is_default && (
-                          <span className="badge-standard border-shamrock-500 text-shamrock-400">
+                          <span className="badge-standard border-lavender-500 text-lavender-400">
                             默认
                           </span>
                         )}
                       </div>
                     </div>
-                    <div className="text-xs text-shamrock-400 space-y-1">
+                    <div className="text-xs text-lavender-400 space-y-1">
                       <div>类型: {iface.type}</div>
                       <div>MTU: {iface.mtu}</div>
                       {iface.ip_addresses.length > 0 && (
@@ -297,13 +297,13 @@ export default function TUNWarning({ onTUNStatusChange, showDetails = false }: T
                 {tunStatus.proxy_processes.map((process, index) => (
                   <div key={index} className="card-standard border-orange-600 bg-orange-500/10">
                     <div className="flex items-center justify-between form-element">
-                      <span className="font-medium text-shamrock-100">{process.name}</span>
+                      <span className="font-medium text-lavender-100">{process.name}</span>
                       <span className="badge-standard border-orange-500 text-orange-400">
                         {process.process_type}
                       </span>
                     </div>
                     {process.pid > 0 && (
-                      <div className="text-xs text-shamrock-400">PID: {process.pid}</div>
+                      <div className="text-xs text-lavender-400">PID: {process.pid}</div>
                     )}
                   </div>
                 ))}
@@ -318,21 +318,21 @@ export default function TUNWarning({ onTUNStatusChange, showDetails = false }: T
               <div className="card-standard">
                 <div className="text-sm space-y-1">
                   <div>
-                    <span className="text-shamrock-400">目标:</span>
-                    <span className="text-shamrock-100 ml-2">{tunStatus.default_route.destination}</span>
+                    <span className="text-lavender-400">目标:</span>
+                    <span className="text-lavender-100 ml-2">{tunStatus.default_route.destination}</span>
                   </div>
                   <div>
-                    <span className="text-shamrock-400">网关:</span>
-                    <span className="text-shamrock-100 ml-2">{tunStatus.default_route.gateway}</span>
+                    <span className="text-lavender-400">网关:</span>
+                    <span className="text-lavender-100 ml-2">{tunStatus.default_route.gateway}</span>
                   </div>
                   <div>
-                    <span className="text-shamrock-400">接口:</span>
-                    <span className="text-shamrock-100 ml-2">{tunStatus.default_route.interface}</span>
+                    <span className="text-lavender-400">接口:</span>
+                    <span className="text-lavender-100 ml-2">{tunStatus.default_route.interface}</span>
                   </div>
                   {tunStatus.default_route.metric > 0 && (
                     <div>
-                      <span className="text-shamrock-400">优先级:</span>
-                      <span className="text-shamrock-100 ml-2">{tunStatus.default_route.metric}</span>
+                      <span className="text-lavender-400">优先级:</span>
+                      <span className="text-lavender-100 ml-2">{tunStatus.default_route.metric}</span>
                     </div>
                   )}
                 </div>

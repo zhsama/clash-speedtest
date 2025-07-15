@@ -368,13 +368,25 @@ func (st *SpeedTester) performSpeedTests(proxy *CProxy, result *Result, isVless 
 		}
 		wg.Wait()
 
+		var failedUploads int
 		for i := 0; i < uploadConcurrent; i++ {
 			if ur := <-uploadResults; ur != nil {
 				totalUploadBytes += ur.bytes
 				totalUploadTime += ur.duration
 				uploadCount++
+			} else {
+				failedUploads++
 			}
 		}
+
+		logger.Logger.Info("Upload test results summary",
+			slog.String("proxy_name", name),
+			slog.String("proxy_type", proxy.Type().String()),
+			slog.Int("total_attempts", uploadConcurrent),
+			slog.Int("successful_uploads", uploadCount),
+			slog.Int("failed_uploads", failedUploads),
+			slog.Int("chunk_size_mb", uploadChunkSize/(1024*1024)),
+		)
 		close(uploadResults)
 
 		if uploadCount > 0 {
@@ -387,6 +399,16 @@ func (st *SpeedTester) performSpeedTests(proxy *CProxy, result *Result, isVless 
 				slog.Int64("total_bytes", totalUploadBytes),
 				slog.Float64("speed_mbps", result.UploadSpeed/(1024*1024)),
 				slog.Int("successful_uploads", uploadCount),
+			)
+		} else {
+			logger.Logger.Warn("All upload tests failed",
+				slog.String("proxy_name", name),
+				slog.String("proxy_type", proxy.Type().String()),
+				slog.Int("total_attempts", uploadConcurrent),
+				slog.Int("chunk_size_mb", uploadChunkSize/(1024*1024)),
+				slog.String("server_url", st.config.ServerURL),
+				slog.String("timeout", st.config.Timeout.String()),
+				slog.String("possible_causes", "network timeout, proxy connection issues, server errors, or protocol incompatibility"),
 			)
 		}
 
@@ -553,8 +575,11 @@ func (st *SpeedTester) testUpload(proxy constant.Proxy, size int, timeout time.D
 
 	req, err := http.NewRequest("POST", fmt.Sprintf("%s/__up", st.config.ServerURL), reader)
 	if err != nil {
-		logger.Logger.Debug("Failed to create upload request",
+		logger.Logger.Warn("Failed to create upload request",
+			slog.String("proxy_name", proxy.Name()),
+			slog.String("proxy_type", proxy.Type().String()),
 			slog.String("error", err.Error()),
+			slog.String("error_type", fmt.Sprintf("%T", err)),
 			slog.Int("size_bytes", size),
 		)
 		return nil
@@ -575,11 +600,14 @@ func (st *SpeedTester) testUpload(proxy constant.Proxy, size int, timeout time.D
 	start := time.Now()
 	resp, err := client.Do(req)
 	if err != nil {
-		logger.Logger.Debug("Upload test request failed",
+		logger.Logger.Warn("Upload test request failed",
 			slog.String("proxy_name", proxy.Name()),
 			slog.String("proxy_type", proxy.Type().String()),
 			slog.String("error", err.Error()),
+			slog.String("error_type", fmt.Sprintf("%T", err)),
 			slog.Int("size_bytes", size),
+			slog.String("server_url", st.config.ServerURL),
+			slog.String("timeout", timeout.String()),
 		)
 		return nil
 	}
@@ -588,12 +616,13 @@ func (st *SpeedTester) testUpload(proxy constant.Proxy, size int, timeout time.D
 	if resp.StatusCode != http.StatusOK {
 		respBody := make([]byte, 256)
 		n, _ := resp.Body.Read(respBody)
-		logger.Logger.Debug("Upload test received non-200 status",
+		logger.Logger.Warn("Upload test received non-200 status",
 			slog.String("proxy_name", proxy.Name()),
 			slog.String("proxy_type", proxy.Type().String()),
 			slog.Int("status_code", resp.StatusCode),
 			slog.String("response", string(respBody[:n])),
 			slog.Int("size_bytes", size),
+			slog.String("server_url", st.config.ServerURL),
 		)
 		return nil
 	}
@@ -665,6 +694,7 @@ func (st *SpeedTester) createClient(proxy constant.Proxy, timeout time.Duration)
 					slog.String("target_host", host),
 					slog.Int("target_port", int(u16Port)),
 					slog.String("error", err.Error()),
+					slog.String("error_type", fmt.Sprintf("%T", err)),
 				)
 				return nil, err
 			}

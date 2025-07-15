@@ -20,6 +20,7 @@ import ClientIcon from "./ClientIcon"
 import RealTimeProgressTable from "./RealTimeProgressTable"
 import TUNWarning from "./TUNWarning"
 import { useWebSocket } from "../hooks/useWebSocket"
+import type { TestProgressData } from "../hooks/useWebSocket"
 import { config } from "@/lib/env"
 import {
   Table,
@@ -91,13 +92,14 @@ const SpeedTestConfig = ({ testConfig, setTestConfig, filterConfig, setFilterCon
       
       <div>
         <label className="form-element-label">
-          下载测试大小: {testConfig.downloadSize} MB
+          测试包大小: {testConfig.downloadSize} MB
         </label>
         <Slider
           value={[testConfig.downloadSize]}
           onValueChange={(v) => setTestConfig(prev => ({ 
             ...prev, 
-            downloadSize: v[0] 
+            downloadSize: v[0],
+            uploadSize: v[0] // 同时更新上传大小
           }))}
           max={100}
           min={10}
@@ -326,7 +328,8 @@ export default function SpeedTestPro() {
     testResults,
     testCompleteData,
     testCancelledData,
-    clearData
+    clearData,
+    setTestProgress
   } = useWebSocket(wsUrl)
   
   useEffect(() => {
@@ -513,16 +516,65 @@ export default function SpeedTestPro() {
     setTesting(true)
     clearData()
     
+    const initialProgress: TestProgressData = {
+      current_proxy: "",
+      completed_count: 0,
+      total_count: filteredNodes.length,
+      progress_percent: 0,
+      status: "starting",
+      current_stage: testConfig.testMode === "unlock_only" ? "unlock_test" : "speed_test"
+    }
+    
+    setTestProgress(initialProgress)
+    
     try {
+      const getFilteredParams = () => {
+        const baseParams = {
+          configPaths: configUrl,
+          testMode: testConfig.testMode,
+          timeout: testConfig.timeout,
+          concurrent: testConfig.concurrent,
+          ...filterConfig,
+          filterRegex: ".+",
+        }
+        
+        switch (testConfig.testMode) {
+          case "speed_only":
+            return {
+              ...baseParams,
+              serverUrl: testConfig.serverUrl,
+              downloadSize: testConfig.downloadSize,
+              uploadSize: testConfig.uploadSize,
+            }
+          case "unlock_only":
+            return {
+              ...baseParams,
+              unlockPlatforms: testConfig.unlockPlatforms,
+              unlockConcurrent: testConfig.unlockConcurrent,
+              unlockTimeout: testConfig.unlockTimeout,
+              unlockRetry: testConfig.unlockRetry,
+            }
+          case "both":
+          default:
+            return {
+              ...baseParams,
+              // 速度测试参数
+              serverUrl: testConfig.serverUrl,
+              downloadSize: testConfig.downloadSize,
+              uploadSize: testConfig.uploadSize,
+              // 解锁检测参数
+              unlockPlatforms: testConfig.unlockPlatforms,
+              unlockConcurrent: testConfig.unlockConcurrent,
+              unlockTimeout: testConfig.unlockTimeout,
+              unlockRetry: testConfig.unlockRetry,
+            }
+        }
+      }
+      
       const response = await fetch(`${config.apiUrl}/api/test/async`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...testConfig,
-          configPaths: configUrl,
-          ...filterConfig,
-          filterRegex: ".+",
-        }),
+        body: JSON.stringify(getFilteredParams()),
       })
       
       const data = await response.json()

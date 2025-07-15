@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/faceair/clash-speedtest/config"
 )
 
 var Logger *slog.Logger
@@ -22,6 +24,7 @@ type LogConfig struct {
 	MaxFiles      int   // Maximum number of log files to keep (default: 5)
 	RotateOnStart bool  // Whether to rotate log on startup
 	EnableConsole bool  // Whether to also output to console
+	Format        string // Log format: "text" or "json"
 }
 
 // DefaultLogConfig returns the default logging configuration
@@ -35,6 +38,22 @@ func DefaultLogConfig() *LogConfig {
 		MaxFiles:      5,
 		RotateOnStart: true,
 		EnableConsole: true,
+		Format:        "text",
+	}
+}
+
+// FromAppConfig converts application config to LogConfig
+func FromAppConfig(appConfig *config.Config) *LogConfig {
+	return &LogConfig{
+		Level:         appConfig.Logger.GetSlogLevel(),
+		OutputToFile:  appConfig.Logger.OutputToFile,
+		LogDir:        appConfig.Logger.LogDir,
+		LogFileName:   appConfig.Logger.LogFileName,
+		MaxSize:       appConfig.Logger.MaxSize,
+		MaxFiles:      appConfig.Logger.MaxFiles,
+		RotateOnStart: appConfig.Logger.RotateOnStart,
+		EnableConsole: appConfig.Logger.EnableConsole,
+		Format:        appConfig.Logger.Format,
 	}
 }
 
@@ -94,14 +113,22 @@ func InitLoggerWithConfig(config *LogConfig) {
 		writer = os.Stdout // Fallback
 	}
 
-	// Create handler based on the output type
+	// Create handler based on the format configuration
 	var handler slog.Handler
-	if config.OutputToFile && !config.EnableConsole {
-		// File only - use JSON format for better structure
+	switch strings.ToLower(config.Format) {
+	case "json":
 		handler = slog.NewJSONHandler(writer, opts)
-	} else {
-		// Console or mixed - use text format for readability
+	case "text":
 		handler = slog.NewTextHandler(writer, opts)
+	default:
+		// Auto-detect format based on output type
+		if config.OutputToFile && !config.EnableConsole {
+			// File only - use JSON format for better structure
+			handler = slog.NewJSONHandler(writer, opts)
+		} else {
+			// Console or mixed - use text format for readability
+			handler = slog.NewTextHandler(writer, opts)
+		}
 	}
 
 	Logger = slog.New(handler)

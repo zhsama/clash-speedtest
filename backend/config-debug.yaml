@@ -1,0 +1,45 @@
+# Clash SpeedTest Configuration File
+# This file contains configuration for the Clash SpeedTest application
+# You can also override these settings with environment variables
+
+# Server Configuration
+server:
+  # Server listening port
+  port: 8080
+  
+  # Server listening host (0.0.0.0 for all interfaces)
+  host: "0.0.0.0"
+
+# Logger Configuration
+logger:
+  # Log level: DEBUG, INFO, WARN, ERROR
+  # DEBUG: Most verbose, includes all debug information
+  # INFO: General information about program execution
+  # WARN: Warning messages that might indicate problems
+  # ERROR: Only error messages
+  level: "DEBUG"
+  
+  # Whether to output logs to file
+  output_to_file: true
+  
+  # Log directory path
+  log_dir: "logs"
+  
+  # Log file name
+  log_file_name: "clash-speedtest.log"
+  
+  # Maximum log file size in bytes (default: 10MB)
+  max_size: 10485760
+  
+  # Maximum number of log files to keep (older files will be deleted)
+  max_files: 5
+  
+  # Whether to rotate log file on startup
+  rotate_on_start: true
+  
+  # Whether to also output logs to console
+  enable_console: true
+  
+  # Log format: "text" (human-readable) or "json" (structured)
+  # "text" is recommended for development, "json" for production
+  format: "text"

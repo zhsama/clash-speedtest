@@ -116,6 +116,7 @@ export interface UseWebSocketReturn {
   testCancelledData: TestCancelledData | null;
   error: ErrorData | null;
   clearData: () => void;
+  setTestProgress: (progress: TestProgressData | null) => void;
 }
 
 export const useWebSocket = (url: string): UseWebSocketReturn => {
@@ -290,5 +291,6 @@ export const useWebSocket = (url: string): UseWebSocketReturn => {
     testCancelledData,
     error,
     clearData,
+    setTestProgress,
   };
 };

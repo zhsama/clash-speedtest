@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -14,6 +15,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/faceair/clash-speedtest/config"
 	"github.com/faceair/clash-speedtest/logger"
 	"github.com/faceair/clash-speedtest/speedtester"
 	"github.com/faceair/clash-speedtest/unlock"
@@ -66,24 +68,20 @@ func createUnlockConfig(req TestRequest) *unlock.UnlockTestConfig {
 }
 
 func main() {
-	// Initialize custom logging configuration
-	logConfig := logger.DefaultLogConfig()
+	// Parse command line flags
+	var configPath string
+	flag.StringVar(&configPath, "config", "config.yaml", "Path to configuration file")
+	flag.Parse()
 
-	// Override from environment variables
-	if logDir := os.Getenv("LOG_DIR"); logDir != "" {
-		logConfig.LogDir = logDir
-	}
-	if logFile := os.Getenv("LOG_FILE"); logFile != "" {
-		logConfig.LogFileName = logFile
-	}
-	if os.Getenv("LOG_TO_FILE") == "false" {
-		logConfig.OutputToFile = false
-	}
-	if os.Getenv("LOG_TO_CONSOLE") == "false" {
-		logConfig.EnableConsole = false
+	// Load configuration
+	appConfig, err := config.LoadConfig(configPath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to load config: %v\n", err)
+		os.Exit(1)
 	}
 
-	// Initialize logger with custom config
+	// Initialize logger with config
+	logConfig := logger.FromAppConfig(appConfig)
 	logger.InitLoggerWithConfig(logConfig)
 
 	// Ensure proper cleanup on exit
@@ -94,7 +92,8 @@ func main() {
 
 	logger.Logger.Info("Starting Clash SpeedTest API Server",
 		slog.String("version", "2.0.0"),
-		slog.String("port", "8080"),
+		slog.String("port", fmt.Sprintf("%d", appConfig.Server.Port)),
+		slog.String("config_file", configPath),
 	)
 
 	// Initialize WebSocket hub
@@ -117,13 +116,13 @@ func main() {
 	handler := corsMiddleware(http.DefaultServeMux)
 
 	server := &http.Server{
-		Addr:    ":8080",
+		Addr:    fmt.Sprintf("%s:%d", appConfig.Server.Host, appConfig.Server.Port),
 		Handler: handler,
 	}
 
 	go func() {
 		logger.Logger.Info("HTTP server starting", slog.String("address", server.Addr))
-		fmt.Println("Speed test API server starting on port 8080")
+		fmt.Printf("Speed test API server starting on %s\n", server.Addr)
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			logger.LogError("Failed to start server", err)
 			os.Exit(1)

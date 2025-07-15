@@ -19,10 +19,13 @@ import {
   TrendingUp,
   Globe,
   Shield,
-  Clock
+  Clock,
+  Lock,
+  Unlock,
+  AlertCircle
 } from "lucide-react"
 import ClientIcon from "./ClientIcon"
-import type { TestResultData, TestProgressData, TestCompleteData, TestCancelledData } from "../hooks/useWebSocket"
+import type { TestResultData, TestProgressData, TestCompleteData, TestCancelledData, UnlockResult } from "../hooks/useWebSocket"
 
 interface TableColumn {
   key: string
@@ -76,16 +79,16 @@ export default function RealTimeProgressTable({
 
   const getSpeedIndicator = (speedMbps: number, maxSpeed: number = 100) => {
     const percentage = Math.min((speedMbps / maxSpeed) * 100, 100);
-    let colorClass = "speed-indicator-poor";
+    let colorClass = "bg-red-500";
     
-    if (speedMbps >= 50) colorClass = "speed-indicator-excellent";
-    else if (speedMbps >= 20) colorClass = "speed-indicator-good";
-    else if (speedMbps >= 5) colorClass = "speed-indicator-fair";
+    if (speedMbps >= 50) colorClass = "bg-green-500";
+    else if (speedMbps >= 20) colorClass = "bg-yellow-500";
+    else if (speedMbps >= 5) colorClass = "bg-orange-500";
     
     return (
-      <div className="speed-indicator w-full mt-1">
+      <div className="w-full mt-1 bg-shamrock-800 rounded-full h-2">
         <div 
-          className={`speed-indicator-fill ${colorClass}`}
+          className={`h-full rounded-full transition-all duration-300 ${colorClass}`}
           style={{ width: `${percentage}%` }}
         />
       </div>
@@ -99,7 +102,7 @@ export default function RealTimeProgressTable({
       case "failed":
         return <XCircle className="h-4 w-4 text-red-400" />;
       default:
-        return <Loader2 className="h-4 w-4 text-blue-400 animate-spin status-pulse" />;
+        return <Loader2 className="h-4 w-4 text-shamrock-400 animate-spin" />;
     }
   };
 
@@ -113,6 +116,105 @@ export default function RealTimeProgressTable({
       default:
         return <Badge variant="secondary" className={baseClasses}>测试中</Badge>
     }
+  }
+
+  // 获取解锁结果的格式化显示
+  const formatUnlockResults = (unlockResults: UnlockResult[]) => {
+    if (!unlockResults || unlockResults.length === 0) {
+      return <span className="text-shamrock-500 text-xs">-</span>
+    }
+
+    const supported = unlockResults.filter(r => r.supported)
+    const unsupported = unlockResults.filter(r => !r.supported)
+
+    return (
+      <div className="space-y-1">
+        {supported.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {supported.map((result) => (
+              <Badge
+                key={result.platform}
+                variant="outline"
+                className="text-xs border-green-500 text-green-400"
+              >
+                <ClientIcon icon={Unlock} className="h-3 w-3 mr-1" />
+                {result.platform}
+                {result.region && ` (${result.region})`}
+              </Badge>
+            ))}
+          </div>
+        )}
+        {unsupported.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {unsupported.map((result) => (
+              <Badge
+                key={result.platform}
+                variant="outline"
+                className="text-xs border-red-500 text-red-400"
+              >
+                <ClientIcon icon={Lock} className="h-3 w-3 mr-1" />
+                {result.platform}
+              </Badge>
+            ))}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // 获取解锁摘要的格式化显示
+  const formatUnlockSummary = (unlockSummary: any) => {
+    if (!unlockSummary) {
+      return <span className="text-shamrock-500 text-xs">-</span>
+    }
+
+    const { supported_platforms = [], total_tested = 0, total_supported = 0 } = unlockSummary
+    const supportRate = total_tested > 0 ? (total_supported / total_tested * 100).toFixed(0) : 0
+
+    return (
+      <div className="space-y-1">
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="text-xs border-green-500 text-green-400">
+            {total_supported}/{total_tested} ({supportRate}%)
+          </Badge>
+        </div>
+        {supported_platforms.length > 0 && (
+          <div className="text-xs text-green-400">
+            {supported_platforms.join(', ')}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // 获取当前测试阶段的显示
+  const getCurrentStageDisplay = (progress: TestProgressData | null) => {
+    if (!progress) return null
+
+    const { current_stage, unlock_platform } = progress
+
+    if (current_stage === "speed_test") {
+      return (
+        <div className="flex items-center gap-2">
+          <ClientIcon icon={Download} className="h-4 w-4 text-blue-400" />
+          <span className="text-sm text-blue-400">速度测试</span>
+        </div>
+      )
+    } else if (current_stage === "unlock_test") {
+      return (
+        <div className="flex items-center gap-2">
+          <ClientIcon icon={Shield} className="h-4 w-4 text-green-400" />
+          <span className="text-sm text-green-400">解锁检测</span>
+          {unlock_platform && (
+            <Badge variant="outline" className="text-xs border-green-500 text-green-400">
+              {unlock_platform}
+            </Badge>
+          )}
+        </div>
+      )
+    }
+
+    return null
   }
 
   const getTableThemeClass = (mode: string) => {
@@ -151,7 +253,7 @@ export default function RealTimeProgressTable({
         priority: 2,
         width: "min-w-48",
         formatter: (value) => (
-          <div className="truncate max-w-xs font-medium text-white" title={value}>
+          <div className="truncate max-w-xs font-medium text-shamrock-50" title={value}>
             {value}
           </div>
         )
@@ -163,7 +265,7 @@ export default function RealTimeProgressTable({
         priority: 3,
         width: "w-20",
         formatter: (value) => (
-          <Badge variant="secondary" className="badge-dark text-xs">
+          <Badge variant="secondary" className="badge-standard text-xs">
             {value}
           </Badge>
         )
@@ -176,7 +278,7 @@ export default function RealTimeProgressTable({
         icon: Globe,
         width: "w-32",
         formatter: (value) => (
-          <span className="text-gray-400 font-mono text-xs">
+          <span className="text-shamrock-400 font-mono text-xs">
             {value || '-'}
           </span>
         )
@@ -236,7 +338,7 @@ export default function RealTimeProgressTable({
         priority: 8,
         width: "w-20",
         formatter: (value) => (
-          <span className="text-gray-400">
+          <span className="text-shamrock-400">
             {value.toFixed(1)}%
           </span>
         )
@@ -246,40 +348,21 @@ export default function RealTimeProgressTable({
     const unlockColumns: TableColumn[] = [
       {
         key: "unlock_summary",
-        header: "解锁状态",
+        header: "解锁摘要",
         visible: true,
         priority: 9,
         icon: Shield,
         width: "w-32",
-        formatter: (_, result) => (
-          <div className="unlock-indicator text-green-400">
-            <Badge variant="outline" className="text-xs border-green-500 text-green-400">
-              解锁中
-            </Badge>
-          </div>
-        )
+        formatter: (_, result) => formatUnlockSummary(result.unlock_summary)
       },
       {
-        key: "unlock_platforms",
-        header: "平台支持",
+        key: "unlock_results",
+        header: "平台详情",
         visible: true,
         priority: 10,
-        width: "min-w-40",
-        formatter: (_, result) => (
-          <div className="flex flex-wrap gap-1">
-            {["Netflix", "YouTube", "Disney+"].map((platform, index) => (
-              <Badge 
-                key={platform} 
-                variant="outline" 
-                className={`text-xs border-blue-500 text-blue-400 ${
-                  index < 2 ? 'animate-pulse' : ''
-                }`}
-              >
-                {platform}
-              </Badge>
-            ))}
-          </div>
-        )
+        icon: Globe,
+        width: "min-w-48",
+        formatter: (_, result) => formatUnlockResults(result.unlock_results || [])
       }
     ];
 
@@ -304,7 +387,7 @@ export default function RealTimeProgressTable({
                 </Badge>
               )}
             </div>
-            <div className="text-xs text-gray-500 truncate" title={value}>
+            <div className="text-xs text-shamrock-500 truncate" title={value}>
               {value}
             </div>
           </div>
@@ -358,18 +441,21 @@ export default function RealTimeProgressTable({
       }
     ];
 
-    const unlockStats = [
-      {
-        label: "解锁成功",
-        value: Math.floor(data.successful_tests * 0.8), // 模拟解锁成功数
-        color: "text-green-400"
-      },
-      {
-        label: "支持平台",
-        value: "3/6",
-        color: "text-cyan-400"
-      }
-    ];
+    const unlockStats = [];
+    if (data.unlock_stats) {
+      unlockStats.push(
+        {
+          label: "解锁成功",
+          value: data.unlock_stats.successful_unlock_tests,
+          color: "text-green-400"
+        },
+        {
+          label: "解锁总数",
+          value: data.unlock_stats.total_unlock_tests,
+          color: "text-cyan-400"
+        }
+      );
+    }
 
     switch (mode) {
       case "speed_only":
@@ -378,7 +464,7 @@ export default function RealTimeProgressTable({
         return [...baseStats, ...unlockStats];
       case "both":
       default:
-        return [...baseStats, ...speedStats];
+        return [...baseStats, ...speedStats, ...unlockStats];
     }
   };
 
@@ -398,10 +484,13 @@ export default function RealTimeProgressTable({
           metric: `${data.best_download_speed_mbps.toFixed(2)} MB/s`
         };
       case "unlock_only":
-        return {
-          ...baseInfo,
-          metric: "支持 Netflix, YouTube"
-        };
+        if (data.unlock_stats?.best_unlock_proxy) {
+          return {
+            name: data.unlock_stats.best_unlock_proxy,
+            metric: `支持 ${data.unlock_stats.best_unlock_platforms?.join(', ') || '多个平台'}`
+          };
+        }
+        return null;
       case "both":
       default:
         return {
@@ -415,55 +504,62 @@ export default function RealTimeProgressTable({
     <div className="space-y-6">
       {/* Progress Summary */}
       {progress && (
-        <Card className="glass-morphism border-gray-800 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-              <ClientIcon icon={TrendingUp} className="h-5 w-5 text-blue-400" />
+        <Card className="card-standard">
+          <div className="flex items-center justify-between form-element">
+            <h3 className="text-lg font-semibold text-shamrock-50 flex items-center gap-2">
+              <ClientIcon icon={TrendingUp} className="h-5 w-5 text-shamrock-400" />
               测试进度
             </h3>
             <div className="flex items-center gap-2">
               <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`} />
-              <span className="text-sm text-gray-400">
+              <span className="text-sm text-shamrock-400">
                 {isConnected ? '已连接' : '未连接'}
               </span>
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 form-element">
             <div className="text-center">
-              <div className="text-2xl font-bold text-white">{progress.completed_count}</div>
-              <div className="text-sm text-gray-400">已完成</div>
+              <div className="text-2xl font-bold text-shamrock-50">{progress.completed_count}</div>
+              <div className="text-sm text-shamrock-400">已完成</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-white">{progress.total_count}</div>
-              <div className="text-sm text-gray-400">总数</div>
+              <div className="text-2xl font-bold text-shamrock-50">{progress.total_count}</div>
+              <div className="text-sm text-shamrock-400">总数</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-blue-400">{progress.progress_percent.toFixed(1)}%</div>
-              <div className="text-sm text-gray-400">进度</div>
+              <div className="text-2xl font-bold text-shamrock-500">{progress.progress_percent.toFixed(1)}%</div>
+              <div className="text-sm text-shamrock-400">进度</div>
             </div>
           </div>
 
-          <div className="w-full bg-gray-800 rounded-full h-3 overflow-hidden">
+          <div className="w-full bg-shamrock-800 rounded-full h-3 overflow-hidden form-element">
             <div
-              className="h-full progress-bar transition-all duration-300 ease-out"
+              className="h-full bg-shamrock-500 transition-all duration-300 ease-out"
               style={{ width: `${progress.progress_percent}%` }}
             />
           </div>
           
-          {progress.current_proxy && (
-            <div className="mt-4 text-center">
-              <span className="text-sm text-gray-400">当前测试: </span>
-              <span className="text-sm text-white font-medium">{progress.current_proxy}</span>
-            </div>
-          )}
+          <div className="space-y-2">
+            {progress.current_proxy && (
+              <div className="text-center">
+                <span className="text-sm text-shamrock-400">当前测试: </span>
+                <span className="text-sm text-shamrock-50 font-medium">{progress.current_proxy}</span>
+              </div>
+            )}
+            {getCurrentStageDisplay(progress) && (
+              <div className="flex justify-center">
+                {getCurrentStageDisplay(progress)}
+              </div>
+            )}
+          </div>
         </Card>
       )}
 
       {/* Completion Summary */}
       {completeData && (
-        <Card className="glass-morphism border-gray-800 p-6">
-          <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+        <Card className="card-standard">
+          <h3 className="text-lg font-semibold text-shamrock-50 form-element flex items-center gap-2">
             <ClientIcon icon={CheckCircle} className="h-5 w-5 text-green-400" />
             测试完成
             {testMode !== "both" && (
@@ -476,11 +572,11 @@ export default function RealTimeProgressTable({
             )}
           </h3>
           
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 form-element">
             {getCompletionSummary(completeData, testMode).map((stat, index) => (
               <div key={index} className="text-center">
                 <div className={`text-xl font-bold ${stat.color}`}>{stat.value}</div>
-                <div className="text-xs text-gray-400">{stat.label}</div>
+                <div className="text-xs text-shamrock-400">{stat.label}</div>
               </div>
             ))}
           </div>
@@ -489,8 +585,8 @@ export default function RealTimeProgressTable({
             const bestNode = getBestNodeInfo(completeData, testMode);
             return bestNode && (
               <div className="text-center text-sm">
-                <span className="text-gray-400">最佳节点: </span>
-                <span className="text-white font-medium">{bestNode.name}</span>
+                <span className="text-shamrock-400">最佳节点: </span>
+                <span className="text-shamrock-50 font-medium">{bestNode.name}</span>
                 <span className="text-green-400 ml-2">({bestNode.metric})</span>
               </div>
             );
@@ -500,29 +596,29 @@ export default function RealTimeProgressTable({
 
       {/* Cancellation Summary */}
       {cancelledData && (
-        <Card className="glass-morphism border-gray-800 p-6">
-          <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+        <Card className="card-standard">
+          <h3 className="text-lg font-semibold text-shamrock-50 form-element flex items-center gap-2">
             <ClientIcon icon={XCircle} className="h-5 w-5 text-orange-400" />
             测试已取消
           </h3>
           
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 form-element">
             <div className="text-center">
               <div className="text-xl font-bold text-orange-400">{cancelledData.completed_tests}</div>
-              <div className="text-xs text-gray-400">已完成</div>
+              <div className="text-xs text-shamrock-400">已完成</div>
             </div>
             <div className="text-center">
-              <div className="text-xl font-bold text-gray-400">{cancelledData.total_tests}</div>
-              <div className="text-xs text-gray-400">总数</div>
+              <div className="text-xl font-bold text-shamrock-400">{cancelledData.total_tests}</div>
+              <div className="text-xs text-shamrock-400">总数</div>
             </div>
             <div className="text-center">
-              <div className="text-xl font-bold text-blue-400">{cancelledData.partial_duration}</div>
-              <div className="text-xs text-gray-400">用时</div>
+              <div className="text-xl font-bold text-shamrock-500">{cancelledData.partial_duration}</div>
+              <div className="text-xs text-shamrock-400">用时</div>
             </div>
           </div>
 
           <div className="text-center text-sm">
-            <span className="text-gray-400">取消原因: </span>
+            <span className="text-shamrock-400">取消原因: </span>
             <span className="text-orange-400 font-medium">{cancelledData.message}</span>
           </div>
         </Card>
@@ -530,12 +626,12 @@ export default function RealTimeProgressTable({
 
       {/* Results Table */}
       {results.length > 0 && (
-        <Card className="glass-morphism border-gray-800">
-          <div className="p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-white">实时测试结果</h2>
+        <Card className="card-standard">
+          <div className="form-element">
+            <div className="flex justify-between items-center form-element">
+              <h2 className="text-xl font-bold text-shamrock-50">实时测试结果</h2>
               <div className="flex items-center gap-3">
-                <Badge variant="outline" className="border-gray-700 text-gray-300">
+                <Badge variant="outline" className="badge-standard">
                   {results.length} 个结果
                 </Badge>
                 {testMode !== "both" && (
@@ -550,11 +646,11 @@ export default function RealTimeProgressTable({
             </div>
 
             <div className="overflow-x-auto">
-              <Table className={`table-dark ${getTableThemeClass(testMode)}`}>
+              <Table className={`table-standard ${getTableThemeClass(testMode)}`}>
                 <TableHeader>
-                  <TableRow className="border-gray-800">
+                  <TableRow>
                     {visibleColumns.map((column) => (
-                      <TableHead key={column.key} className={`text-gray-400 ${column.width || ''}`}>
+                      <TableHead key={column.key} className={`text-shamrock-400 ${column.width || ''}`}>
                         <div className="flex items-center gap-1">
                           {column.icon && <ClientIcon icon={column.icon} className="h-4 w-4" />}
                           {column.header}
@@ -567,7 +663,7 @@ export default function RealTimeProgressTable({
                   {results.map((result, index) => (
                     <TableRow 
                       key={`${result.proxy_name}-${index}`} 
-                      className="table-row-dark animate-in slide-in-from-bottom-1 duration-300"
+                      className="table-row-dark"
                     >
                       {visibleColumns.map((column) => (
                         <TableCell key={column.key} className={column.width || ''}>
@@ -588,12 +684,12 @@ export default function RealTimeProgressTable({
 
       {/* Empty State */}
       {results.length === 0 && !progress && (
-        <Card className="glass-morphism border-gray-800 p-12">
-          <div className="text-center">
-            <ClientIcon icon={Zap} className="h-12 w-12 text-gray-500 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-400 mb-2">等待测试开始</h3>
-            <p className="text-sm text-gray-500">
-              点击"开始测试"按钮开始代理速度测试，结果将在此处实时显示
+        <Card className="card-standard">
+          <div className="text-center py-12">
+            <ClientIcon icon={Zap} className="h-12 w-12 text-shamrock-600 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-shamrock-400 mb-2">等待测试开始</h3>
+            <p className="text-sm text-shamrock-500">
+              {`点击"开始测试"按钮开始代理${testMode === "speed_only" ? "速度" : testMode === "unlock_only" ? "解锁" : "速度和解锁"}测试，结果将在此处实时显示`}
             </p>
           </div>
         </Card>

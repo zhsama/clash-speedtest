@@ -29,6 +29,15 @@ export interface TestProgressData {
   total_count: number;
   progress_percent: number;
   status: string;
+  current_stage?: string; // 当前测试阶段：speed_test, unlock_test
+  unlock_platform?: string; // 当前测试的解锁平台
+}
+
+export interface UnlockResult {
+  platform: string;
+  supported: boolean;
+  region?: string;
+  error_message?: string;
 }
 
 export interface TestResultData {
@@ -47,6 +56,14 @@ export interface TestResultData {
   error_stage?: string;
   error_code?: string;
   error_message?: string;
+  // 新增解锁检测结果
+  unlock_results?: UnlockResult[];
+  unlock_summary?: {
+    supported_platforms: string[];
+    unsupported_platforms: string[];
+    total_tested: number;
+    total_supported: number;
+  };
 }
 
 export interface TestCompleteData {
@@ -59,6 +76,20 @@ export interface TestCompleteData {
   average_upload_mbps: number;
   best_proxy: string;
   best_download_speed_mbps: number;
+  // 新增解锁检测统计
+  unlock_stats?: {
+    total_unlock_tests: number;
+    successful_unlock_tests: number;
+    platform_stats: {
+      [platform: string]: {
+        total_tested: number;
+        successful: number;
+        success_rate: number;
+      };
+    };
+    best_unlock_proxy?: string;
+    best_unlock_platforms?: string[];
+  };
 }
 
 export interface ErrorData {

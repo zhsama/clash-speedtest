@@ -56,7 +56,6 @@ interface TestConfig {
   concurrent: number
   // 解锁检测相关配置
   testMode: string
-  unlockEnabled: boolean
   unlockPlatforms: string[]
   unlockConcurrent: number
   unlockTimeout: number
@@ -218,20 +217,6 @@ const UnlockTestConfig = ({ testConfig, setTestConfig, hasSpeedConfig }: {
     
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 component-gap">
       <div>
-        <label className="form-element-label flex items-center gap-2">
-          <Switch
-            checked={testConfig.unlockEnabled}
-            onCheckedChange={(checked) => setTestConfig(prev => ({ 
-              ...prev, 
-              unlockEnabled: checked 
-            }))}
-            className="switch-dark"
-          />
-          启用解锁检测
-        </label>
-      </div>
-      
-      <div>
         <label className="form-element-label">
           解锁检测并发数: {testConfig.unlockConcurrent}
         </label>
@@ -245,7 +230,6 @@ const UnlockTestConfig = ({ testConfig, setTestConfig, hasSpeedConfig }: {
           min={1}
           step={1}
           className="slider-dark"
-          disabled={!testConfig.unlockEnabled}
         />
       </div>
       
@@ -263,37 +247,34 @@ const UnlockTestConfig = ({ testConfig, setTestConfig, hasSpeedConfig }: {
           min={5}
           step={5}
           className="slider-dark"
-          disabled={!testConfig.unlockEnabled}
         />
       </div>
     </div>
     
-    {testConfig.unlockEnabled && (
-      <div className="form-element">
-        <label className="form-element-label">
-          检测平台
-        </label>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 component-gap">
-          {["Netflix", "YouTube", "Disney+", "ChatGPT", "Spotify", "Bilibili"].map((platform) => (
-            <label key={platform} className="flex items-center gap-2 cursor-pointer">
-              <Checkbox
-                checked={testConfig.unlockPlatforms.includes(platform)}
-                onCheckedChange={(checked) => {
-                  setTestConfig(prev => ({
-                    ...prev,
-                    unlockPlatforms: checked
-                      ? [...prev.unlockPlatforms, platform]
-                      : prev.unlockPlatforms.filter(p => p !== platform)
-                  }))
-                }}
-                className="checkbox-dark"
-              />
-              <span className="text-shamrock-100 text-sm">{platform}</span>
-            </label>
-          ))}
-        </div>
+    <div className="form-element">
+      <label className="form-element-label">
+        检测平台
+      </label>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 component-gap">
+        {["Netflix", "YouTube", "Disney+", "ChatGPT", "Spotify", "Bilibili"].map((platform) => (
+          <label key={platform} className="flex items-center gap-2 cursor-pointer">
+            <Checkbox
+              checked={testConfig.unlockPlatforms.includes(platform)}
+              onCheckedChange={(checked) => {
+                setTestConfig(prev => ({
+                  ...prev,
+                  unlockPlatforms: checked
+                    ? [...prev.unlockPlatforms, platform]
+                    : prev.unlockPlatforms.filter(p => p !== platform)
+                }))
+              }}
+              className="checkbox-dark"
+            />
+            <span className="text-shamrock-100 text-sm">{platform}</span>
+          </label>
+        ))}
       </div>
-    )}
+    </div>
   </div>
 )
 
@@ -325,7 +306,6 @@ export default function SpeedTestPro() {
     concurrent: 4,
     // 解锁检测配置
     testMode: "both", // both, speed_only, unlock_only
-    unlockEnabled: true,
     unlockPlatforms: ["Netflix", "YouTube", "Disney+", "ChatGPT", "Spotify", "Bilibili"],
     unlockConcurrent: 5,
     unlockTimeout: 10,
@@ -433,17 +413,20 @@ export default function SpeedTestPro() {
         const protocols = [...new Set(data.nodes.map((n: NodeInfo) => n.type))]
         setAvailableProtocols(protocols as string[])
         
-        setFilterConfig(prev => ({
-          ...prev,
+        // 更新过滤配置
+        const newFilterConfig = {
+          ...filterConfig,
           protocolFilter: protocols as string[]
-        }))
+        }
+        setFilterConfig(newFilterConfig)
         
-        applyFilters(data.nodes)
+        // 使用新的过滤配置来应用过滤和计算统计
+        const filtered = applyFiltersWithConfig(data.nodes, newFilterConfig)
+        setFilteredNodes(filtered)
         
-        const filteredCount = data.nodes.filter((node: NodeInfo) => !isNodeFiltered(node)).length
-        const hasFilters = filterConfig.includeNodes.length > 0 || 
-                          filterConfig.excludeNodes.length > 0 || 
-                          filterConfig.protocolFilter.length > 0
+        const filteredCount = filtered.length
+        const hasFilters = newFilterConfig.includeNodes.length > 0 || 
+                          newFilterConfig.excludeNodes.length > 0
         
         if (hasFilters && filteredCount < data.nodes.length) {
           const filteredOutCount = data.nodes.length - filteredCount
@@ -461,59 +444,35 @@ export default function SpeedTestPro() {
     }
   }
   
-  const isNodeFiltered = (node: NodeInfo) => {
-    if (filterConfig.includeNodes.length > 0) {
-      const included = filterConfig.includeNodes.some(include =>
-        node.name.toLowerCase().includes(include.toLowerCase())
-      )
-      if (!included) {
-        console.log(`Node ${node.name} filtered out by includeNodes`);
-        return true
-      }
-    }
-    
-    if (filterConfig.excludeNodes.length > 0) {
-      const excluded = filterConfig.excludeNodes.some(exclude =>
-        node.name.toLowerCase().includes(exclude.toLowerCase())
-      )
-      if (excluded) {
-        console.log(`Node ${node.name} filtered out by excludeNodes`);
-        return true
-      }
-    }
-    
-    if (!filterConfig.protocolFilter.includes(node.type)) {
-      console.log(`Node ${node.name} (${node.type}) filtered out by protocolFilter. Current filter:`, filterConfig.protocolFilter);
-      return true
-    }
-    
-    return false
+  const applyFilters = (nodesToFilter: NodeInfo[] = nodes) => {
+    const filtered = applyFiltersWithConfig(nodesToFilter, filterConfig)
+    setFilteredNodes(filtered)
   }
 
-  const applyFilters = (nodesToFilter: NodeInfo[] = nodes) => {
+  const applyFiltersWithConfig = (nodesToFilter: NodeInfo[], config: FilterConfig) => {
     let filtered = [...nodesToFilter]
     
-    if (filterConfig.includeNodes.length > 0) {
+    if (config.includeNodes.length > 0) {
       filtered = filtered.filter(node =>
-        filterConfig.includeNodes.some(include =>
+        config.includeNodes.some(include =>
           node.name.toLowerCase().includes(include.toLowerCase())
         )
       )
     }
     
-    if (filterConfig.excludeNodes.length > 0) {
+    if (config.excludeNodes.length > 0) {
       filtered = filtered.filter(node =>
-        !filterConfig.excludeNodes.some(exclude =>
+        !config.excludeNodes.some(exclude =>
           node.name.toLowerCase().includes(exclude.toLowerCase())
         )
       )
     }
     
     filtered = filtered.filter(node =>
-      filterConfig.protocolFilter.includes(node.type)
+      config.protocolFilter.includes(node.type)
     )
     
-    setFilteredNodes(filtered)
+    return filtered
   }
   
   useEffect(() => {
@@ -699,7 +658,7 @@ export default function SpeedTestPro() {
                 总节点数: {nodes.length}
               </span>
               <span className="badge-standard">
-                符合条件: {nodes.filter(node => !isNodeFiltered(node)).length}
+                符合条件: {filteredNodes.length}
               </span>
               {testing && (
                 <span className="badge-standard bg-shamrock-600 text-shamrock-50">
@@ -740,7 +699,7 @@ export default function SpeedTestPro() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {nodes.filter(node => !isNodeFiltered(node)).map((node, index) => (
+                  {filteredNodes.map((node, index) => (
                     <TableRow key={`${node.name}-${index}`}>
                       <TableCell className="font-medium text-shamrock-50">
                         <div className="truncate max-w-xs" title={node.name}>

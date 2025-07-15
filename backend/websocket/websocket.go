@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/faceair/clash-speedtest/logger"
+	"github.com/faceair/clash-speedtest/speedtester"
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
 )
@@ -120,6 +121,48 @@ type TestResultData struct {
 	ErrorStage   string `json:"error_stage,omitempty"`   // 错误阶段
 	ErrorCode    string `json:"error_code,omitempty"`    // 错误代码
 	ErrorMessage string `json:"error_message,omitempty"` // 错误消息
+	UnlockResults []UnlockResult   `json:"unlock_results,omitempty"` // 解锁检测结果
+	UnlockSummary *UnlockSummary   `json:"unlock_summary,omitempty"` // 解锁摘要
+}
+
+// UnlockResult 前端期望的解锁结果格式
+type UnlockResult struct {
+	Platform     string `json:"platform"`
+	Supported    bool   `json:"supported"`
+	Region       string `json:"region,omitempty"`
+	ErrorMessage string `json:"error_message,omitempty"`
+}
+
+// UnlockSummary 前端期望的解锁摘要格式
+type UnlockSummary struct {
+	SupportedPlatforms   []string `json:"supported_platforms"`
+	UnsupportedPlatforms []string `json:"unsupported_platforms"`
+	TotalTested          int      `json:"total_tested"`
+	TotalSupported       int      `json:"total_supported"`
+}
+
+// ConvertSpeedtesterUnlockResults 将speedtester的unlock结果转换为websocket格式
+func ConvertSpeedtesterUnlockResults(results []speedtester.FrontendUnlockResult) []UnlockResult {
+	converted := make([]UnlockResult, len(results))
+	for i, result := range results {
+		converted[i] = UnlockResult{
+			Platform:     result.Platform,
+			Supported:    result.Supported,
+			Region:       result.Region,
+			ErrorMessage: result.ErrorMessage,
+		}
+	}
+	return converted
+}
+
+// ConvertSpeedtesterUnlockSummary 将speedtester的unlock摘要转换为websocket格式
+func ConvertSpeedtesterUnlockSummary(summary speedtester.FrontendUnlockSummary) *UnlockSummary {
+	return &UnlockSummary{
+		SupportedPlatforms:   summary.SupportedPlatforms,
+		UnsupportedPlatforms: summary.UnsupportedPlatforms,
+		TotalTested:          summary.TotalTested,
+		TotalSupported:       summary.TotalSupported,
+	}
 }
 
 // TestCompleteData contains summary information when all tests are done

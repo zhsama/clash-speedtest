@@ -35,16 +35,31 @@ var (
 
 // createUnlockConfig 根据TestRequest创建解锁检测配置
 func createUnlockConfig(req TestRequest) *unlock.UnlockTestConfig {
-	if !req.UnlockEnabled {
+	logger.Logger.Debug("Creating unlock config",
+		slog.Bool("unlock_enabled", req.UnlockEnabled),
+		slog.String("test_mode", req.TestMode),
+		slog.Any("platforms", req.UnlockPlatforms),
+		slog.Int("concurrent", req.UnlockConcurrent),
+		slog.Int("timeout", req.UnlockTimeout),
+	)
+
+	needsUnlock := req.TestMode == "unlock_only" || req.TestMode == "both"
+	
+	if !req.UnlockEnabled && !needsUnlock {
+		logger.Logger.Debug("Unlock detection disabled by request")
 		return &unlock.UnlockTestConfig{
 			Enabled: false,
 		}
 	}
 
-	// 设置默认值
+	if needsUnlock {
+		logger.Logger.Debug("Auto-enabling unlock detection for test mode", slog.String("test_mode", req.TestMode))
+	}
+
 	platforms := req.UnlockPlatforms
 	if len(platforms) == 0 {
 		platforms = []string{"Netflix", "YouTube", "Disney+", "ChatGPT", "Spotify", "Bilibili"}
+		logger.Logger.Debug("Using default platforms", slog.Any("platforms", platforms))
 	}
 
 	concurrent := req.UnlockConcurrent
@@ -57,7 +72,7 @@ func createUnlockConfig(req TestRequest) *unlock.UnlockTestConfig {
 		timeout = 10
 	}
 
-	return &unlock.UnlockTestConfig{
+	config := &unlock.UnlockTestConfig{
 		Enabled:       true,
 		Platforms:     platforms,
 		Concurrent:    concurrent,
@@ -65,6 +80,8 @@ func createUnlockConfig(req TestRequest) *unlock.UnlockTestConfig {
 		RetryOnError:  req.UnlockRetry,
 		IncludeIPInfo: true,
 	}
+
+	return config
 }
 
 func main() {
@@ -267,8 +284,10 @@ func runTestTask(task *TestTask) {
 
 	logger.Logger.Info("Starting test task", slog.String("task_id", task.ID))
 
-	// 创建SpeedTester实例
 	unlockConfig := createUnlockConfig(task.Config)
+	
+	
+	
 	speedTester := speedtester.New(&speedtester.Config{
 		ConfigPaths:      task.Config.ConfigPaths,
 		FilterRegex:      task.Config.FilterRegex,
@@ -346,17 +365,28 @@ func runTestTask(task *TestTask) {
 
 		// 判断结果状态
 		status := "success"
-		if result.PacketLoss == 100 || result.Latency > time.Duration(task.Config.MaxLatency)*time.Millisecond {
-			status = "failed"
-			failed++
-		} else if result.DownloadSpeed < task.Config.MinDownloadSpeed*1024*1024 || result.UploadSpeed < task.Config.MinUploadSpeed*1024*1024 {
-			status = "failed"
-			failed++
+		
+		if task.Config.TestMode == "unlock_only" {
+			if result.UnlockSummary.TotalSupported > 0 {
+				status = "success"
+				successful++
+			} else {
+				status = "failed"
+				failed++
+			}
 		} else {
-			successful++
+			if result.PacketLoss == 100 || result.Latency > time.Duration(task.Config.MaxLatency)*time.Millisecond {
+				status = "failed"
+				failed++
+			} else if result.DownloadSpeed < task.Config.MinDownloadSpeed*1024*1024 || result.UploadSpeed < task.Config.MinUploadSpeed*1024*1024 {
+				status = "failed"
+				failed++
+			} else {
+				status = "success"
+				successful++
+			}
 		}
 
-		// 发送进度更新
 		progressData := websocket.TestProgressData{
 			CurrentProxy:    result.ProxyName,
 			CompletedCount:  completed,
@@ -379,6 +409,8 @@ func runTestTask(task *TestTask) {
 			DownloadSpeedMbps: result.DownloadSpeed / (1024 * 1024),
 			UploadSpeedMbps:   result.UploadSpeed / (1024 * 1024),
 			Status:            status,
+			UnlockResults:     websocket.ConvertSpeedtesterUnlockResults(result.UnlockResults),
+			UnlockSummary:     websocket.ConvertSpeedtesterUnlockSummary(result.UnlockSummary),
 		}
 
 		if result.TestError != nil {
@@ -750,14 +782,26 @@ func handleTestWithWebSocket(w http.ResponseWriter, r *http.Request) {
 
 		// Determine status
 		status := "success"
-		if result.PacketLoss == 100 || result.Latency > time.Duration(req.MaxLatency)*time.Millisecond {
-			status = "failed"
-			failed++
-		} else if (req.MinDownloadSpeed > 0 && result.DownloadSpeed < req.MinDownloadSpeed*1024*1024) || (req.MinUploadSpeed > 0 && result.UploadSpeed < req.MinUploadSpeed*1024*1024) {
-			status = "failed"
-			failed++
+		
+		if req.TestMode == "unlock_only" {
+			if result.UnlockSummary.TotalSupported > 0 {
+				status = "success"
+				successful++
+			} else {
+				status = "failed"
+				failed++
+			}
 		} else {
-			successful++
+			if result.PacketLoss == 100 || result.Latency > time.Duration(req.MaxLatency)*time.Millisecond {
+				status = "failed"
+				failed++
+			} else if (req.MinDownloadSpeed > 0 && result.DownloadSpeed < req.MinDownloadSpeed*1024*1024) || (req.MinUploadSpeed > 0 && result.UploadSpeed < req.MinUploadSpeed*1024*1024) {
+				status = "failed"
+				failed++
+			} else {
+				status = "success"
+				successful++
+			}
 		}
 
 		// Send progress update
@@ -783,9 +827,10 @@ func handleTestWithWebSocket(w http.ResponseWriter, r *http.Request) {
 			DownloadSpeedMbps: result.DownloadSpeed / (1024 * 1024),
 			UploadSpeedMbps:   result.UploadSpeed / (1024 * 1024),
 			Status:            status,
+			UnlockResults:     websocket.ConvertSpeedtesterUnlockResults(result.UnlockResults),
+			UnlockSummary:     websocket.ConvertSpeedtesterUnlockSummary(result.UnlockSummary),
 		}
 
-		// 如果有错误详情，添加到WebSocket消息中
 		if result.TestError != nil {
 			resultData.ErrorStage = result.TestError.Stage
 			resultData.ErrorCode = result.TestError.Code

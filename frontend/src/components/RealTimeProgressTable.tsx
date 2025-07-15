@@ -669,7 +669,13 @@ export default function RealTimeProgressTable({
                         <TableCell key={column.key} className={column.width || ''}>
                           {column.formatter 
                             ? column.formatter(result[column.key as keyof TestResultData], result)
-                            : result[column.key as keyof TestResultData]
+                            : (() => {
+                                const value = result[column.key as keyof TestResultData];
+                                if (Array.isArray(value) || typeof value === 'object') {
+                                  return <span className="text-shamrock-500 text-xs">-</span>;
+                                }
+                                return value;
+                              })()
                           }
                         </TableCell>
                       ))}

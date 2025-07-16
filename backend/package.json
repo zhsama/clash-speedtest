@@ -6,6 +6,8 @@
     "dev": "npm run api:dev",
     "api:dev": "go run main.go -config=config-debug.yaml",
     "dev:config": "go run main.go -config=config.yaml",
+    "debug": "/Users/zhsama/go/bin/dlv debug --headless --listen=:2345 --api-version=2 --accept-multiclient main.go -- -config=config-debug.yaml",
+    "debug:config": "/Users/zhsama/go/bin/dlv debug --headless --listen=:2345 --api-version=2 --accept-multiclient main.go -- -config=config.yaml",
     "build": "go build -ldflags=\"-s -w\" -o dist/clash-speedtest .",
     "build:api": "go build -ldflags=\"-s -w\" -o dist/api-server ./api-server",
     "build:download": "go build -ldflags=\"-s -w\" -o dist/download-server ./download-server",

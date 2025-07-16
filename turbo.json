@@ -46,6 +46,14 @@
         ".env*"
       ]
     },
+    "debug": {
+      "cache": false,
+      "persistent": true
+    },
+    "debug:backend": {
+      "cache": false,
+      "persistent": true
+    },
     "clean": {
       "cache": false
     }

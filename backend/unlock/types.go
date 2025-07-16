@@ -1,6 +1,7 @@
 package unlock
 
 import (
+	"context"
 	"time"
 
 	"github.com/metacubex/mihomo/constant"
@@ -33,19 +34,32 @@ type UnlockResult struct {
 	Message   string       `json:"message"`    // 额外信息
 	Latency   int64        `json:"latency_ms"` // 检测延迟
 	CheckedAt time.Time    `json:"checked_at"` // 检测时间
+	err       error        `json:"-"`          // 内部错误，不序列化，用于日志和调试
 }
 
 // UnlockTestConfig 解锁检测配置
 type UnlockTestConfig struct {
-	Enabled       bool     `json:"enabled"`         // 是否启用
-	Platforms     []string `json:"platforms"`       // 要检测的平台列表
-	Concurrent    int      `json:"concurrent"`      // 并发检测数
-	Timeout       int      `json:"timeout"`         // 单个检测超时（秒）
-	RetryOnError  bool     `json:"retry_on_error"`  // 错误时重试
-	IncludeIPInfo bool     `json:"include_ip_info"` // 包含 IP 信息
+	Enabled          bool     `json:"enabled"`           // 是否启用
+	Platforms        []string `json:"platforms"`         // 要检测的平台列表
+	Concurrent       int      `json:"concurrent"`        // 并发检测数
+	Timeout          int      `json:"timeout"`           // 单个检测超时（秒）
+	RetryOnError     bool     `json:"retry_on_error"`    // 错误时重试
+	IncludeIPInfo    bool     `json:"include_ip_info"`   // 包含 IP 信息
+	EnableCache      bool     `json:"enable_cache"`      // 启用缓存
+	CacheTTL         int      `json:"cache_ttl"`         // 缓存时间（分钟）
 }
 
-// IPInfo IP 信息结构
+// IPRiskInfo IP 风险信息
+type IPRiskInfo struct {
+	IP        string  `json:"ip"`
+	Country   string  `json:"country"`
+	City      string  `json:"city"`
+	ISP       string  `json:"isp"`
+	RiskScore int     `json:"risk_score"` // 风险评分 0-100
+	Type      string  `json:"type"`       // 代理类型检测
+}
+
+// IPInfo IP 信息结构 (保持向后兼容)
 type IPInfo struct {
 	IP        string `json:"ip"`
 	Country   string `json:"country"`
@@ -56,7 +70,7 @@ type IPInfo struct {
 
 // UnlockDetector 解锁检测器接口
 type UnlockDetector interface {
-	Detect(proxy constant.Proxy, timeout time.Duration) *UnlockResult
+	Detect(ctx context.Context, proxy constant.Proxy) *UnlockResult
 	GetPlatformName() string
 	GetPriority() int // 检测优先级 (1=高, 2=中, 3=低)
 }

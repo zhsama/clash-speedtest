@@ -1,36 +1,38 @@
-package unlock
+package detectors
 
 import (
+	"context"
 	"io"
 	"strings"
 	"time"
 
+	"github.com/faceair/clash-speedtest/unlock"
 	"github.com/metacubex/mihomo/constant"
 )
 
 // DisneyDetector Disney+检测器
 type DisneyDetector struct {
-	*BaseDetector
+	*unlock.BaseDetector
 }
 
 // NewDisneyDetector 创建Disney+检测器
 func NewDisneyDetector() *DisneyDetector {
 	return &DisneyDetector{
-		BaseDetector: NewBaseDetector("Disney+", 1), // 高优先级
+		BaseDetector: unlock.NewBaseDetector("Disney+", 1), // 高优先级
 	}
 }
 
 // Detect 检测Disney+解锁状态
-func (d *DisneyDetector) Detect(proxy constant.Proxy, timeout time.Duration) *UnlockResult {
-	d.logDetectionStart(proxy)
+func (d *DisneyDetector) Detect(ctx context.Context, proxy constant.Proxy) *unlock.UnlockResult {
+	d.LogDetectionStart(proxy)
 
-	client := createHTTPClient(proxy, timeout)
+	client := unlock.CreateHTTPClient(ctx, proxy)
 
 	// 访问Disney+主页
-	resp, err := makeRequest(client, "GET", "https://www.disneyplus.com", nil)
+	resp, err := unlock.MakeRequest(ctx, client, "GET", "https://www.disneyplus.com", nil)
 	if err != nil {
-		result := d.createErrorResult("Failed to connect to Disney+", err)
-		d.logDetectionResult(proxy, result)
+		result := d.CreateErrorResult("Failed to connect to Disney+", err)
+		d.LogDetectionResult(proxy, result)
 		return result
 	}
 	defer resp.Body.Close()
@@ -38,34 +40,35 @@ func (d *DisneyDetector) Detect(proxy constant.Proxy, timeout time.Duration) *Un
 	// 检查重定向URL
 	finalURL := resp.Request.URL.String()
 
-	var result *UnlockResult
+	var result *unlock.UnlockResult
 	if strings.Contains(finalURL, "/unavailable") ||
 		strings.Contains(finalURL, "/blocked") ||
 		strings.Contains(finalURL, "/unsupported") {
-		result = d.createResult(StatusLocked, "", "Disney+ not available in this region")
+		result = d.CreateResult(unlock.StatusLocked, "", "Disney+ not available in this region")
 	} else {
 		// 读取响应内容进行进一步检查
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
-			result = d.createErrorResult("Failed to read Disney+ response", err)
+			result = d.CreateErrorResult("Failed to read Disney+ response", err)
 		} else {
 			bodyStr := string(body)
 			if strings.Contains(bodyStr, "not available") ||
 				strings.Contains(bodyStr, "access denied") {
-				result = d.createResult(StatusLocked, "", "Disney+ blocked in this region")
+				result = d.CreateResult(unlock.StatusLocked, "", "Disney+ blocked in this region")
 			} else if strings.Contains(bodyStr, "sign up") ||
 				strings.Contains(bodyStr, "subscribe") ||
 				strings.Contains(bodyStr, "bundle") {
 				// 提取地区信息
 				region := d.extractDisneyRegion(finalURL, bodyStr)
-				result = d.createResult(StatusUnlocked, region, "Disney+ available")
+				result = d.CreateResult(unlock.StatusUnlocked, region, "Disney+ available")
 			} else {
-				result = d.createResult(StatusFailed, "", "Unable to determine Disney+ status")
+				result = d.CreateResult(unlock.StatusFailed, "", "Unable to determine Disney+ status")
 			}
 		}
 	}
 
-	d.logDetectionResult(proxy, result)
+	result.CheckedAt = time.Now()
+	d.LogDetectionResult(proxy, result)
 	return result
 }
 
@@ -100,4 +103,9 @@ func (d *DisneyDetector) extractDisneyRegion(url, body string) string {
 	}
 
 	return ""
+}
+
+// init 函数用于自动注册检测器
+func init() {
+	unlock.Register(NewDisneyDetector())
 }

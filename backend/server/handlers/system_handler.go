@@ -29,6 +29,11 @@ func NewSystemHandler() *SystemHandler {
 func (h *SystemHandler) HandleTUNCheck(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	
+	if r.Method != http.MethodGet {
+		h.handleMethodNotAllowed(ctx, w, r, "GET")
+		return
+	}
+	
 	logger.Logger.InfoContext(ctx, "TUN mode detection request")
 	
 	status := system.CheckTUNMode()

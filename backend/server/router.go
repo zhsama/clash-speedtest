@@ -34,17 +34,22 @@ func (r *Router) Setup() {
 	r.mux.HandleFunc("/health", r.withMiddleware(r.testHandler.HandleHealth))
 	
 	// 系统相关路由
+	r.mux.HandleFunc("/api/tun-check", r.withMiddleware(r.systemHandler.HandleTUNCheck))
 	r.mux.HandleFunc("/system/tun-check", r.withMiddleware(r.systemHandler.HandleTUNCheck))
 	r.mux.HandleFunc("/system/logs", r.withMiddleware(r.systemHandler.HandleLogManagement))
 	
 	// 测试相关路由
 	r.mux.HandleFunc("/test", r.withMiddleware(r.testHandler.HandleTest))
 	r.mux.HandleFunc("/test/async", r.withMiddleware(r.testHandler.HandleTestAsync))
+	r.mux.HandleFunc("/api/test/async", r.withMiddleware(r.testHandler.HandleTestAsync))
 	r.mux.HandleFunc("/test/websocket", r.withMiddleware(r.handleWebSocket))
+	r.mux.HandleFunc("/ws", r.withMiddleware(r.handleWebSocket))
 	
 	// 配置相关路由
 	r.mux.HandleFunc("/config/protocols", r.withMiddleware(r.configHandler.HandleGetProtocols))
+	r.mux.HandleFunc("/api/protocols", r.withMiddleware(r.configHandler.HandleGetProtocols))
 	r.mux.HandleFunc("/config/nodes", r.withMiddleware(r.configHandler.HandleGetNodes))
+	r.mux.HandleFunc("/api/nodes", r.withMiddleware(r.configHandler.HandleGetNodes))
 	r.mux.HandleFunc("/config/export", r.withMiddleware(r.configHandler.HandleExportResults))
 }
 

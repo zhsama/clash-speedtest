@@ -13,8 +13,24 @@ import (
 	"github.com/metacubex/mihomo/constant"
 )
 
+// CreateHTTPClient 创建通过代理的HTTP客户端（导出版本）
+func CreateHTTPClient(ctx context.Context, proxy constant.Proxy) *http.Client {
+	return createHTTPClient(ctx, proxy)
+}
+
+// MakeRequest 发送HTTP请求（导出版本）
+func MakeRequest(ctx context.Context, client *http.Client, method, url string, headers map[string]string) (*http.Response, error) {
+	return makeRequest(ctx, client, method, url, headers)
+}
+
 // createHTTPClient 创建通过代理的HTTP客户端
-func createHTTPClient(proxy constant.Proxy, timeout time.Duration) *http.Client {
+func createHTTPClient(ctx context.Context, proxy constant.Proxy) *http.Client {
+	// 从context中获取超时，如果没有设置则使用默认值
+	timeout := 30 * time.Second
+	if deadline, ok := ctx.Deadline(); ok {
+		timeout = time.Until(deadline)
+	}
+
 	transport := &http.Transport{
 		DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
 			host, port, err := net.SplitHostPort(addr)
@@ -50,8 +66,8 @@ func createHTTPClient(proxy constant.Proxy, timeout time.Duration) *http.Client 
 }
 
 // makeRequest 发送HTTP请求
-func makeRequest(client *http.Client, method, url string, headers map[string]string) (*http.Response, error) {
-	req, err := http.NewRequest(method, url, nil)
+func makeRequest(ctx context.Context, client *http.Client, method, url string, headers map[string]string) (*http.Response, error) {
+	req, err := http.NewRequestWithContext(ctx, method, url, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -112,6 +128,26 @@ func (b *BaseDetector) GetPlatformName() string {
 // GetPriority 获取优先级
 func (b *BaseDetector) GetPriority() int {
 	return b.priority
+}
+
+// LogDetectionStart 记录检测开始日志（导出版本）
+func (b *BaseDetector) LogDetectionStart(proxy constant.Proxy) {
+	b.logDetectionStart(proxy)
+}
+
+// LogDetectionResult 记录检测结果日志（导出版本）
+func (b *BaseDetector) LogDetectionResult(proxy constant.Proxy, result *UnlockResult) {
+	b.logDetectionResult(proxy, result)
+}
+
+// CreateErrorResult 创建错误结果（导出版本）
+func (b *BaseDetector) CreateErrorResult(message string, err error) *UnlockResult {
+	return b.createErrorResult(message, err)
+}
+
+// CreateResult 创建检测结果（导出版本）
+func (b *BaseDetector) CreateResult(status UnlockStatus, region, message string) *UnlockResult {
+	return b.createResult(status, region, message)
 }
 
 // logDetectionStart 记录检测开始日志

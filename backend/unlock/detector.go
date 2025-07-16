@@ -1,6 +1,7 @@
 package unlock
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"sync"
@@ -12,53 +13,21 @@ import (
 
 // Detector 主检测器
 type Detector struct {
-	config    *UnlockTestConfig
-	detectors map[string]UnlockDetector
-	cache     UnlockCache
+	config *UnlockTestConfig
+	cache  UnlockCache
 }
 
 // NewDetector 创建新的解锁检测器
 func NewDetector(config *UnlockTestConfig) *Detector {
-	detector := &Detector{
-		config:    config,
-		detectors: make(map[string]UnlockDetector),
-		cache:     NewUnlockCache(),
+	return &Detector{
+		config: config,
+		cache:  NewUnlockCache(),
 	}
-
-	// 注册默认检测器
-	detector.registerDefaultDetectors()
-
-	return detector
-}
-
-// registerDefaultDetectors 注册默认的平台检测器
-func (d *Detector) registerDefaultDetectors() {
-	// 注册各个平台的检测器
-	d.Register("Netflix", NewNetflixDetector())
-	d.Register("YouTube", NewYouTubeDetector())
-	d.Register("Disney+", NewDisneyDetector())
-	d.Register("ChatGPT", NewOpenAIDetector())
-	d.Register("Spotify", NewSpotifyDetector())
-	d.Register("Bilibili", NewBilibiliDetector())
-	// 可以继续添加更多平台...
-}
-
-// Register 注册平台检测器
-func (d *Detector) Register(name string, detector UnlockDetector) {
-	d.detectors[name] = detector
-	logger.Logger.Debug("Registered unlock detector",
-		slog.String("platform", name),
-		slog.Int("priority", detector.GetPriority()),
-	)
 }
 
 // GetSupportedPlatforms 获取支持的平台列表
 func (d *Detector) GetSupportedPlatforms() []string {
-	platforms := make([]string, 0, len(d.detectors))
-	for name := range d.detectors {
-		platforms = append(platforms, name)
-	}
-	return platforms
+	return GetRegisteredPlatforms()
 }
 
 // DetectAll 检测所有指定平台
@@ -131,7 +100,7 @@ func (d *Detector) detectPlatform(proxy constant.Proxy, platform string) *Unlock
 		return cached
 	}
 
-	detector, exists := d.detectors[platform]
+	detector, exists := GetDetector(platform)
 	if !exists {
 		return &UnlockResult{
 			Platform:  platform,
@@ -147,17 +116,22 @@ func (d *Detector) detectPlatform(proxy constant.Proxy, platform string) *Unlock
 	)
 
 	start := time.Now()
-	timeout := time.Duration(d.config.Timeout) * time.Second
+	
+	// 创建带超时的context
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(d.config.Timeout)*time.Second)
+	defer cancel()
 
 	var result *UnlockResult
 	if d.config.RetryOnError {
-		result = d.detectWithRetry(detector, proxy, timeout, 2)
+		result = d.detectWithRetry(ctx, detector, proxy, 2)
 	} else {
-		result = detector.Detect(proxy, timeout)
+		result = detector.Detect(ctx, proxy)
 	}
 
 	result.Latency = time.Since(start).Milliseconds()
-	result.CheckedAt = time.Now()
+	if result.CheckedAt.IsZero() {
+		result.CheckedAt = time.Now()
+	}
 
 	// 缓存结果
 	d.cache.Set(cacheKey, result, 0) // 使用默认TTL
@@ -174,11 +148,15 @@ func (d *Detector) detectPlatform(proxy constant.Proxy, platform string) *Unlock
 }
 
 // detectWithRetry 带重试的检测
-func (d *Detector) detectWithRetry(detector UnlockDetector, proxy constant.Proxy, timeout time.Duration, maxRetries int) *UnlockResult {
+func (d *Detector) detectWithRetry(ctx context.Context, detector UnlockDetector, proxy constant.Proxy, maxRetries int) *UnlockResult {
 	var lastResult *UnlockResult
 
 	for i := 0; i <= maxRetries; i++ {
-		result := detector.Detect(proxy, timeout)
+		// 为每次重试创建新的context
+		retryCtx, cancel := context.WithTimeout(ctx, time.Duration(d.config.Timeout)*time.Second)
+		
+		result := detector.Detect(retryCtx, proxy)
+		cancel()
 
 		if result.Status != StatusError {
 			return result
@@ -213,7 +191,7 @@ func (d *Detector) sortByPriority(platforms []string) []string {
 
 	for _, platform := range platforms {
 		priority := 3 // 默认低优先级
-		if detector, exists := d.detectors[platform]; exists {
+		if detector, exists := GetDetector(platform); exists {
 			priority = detector.GetPriority()
 		}
 		prioritized = append(prioritized, platformPriority{

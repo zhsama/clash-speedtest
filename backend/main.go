@@ -10,6 +10,9 @@ import (
 	"github.com/faceair/clash-speedtest/logger"
 	"github.com/faceair/clash-speedtest/server"
 	"github.com/metacubex/mihomo/log"
+	
+	// 导入detectors包以触发自动注册
+	_ "github.com/faceair/clash-speedtest/detectors"
 )
 
 func main() {

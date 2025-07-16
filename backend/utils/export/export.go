@@ -1,4 +1,4 @@
-package utils
+package export
 
 import (
 	"encoding/csv"
@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/faceair/clash-speedtest/utils/stats"
 	"gopkg.in/yaml.v3"
 )
 
@@ -74,7 +75,7 @@ type ClashConfig struct {
 // Exporter handles exporting test results in various formats
 type Exporter struct {
 	results []ExportableResult
-	stats   *TestStatistics
+	stats   *stats.TestStatistics
 }
 
 // NewExporter creates a new exporter
@@ -90,7 +91,7 @@ func (e *Exporter) AddResult(result ExportableResult) {
 }
 
 // SetStatistics sets the test statistics
-func (e *Exporter) SetStatistics(stats *TestStatistics) {
+func (e *Exporter) SetStatistics(stats *stats.TestStatistics) {
 	e.stats = stats
 }
 
@@ -165,9 +166,9 @@ func (e *Exporter) sortResults(results []ExportableResult, sortBy string) []Expo
 func (e *Exporter) exportJSON(results []ExportableResult, outputPath string) error {
 	data := struct {
 		Metadata struct {
-			ExportTime   time.Time       `json:"export_time"`
-			TotalResults int             `json:"total_results"`
-			Statistics   *TestStatistics `json:"statistics,omitempty"`
+			ExportTime   time.Time                `json:"export_time"`
+			TotalResults int                      `json:"total_results"`
+			Statistics   *stats.TestStatistics `json:"statistics,omitempty"`
 		} `json:"metadata"`
 		Results []ExportableResult `json:"results"`
 	}{
@@ -242,9 +243,9 @@ func (e *Exporter) exportCSV(results []ExportableResult, outputPath string) erro
 func (e *Exporter) exportYAML(results []ExportableResult, outputPath string) error {
 	data := struct {
 		Metadata struct {
-			ExportTime   time.Time       `yaml:"export_time"`
-			TotalResults int             `yaml:"total_results"`
-			Statistics   *TestStatistics `yaml:"statistics,omitempty"`
+			ExportTime   time.Time                `yaml:"export_time"`
+			TotalResults int                      `yaml:"total_results"`
+			Statistics   *stats.TestStatistics `yaml:"statistics,omitempty"`
 		} `yaml:"metadata"`
 		Results []ExportableResult `yaml:"results"`
 	}{

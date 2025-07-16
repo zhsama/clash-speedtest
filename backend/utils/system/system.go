@@ -1,4 +1,4 @@
-package utils
+package system
 
 import (
 	"bufio"
@@ -65,7 +65,7 @@ type SystemInfo struct {
 
 // 检测系统是否启用了 TUN 模式，使用多阶段检测策略：优先使用 Fake-IP 检测，降级到传统接口检测
 func CheckTUNMode() *TUNStatus {
-	logger.Logger.Info("开始检测 TUN 模式状态")
+	logger.Logger.Info("Starting TUN mode detection")
 
 	status := &TUNStatus{
 		DetectionTime:     time.Now(),
@@ -92,8 +92,8 @@ func CheckTUNMode() *TUNStatus {
 	// 核心检测逻辑：结合接口状态、进程信息和路由表判断
 	status.Enabled = determineTUNModeStatus(status)
 
-	// 记录检测结果
-	logger.Logger.Info("TUN 模式检测完成",
+	// Log detection results
+	logger.Logger.Info("TUN mode detection completed",
 		slog.Bool("enabled", status.Enabled),
 		slog.Int("tun_interfaces", len(status.Interfaces)),
 		slog.Int("proxy_processes", len(status.ProxyProcesses)),
@@ -119,7 +119,7 @@ func getTUNInterfaces() []TUNInterface {
 
 	interfaces, err := net.Interfaces()
 	if err != nil {
-		logger.Logger.Error("获取网络接口失败", slog.String("error", err.Error()))
+		logger.Logger.Error("Failed to get network interfaces", slog.String("error", err.Error()))
 		return tunInterfaces
 	}
 
@@ -145,14 +145,6 @@ func getTUNInterfaces() []TUNInterface {
 			tunIface.IsDefault = isDefaultRouteInterface(iface.Name)
 
 			tunInterfaces = append(tunInterfaces, tunIface)
-
-			logger.Logger.Debug("发现 TUN 接口",
-				slog.String("name", tunIface.Name),
-				slog.String("type", tunIface.Type),
-				slog.Bool("is_up", tunIface.IsUp),
-				slog.Bool("is_default", tunIface.IsDefault),
-				slog.Int("ip_count", len(tunIface.IPAddresses)),
-			)
 		}
 	}
 
@@ -205,13 +197,13 @@ func getProxyProcesses() []ProxyProcess {
 	case "windows":
 		cmd = exec.Command("tasklist", "/v")
 	default:
-		logger.Logger.Warn("不支持的操作系统", slog.String("os", runtime.GOOS))
+		logger.Logger.Warn("Unsupported operating system", slog.String("os", runtime.GOOS))
 		return processes
 	}
 
 	output, err := cmd.Output()
 	if err != nil {
-		logger.Logger.Error("获取进程列表失败", slog.String("error", err.Error()))
+		logger.Logger.Error("Failed to get process list", slog.String("error", err.Error()))
 		return processes
 	}
 
@@ -271,7 +263,7 @@ func getProxyProcesses() []ProxyProcess {
 		}
 	}
 
-	logger.Logger.Debug("检测到代理进程", slog.Int("count", len(processes)))
+	logger.Logger.Debug("Detected proxy processes", slog.Int("count", len(processes)))
 
 	return processes
 }
@@ -341,13 +333,13 @@ func getDefaultRoute() *RouteInfo {
 	case "windows":
 		cmd = exec.Command("route", "print", "0.0.0.0")
 	default:
-		logger.Logger.Warn("不支持的操作系统路由检测", slog.String("os", runtime.GOOS))
+		logger.Logger.Warn("Unsupported operating system for route detection", slog.String("os", runtime.GOOS))
 		return nil
 	}
 
 	output, err := cmd.Output()
 	if err != nil {
-		logger.Logger.Error("获取默认路由失败", slog.String("error", err.Error()))
+		logger.Logger.Error("Failed to get default route", slog.String("error", err.Error()))
 		return nil
 	}
 
@@ -409,7 +401,7 @@ func parseDefaultRoute(output, osType string) *RouteInfo {
 	route.Destination = "0.0.0.0/0"
 
 	if route.Gateway != "" || route.Interface != "" {
-		logger.Logger.Debug("默认路由信息",
+		logger.Logger.Debug("Default route information",
 			slog.String("gateway", route.Gateway),
 			slog.String("interface", route.Interface),
 		)
@@ -458,7 +450,7 @@ func checkFakeIPMode(status *TUNStatus) bool {
 	enabled, details, err := CheckTUNModeWithFakeIP(DefaultFakeIPCIDR)
 
 	if err != nil {
-		logger.Logger.Debug("Fake-IP 检测失败", slog.String("error", err.Error()))
+		logger.Logger.Debug("Fake-IP detection failed", slog.String("error", err.Error()))
 		return false
 	}
 
@@ -597,7 +589,7 @@ func FindFakeIPInterfaces(interfaces []TUNInterface, fakeCIDR string) (map[strin
 			// 检查是否在 Fake-IP 网段内
 			if fakeNet.Contains(ip) {
 				suspectIfaces[iface.Name] = true
-				logger.Logger.Debug("发现可能的 TUN 接口",
+				logger.Logger.Debug("Found possible TUN interface",
 					slog.String("name", iface.Name),
 					slog.String("ip", ipStr),
 				)
@@ -637,7 +629,7 @@ func CheckRouteToFakeIPDarwin(fakeCIDR string, suspectIfaces map[string]bool) (b
 		return false, fmt.Errorf("获取路由表失败: %w", err)
 	}
 
-	logger.Logger.Debug("开始检查路由表",
+	logger.Logger.Debug("Starting route table check",
 		slog.String("fake_cidr", fakeCIDR),
 		slog.Any("suspect_interfaces", MapKeysToSlice(suspectIfaces)),
 	)
@@ -659,7 +651,7 @@ func CheckRouteToFakeIPDarwin(fakeCIDR string, suspectIfaces map[string]bool) (b
 			continue
 		}
 
-		logger.Logger.Debug("检查路由条目",
+		logger.Logger.Debug("Checking route entry",
 			slog.String("destination", dest),
 			slog.String("gateway", gateway),
 			slog.String("interface", iface),
@@ -675,7 +667,7 @@ func CheckRouteToFakeIPDarwin(fakeCIDR string, suspectIfaces map[string]bool) (b
 				// 检查这个网段是否与 Fake-IP 段有重叠
 				if fakeNet.Contains(destNet.IP) || destNet.Contains(fakeNet.IP) {
 					isRelated = true
-					logger.Logger.Debug("找到重叠的网段路由",
+					logger.Logger.Debug("Found overlapping subnet route",
 						slog.String("dest_cidr", dest),
 						slog.String("interface", iface),
 					)
@@ -686,7 +678,7 @@ func CheckRouteToFakeIPDarwin(fakeCIDR string, suspectIfaces map[string]bool) (b
 			if ip := net.ParseIP(dest); ip != nil {
 				if fakeNet.Contains(ip) {
 					isRelated = true
-					logger.Logger.Debug("找到指向 Fake-IP 的单IP路由",
+					logger.Logger.Debug("Found single IP route to Fake-IP",
 						slog.String("dest_ip", dest),
 						slog.String("interface", iface),
 					)
@@ -698,7 +690,7 @@ func CheckRouteToFakeIPDarwin(fakeCIDR string, suspectIfaces map[string]bool) (b
 		if gatewayIP := net.ParseIP(gateway); gatewayIP != nil {
 			if fakeNet.Contains(gatewayIP) {
 				isRelated = true
-				logger.Logger.Debug("找到使用 Fake-IP 网关的路由",
+				logger.Logger.Debug("Found route using Fake-IP gateway",
 					slog.String("gateway", gateway),
 					slog.String("interface", iface),
 				)
@@ -706,7 +698,7 @@ func CheckRouteToFakeIPDarwin(fakeCIDR string, suspectIfaces map[string]bool) (b
 		}
 
 		if isRelated {
-			logger.Logger.Info("确认找到指向 Fake-IP 的路由",
+			logger.Logger.Info("Confirmed route to Fake-IP found",
 				slog.String("destination", dest),
 				slog.String("gateway", gateway),
 				slog.String("interface", iface),
@@ -715,7 +707,7 @@ func CheckRouteToFakeIPDarwin(fakeCIDR string, suspectIfaces map[string]bool) (b
 		}
 	}
 
-	logger.Logger.Debug("未找到指向 Fake-IP 的路由")
+	logger.Logger.Debug("No route to Fake-IP found")
 	return false, nil
 }
 
@@ -753,7 +745,7 @@ func CheckRouteToFakeIPLinux(fakeCIDR string, suspectIfaces map[string]bool) (bo
 		if strings.Contains(line, fakeCIDR) {
 			for ifaceName := range suspectIfaces {
 				if strings.Contains(line, " dev "+ifaceName+" ") {
-					logger.Logger.Debug("找到指向 Fake-IP 的路由",
+					logger.Logger.Debug("Found route to Fake-IP (Linux)",
 						slog.String("route", line),
 						slog.String("interface", ifaceName),
 					)
@@ -783,7 +775,7 @@ func CheckRouteToFakeIPWindows(fakeCIDR string, suspectIfaces map[string]bool) (
 		if strings.Contains(line, fakeCIDRIP) {
 			for ifaceName := range suspectIfaces {
 				if strings.Contains(line, ifaceName) {
-					logger.Logger.Debug("找到指向 Fake-IP 的路由",
+					logger.Logger.Debug("Found route to Fake-IP (macOS)",
 						slog.String("route", line),
 						slog.String("interface", ifaceName),
 					)

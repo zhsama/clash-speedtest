@@ -32,19 +32,6 @@ func New(config *Config) *SpeedTester {
 		config: config,
 	}
 
-	if config.UnlockConfig != nil {
-		logger.Logger.Debug("Unlock config details",
-			slog.Bool("enabled", config.UnlockConfig.Enabled),
-			slog.Any("platforms", config.UnlockConfig.Platforms),
-			slog.Int("concurrent", config.UnlockConfig.Concurrent),
-			slog.Int("timeout", config.UnlockConfig.Timeout),
-			slog.Bool("retry_on_error", config.UnlockConfig.RetryOnError),
-			slog.Bool("include_ip_info", config.UnlockConfig.IncludeIPInfo),
-		)
-	} else {
-		logger.Logger.Debug("No unlock config provided")
-	}
-
 	if config.UnlockConfig != nil && config.UnlockConfig.Enabled {
 		logger.Logger.Debug("Initializing unlock detector",
 			slog.Int("platforms", len(config.UnlockConfig.Platforms)),
@@ -61,11 +48,6 @@ func New(config *Config) *SpeedTester {
 		} else {
 			logger.Logger.Error("Failed to initialize unlock detector")
 		}
-	} else {
-		logger.Logger.Debug("Unlock detector not initialized",
-			slog.Bool("config_nil", config.UnlockConfig == nil),
-			slog.Bool("enabled", config.UnlockConfig != nil && config.UnlockConfig.Enabled),
-		)
 	}
 
 	return st
@@ -209,19 +191,10 @@ func (st *SpeedTester) testProxy(name string, proxy *CProxy) *Result {
 
 	// 1. 延迟测试（除非是仅解锁模式）
 	if testMode != "unlock_only" {
-		logger.Logger.Debug("Testing proxy latency", slog.String("proxy_name", name))
-
 		latencyResult := st.testLatencyWithErrors(proxy, st.config.MaxLatency, isVless)
 		result.Latency = latencyResult.avgLatency
 		result.Jitter = latencyResult.jitter
 		result.PacketLoss = latencyResult.packetLoss
-
-		logger.Logger.Debug("Latency test completed",
-			slog.String("proxy_name", name),
-			slog.Int64("latency_ms", result.Latency.Milliseconds()),
-			slog.Float64("packet_loss", result.PacketLoss),
-			slog.Int64("jitter_ms", result.Jitter.Milliseconds()),
-		)
 
 		// 如果延迟测试失败，且不是快速模式或解锁优先模式，则跳过后续测试
 		if testMode == "speed_only" && (result.PacketLoss == 100 || result.Latency > st.config.MaxLatency) {
@@ -237,12 +210,6 @@ func (st *SpeedTester) testProxy(name string, proxy *CProxy) *Result {
 
 	// 2. 解锁检测（除非是仅测速模式）
 	if testMode != "speed_only" && st.unlockDetector != nil {
-		logger.Logger.Debug("Starting unlock detection",
-			slog.String("proxy_name", name),
-			slog.Int("platforms", len(st.config.UnlockConfig.Platforms)),
-			slog.Bool("detector_initialized", st.unlockDetector != nil),
-		)
-
 		unlockResults := st.unlockDetector.DetectAll(proxy.Proxy, st.config.UnlockConfig.Platforms)
 		result.UnlockResults = convertToFrontendUnlockResults(unlockResults)
 		result.UnlockSummary = generateFrontendUnlockSummary(unlockResults)
@@ -297,11 +264,6 @@ func (st *SpeedTester) testProxy(name string, proxy *CProxy) *Result {
 // performSpeedTests 执行速度测试
 func (st *SpeedTester) performSpeedTests(proxy *CProxy, result *Result, isVless bool, name string) {
 	// 并发进行下载和上传测试
-	logger.Logger.Debug("Starting speed tests",
-		slog.String("proxy_name", name),
-		slog.Int("concurrent", st.config.Concurrent),
-	)
-
 	var wg sync.WaitGroup
 
 	var totalDownloadBytes, totalUploadBytes int64

@@ -15,7 +15,6 @@ import (
 	"github.com/metacubex/mihomo/adapter"
 	"github.com/metacubex/mihomo/adapter/provider"
 	"github.com/metacubex/mihomo/constant"
-	"github.com/metacubex/mihomo/log"
 	"gopkg.in/yaml.v3"
 )
 
@@ -35,8 +34,6 @@ func (st *SpeedTester) LoadProxies(stashCompatible bool) (map[string]*CProxy, er
 	allProxies := make(map[string]*CProxy)
 	configPaths := strings.Split(st.config.ConfigPaths, ",")
 
-	logger.Logger.Debug("Processing config paths", slog.Int("path_count", len(configPaths)))
-
 	for i, configPath := range configPaths {
 		// Trim spaces and remove quotes
 		configPath = strings.TrimSpace(configPath)
@@ -46,7 +43,6 @@ func (st *SpeedTester) LoadProxies(stashCompatible bool) (map[string]*CProxy, er
 		}
 
 		if configPath == "" {
-			logger.Logger.Debug("Skipping empty config path", slog.Int("index", i))
 			continue
 		}
 
@@ -58,36 +54,22 @@ func (st *SpeedTester) LoadProxies(stashCompatible bool) (map[string]*CProxy, er
 		var body []byte
 		var err error
 		if strings.HasPrefix(configPath, "http") {
-			logger.Logger.Debug("Fetching config via HTTP", slog.String("url", configPath))
 			var resp *http.Response
 			resp, err = http.Get(configPath)
 			if err != nil {
 				logger.LogError("Failed to fetch config", err, slog.String("url", configPath))
-				log.Warnln("failed to fetch config: %s", err)
 				continue
 			}
 			defer resp.Body.Close()
 
-			logger.Logger.Debug("HTTP response received",
-				slog.Int("status_code", resp.StatusCode),
-				slog.String("content_type", resp.Header.Get("Content-Type")),
-			)
-
 			body, err = io.ReadAll(resp.Body)
 		} else {
-			logger.Logger.Debug("Reading config from file", slog.String("file", configPath))
 			body, err = os.ReadFile(configPath)
 		}
 		if err != nil {
 			logger.LogError("Failed to read config", err, slog.String("path", configPath))
-			log.Warnln("failed to read config: %s", err)
 			continue
 		}
-
-		logger.Logger.Debug("Config content loaded",
-			slog.String("path", configPath),
-			slog.Int("size_bytes", len(body)),
-		)
 
 		// Try to detect and decode base64 encoded configuration
 		if strings.TrimSpace(string(body)) != "" {
@@ -175,7 +157,6 @@ func (st *SpeedTester) LoadProxies(stashCompatible bool) (map[string]*CProxy, er
 					slog.String("provider_name", name),
 					slog.String("provider_url", config["url"].(string)),
 				)
-				log.Warnln("failed to fetch config: %s", err)
 				continue
 			}
 			body, err = io.ReadAll(resp.Body)

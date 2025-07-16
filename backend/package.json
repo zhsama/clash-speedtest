@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "npm run api:dev",
-    "api:dev": "go run . -config=config-debug.yaml",
-    "dev:config": "go run . -config=config.yaml",
+    "api:dev": "go run main.go -config=config-debug.yaml",
+    "dev:config": "go run main.go -config=config.yaml",
     "build": "go build -ldflags=\"-s -w\" -o dist/clash-speedtest .",
     "build:api": "go build -ldflags=\"-s -w\" -o dist/api-server ./api-server",
     "build:download": "go build -ldflags=\"-s -w\" -o dist/download-server ./download-server",

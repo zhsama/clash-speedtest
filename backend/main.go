@@ -24,6 +24,89 @@ import (
 	"github.com/metacubex/mihomo/log"
 )
 
+// TestRequest 表示测试请求的结构
+type TestRequest struct {
+	ConfigPaths      string   `json:"configPaths"`
+	FilterRegex      string   `json:"filterRegex"`
+	IncludeNodes     []string `json:"includeNodes"`
+	ExcludeNodes     []string `json:"excludeNodes"`
+	ProtocolFilter   []string `json:"protocolFilter"`
+	ServerURL        string   `json:"serverUrl"`
+	DownloadSize     int      `json:"downloadSize"`
+	UploadSize       int      `json:"uploadSize"`
+	Timeout          int      `json:"timeout"`
+	Concurrent       int      `json:"concurrent"`
+	MaxLatency       int      `json:"maxLatency"`
+	MinDownloadSpeed float64  `json:"minDownloadSpeed"`
+	MinUploadSpeed   float64  `json:"minUploadSpeed"`
+	StashCompatible  bool     `json:"stashCompatible"`
+	// 新增字段
+	FastMode     bool   `json:"fastMode"`     // 快速模式：只测试延迟
+	RenameNodes  bool   `json:"renameNodes"`  // 节点重命名：添加地理位置信息
+	ExportFormat string `json:"exportFormat"` // 导出格式：json, csv, yaml, clash
+	ExportPath   string `json:"exportPath"`   // 导出路径
+	// 解锁检测相关字段
+	TestMode         string   `json:"testMode"`         // 测试模式：speed_only, unlock_only, both
+	UnlockEnabled    bool     `json:"unlockEnabled"`    // 是否启用解锁检测
+	UnlockPlatforms  []string `json:"unlockPlatforms"`  // 要检测的平台列表
+	UnlockConcurrent int      `json:"unlockConcurrent"` // 解锁检测并发数
+	UnlockTimeout    int      `json:"unlockTimeout"`    // 解锁检测超时时间
+	UnlockRetry      bool     `json:"unlockRetry"`      // 解锁检测失败时是否重试
+}
+
+// TestResponse 表示测试响应的结构
+type TestResponse struct {
+	Success bool                  `json:"success"`
+	Error   string                `json:"error,omitempty"`
+	Results []*speedtester.Result `json:"results,omitempty"`
+}
+
+// TestTask 表示测试任务的结构
+type TestTask struct {
+	ID         string
+	Config     TestRequest
+	Context    context.Context
+	CancelFunc context.CancelFunc
+	Status     string // pending, running, completed, cancelled
+	StartTime  time.Time
+}
+
+// loggingResponseWriter HTTP响应写入器，用于记录响应状态
+type loggingResponseWriter struct {
+	http.ResponseWriter
+	statusCode int
+}
+
+// WriteHeader 记录HTTP状态码
+func (lrw *loggingResponseWriter) WriteHeader(code int) {
+	lrw.statusCode = code
+	lrw.ResponseWriter.WriteHeader(code)
+}
+
+// ProtocolsResponse 协议列表响应结构
+type ProtocolsResponse struct {
+	Success   bool     `json:"success"`
+	Error     string   `json:"error,omitempty"`
+	Protocols []string `json:"protocols,omitempty"`
+}
+
+// NodeInfo 节点信息结构
+type NodeInfo struct {
+	Name     string `json:"name"`
+	Type     string `json:"type"`
+	Server   string `json:"server"`
+	Port     int    `json:"port"`
+	Password string `json:"password,omitempty"`
+	Cipher   string `json:"cipher,omitempty"`
+}
+
+// NodesResponse 节点列表响应结构
+type NodesResponse struct {
+	Success bool       `json:"success"`
+	Error   string     `json:"error,omitempty"`
+	Nodes   []NodeInfo `json:"nodes,omitempty"`
+}
+
 var wsHub *websocket.Hub
 var testCancelFunc context.CancelFunc
 var testCancelMutex sync.RWMutex
@@ -32,6 +115,82 @@ var (
 	testTasks      = make(map[string]*TestTask)
 	testTasksMutex sync.RWMutex
 )
+
+// generateTaskID generates a unique task ID
+func generateTaskID() string {
+	return fmt.Sprintf("task-%d-%s", time.Now().Unix(), time.Now().Format("150405"))
+}
+
+// handleHealth handles health check requests
+func handleHealth(w http.ResponseWriter, r *http.Request) {
+	logger.Logger.Debug("Health check requested")
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+}
+
+// sendError sends an error response
+func sendError(w http.ResponseWriter, message string) {
+	logger.Logger.Error("Sending error response", slog.String("error", message))
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusBadRequest)
+	json.NewEncoder(w).Encode(TestResponse{
+		Success: false,
+		Error:   message,
+	})
+}
+
+// sendSuccess sends a success response
+func sendSuccess(w http.ResponseWriter, results []*speedtester.Result) {
+	logger.Logger.Info("Sending successful response", slog.Int("result_count", len(results)))
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(TestResponse{
+		Success: true,
+		Results: results,
+	})
+}
+
+// handleTUNCheck handles TUN mode detection requests
+func handleTUNCheck(w http.ResponseWriter, r *http.Request) {
+	logger.Logger.Info("TUN 模式检测请求")
+
+	status := utils.CheckTUNMode()
+
+	w.Header().Set("Content-Type", "application/json")
+
+	response := map[string]any{
+		"success":    true,
+		"tun_status": status,
+		"warning":    "",
+	}
+
+	// 如果检测到 TUN 模式启用，添加警告信息
+	if status.Enabled {
+		warning := "检测到系统已启用 TUN 模式！"
+		if status.ActiveInterface != nil {
+			warning += fmt.Sprintf(" 活动接口: %s", status.ActiveInterface.Name)
+		}
+		if len(status.ProxyProcesses) > 0 {
+			warning += fmt.Sprintf(" 检测到代理进程: %s", status.ProxyProcesses[0].Name)
+		}
+		warning += " 建议在进行速度测试前先关闭 TUN 模式，以获得更准确的测试结果。"
+
+		response["warning"] = warning
+
+		logger.Logger.Warn("检测到 TUN 模式已启用",
+			slog.String("active_interface", func() string {
+				if status.ActiveInterface != nil {
+					return status.ActiveInterface.Name
+				}
+				return "unknown"
+			}()),
+			slog.Int("proxy_processes", len(status.ProxyProcesses)),
+		)
+	} else {
+		logger.Logger.Info("未检测到 TUN 模式")
+	}
+
+	json.NewEncoder(w).Encode(response)
+}
 
 // createUnlockConfig 根据TestRequest创建解锁检测配置
 func createUnlockConfig(req TestRequest) *unlock.UnlockTestConfig {
@@ -203,8 +362,6 @@ func loggingMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		logger.LogHTTPRequest(r.Method, r.URL.Path, r.RemoteAddr, lrw.statusCode, duration.String())
 	}
 }
-
-// 生成任务ID
 
 // 异步测试处理
 func handleTestAsync(w http.ResponseWriter, r *http.Request) {

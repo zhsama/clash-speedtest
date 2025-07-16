@@ -579,9 +579,9 @@ export default function SpeedTestPro() {
       
       const data = await response.json()
       
-      if (data.success && data.taskId) {
-        setTaskId(data.taskId)
-        toast.success(`测试任务已创建，任务ID: ${data.taskId}`)
+      if (data.success && data.data && data.data.taskId) {
+        setTaskId(data.data.taskId)
+        toast.success(`测试任务已创建，任务ID: ${data.data.taskId}`)
       } else {
         toast.error(data.error || "创建测试任务失败")
         setTesting(false)

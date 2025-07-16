@@ -744,47 +744,49 @@ export default function SpeedTestPro() {
                 </Button>
               </div>
               
-              <div className="table-standard max-h-96 overflow-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>节点名称</TableHead>
-                      <TableHead>类型</TableHead>
-                      <TableHead>服务器</TableHead>
-                      <TableHead>端口</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredNodes.length > 0 ? (
-                      filteredNodes.map((node, index) => (
-                        <TableRow key={`${node.name}-${index}`}>
-                          <TableCell className="font-medium text-lavender-50">
-                            <div className="truncate max-w-xs" title={node.name}>
-                              {node.name}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <span className="badge-standard">
-                              {node.type}
-                            </span>
-                          </TableCell>
-                          <TableCell className="text-lavender-300 font-mono text-sm">
-                            {node.server}
-                          </TableCell>
-                          <TableCell className="text-lavender-300">
-                            {node.port}
+              <div className="table-scroll-container">
+                <div className="table-scroll-content">
+                  <Table>
+                    <TableHeader className="table-header-fixed">
+                      <TableRow>
+                        <TableHead>节点名称</TableHead>
+                        <TableHead>类型</TableHead>
+                        <TableHead>服务器</TableHead>
+                        <TableHead>端口</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredNodes.length > 0 ? (
+                        filteredNodes.map((node, index) => (
+                          <TableRow key={`${node.name}-${index}`}>
+                            <TableCell className="font-medium text-lavender-50">
+                              <div className="truncate max-w-xs" title={node.name}>
+                                {node.name}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <span className="badge-standard">
+                                {node.type}
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-lavender-300 font-mono text-sm">
+                              {node.server}
+                            </TableCell>
+                            <TableCell className="text-lavender-300">
+                              {node.port}
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={4} className="text-center text-lavender-400 py-8">
+                            {nodes.length === 0 ? "暂无节点信息" : "没有符合条件的节点"}
                           </TableCell>
                         </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={4} className="text-center text-lavender-400 py-8">
-                          {nodes.length === 0 ? "暂无节点信息" : "没有符合条件的节点"}
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
               </div>
             </Card>
 

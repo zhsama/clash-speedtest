@@ -196,7 +196,29 @@
     background: hsla(0, 0%, 6%, 0.6);
     border: 1px solid hsl(var(--lavender-500));
     border-radius: var(--radius);
+  }
+
+  /* 表格滚动容器样式 */
+  .table-scroll-container {
+    background: hsla(0, 0%, 6%, 0.6);
+    border: 1px solid hsl(var(--lavender-500));
+    border-radius: var(--radius);
     overflow: hidden;
+  }
+
+  .table-scroll-content {
+    max-height: 24rem; /* 96 * 0.25rem = 24rem */
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  /* 固定表头样式 */
+  .table-header-fixed {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: hsla(0, 0%, 10%, 0.95);
+    backdrop-filter: blur(8px);
   }
 
   .table-standard th {

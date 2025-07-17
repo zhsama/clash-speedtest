@@ -2,6 +2,7 @@ package unlock
 
 import (
 	"context"
+	"net/http"
 	"time"
 
 	"github.com/metacubex/mihomo/constant"
@@ -149,3 +150,38 @@ func (c *ConcurrencyController) Acquire() {
 func (c *ConcurrencyController) Release() {
 	<-c.semaphore
 }
+
+// StreamResult 流媒体检测结果（按照模板架构）
+type StreamResult struct {
+	Platform string `json:"platform"` // 平台名称
+	Status   string `json:"status"`   // 状态：Success/Failed
+	Region   string `json:"region"`   // 地区/货币代码
+	Info     string `json:"info"`     // 额外信息
+}
+
+// StreamTest 流媒体测试函数类型
+type StreamTest func(*http.Client) *StreamResult
+
+// FormatResult 格式化检测结果为字符串
+func (r *StreamResult) FormatResult() string {
+	if r.Status == "Success" {
+		if r.Info != "" {
+			return r.Region + " (" + r.Info + ")"
+		}
+		return r.Region
+	}
+	if r.Info != "" {
+		return "Failed (" + r.Info + ")"
+	}
+	return "Failed"
+}
+
+// 常量定义
+const (
+	UA_Browser = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+)
+
+// 全局变量
+var (
+	StreamTests []StreamTest
+)

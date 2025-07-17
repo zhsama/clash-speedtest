@@ -1,38 +1,34 @@
 package detectors
 
 import (
-	"context"
 	"io"
+	"net/http"
 	"strings"
-	"time"
 
 	"github.com/faceair/clash-speedtest/unlock"
-	"github.com/metacubex/mihomo/constant"
 )
 
-// SpotifyDetector Spotify检测器
-type SpotifyDetector struct {
-	*unlock.BaseDetector
-}
-
-// NewSpotifyDetector 创建Spotify检测器
-func NewSpotifyDetector() *SpotifyDetector {
-	return &SpotifyDetector{
-		BaseDetector: unlock.NewBaseDetector("Spotify", 2), // 中优先级
+// TestSpotify 测试 Spotify 解锁情况
+func TestSpotify(client *http.Client) *unlock.StreamResult {
+	result := &unlock.StreamResult{
+		Platform: "Spotify",
 	}
-}
 
-// Detect 检测Spotify解锁状态
-func (d *SpotifyDetector) Detect(ctx context.Context, proxy constant.Proxy) *unlock.UnlockResult {
-	d.LogDetectionStart(proxy)
-
-	client := unlock.CreateHTTPClient(ctx, proxy)
-
-	// 访问Spotify主页
-	resp, err := unlock.MakeRequest(ctx, client, "GET", "https://open.spotify.com/", nil)
+	req, err := http.NewRequest("GET", "https://open.spotify.com/", nil)
 	if err != nil {
-		result := d.CreateErrorResult("Failed to connect to Spotify", err)
-		d.LogDetectionResult(proxy, result)
+		result.Status = "Failed"
+		result.Info = "Create Request Error"
+		return result
+	}
+
+	req.Header.Set("User-Agent", unlock.UA_Browser)
+	req.Header.Set("Accept-Language", "en-US,en;q=0.9")
+	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		result.Status = "Failed"
+		result.Info = "Network Connection Error"
 		return result
 	}
 	defer resp.Body.Close()
@@ -40,42 +36,50 @@ func (d *SpotifyDetector) Detect(ctx context.Context, proxy constant.Proxy) *unl
 	// 检查是否被重定向到不可用页面
 	finalURL := resp.Request.URL.String()
 	if strings.Contains(finalURL, "unavailable") {
-		result := d.CreateResult(unlock.StatusLocked, "", "Spotify not available in this region")
-		d.LogDetectionResult(proxy, result)
+		result.Status = "Failed"
+		result.Info = "Not Available"
 		return result
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		result := d.CreateErrorResult("Failed to read Spotify response", err)
-		d.LogDetectionResult(proxy, result)
+		result.Status = "Failed"
+		result.Info = "Read Response Error"
 		return result
 	}
 
-	bodyStr := string(body)
+	htmlContent := string(body)
 
-	var result *unlock.UnlockResult
-	if strings.Contains(bodyStr, "not available") ||
-		strings.Contains(bodyStr, "blocked") {
-		result = d.CreateResult(unlock.StatusLocked, "", "Spotify blocked in this region")
-	} else if strings.Contains(bodyStr, "spotify") &&
-		(strings.Contains(bodyStr, "sign up") ||
-			strings.Contains(bodyStr, "login") ||
-			strings.Contains(bodyStr, "premium")) {
-		// 提取地区信息
-		region := d.extractSpotifyRegion(bodyStr)
-		result = d.CreateResult(unlock.StatusUnlocked, region, "Spotify available")
-	} else {
-		result = d.CreateResult(unlock.StatusFailed, "", "Unable to determine Spotify status")
+	// 检查是否被阻止
+	if strings.Contains(htmlContent, "not available") ||
+		strings.Contains(htmlContent, "blocked") {
+		result.Status = "Failed"
+		result.Info = "Blocked"
+		return result
 	}
 
-	result.CheckedAt = time.Now()
-	d.LogDetectionResult(proxy, result)
+	// 检查是否正常显示
+	if strings.Contains(htmlContent, "spotify") &&
+		(strings.Contains(htmlContent, "sign up") ||
+			strings.Contains(htmlContent, "login") ||
+			strings.Contains(htmlContent, "premium")) {
+		// 提取地区信息
+		region := extractSpotifyRegion(htmlContent)
+		result.Status = "Success"
+		result.Region = region
+		if region == "" {
+			result.Region = "Available"
+		}
+		return result
+	}
+
+	result.Status = "Failed"
+	result.Info = "Unknown Error"
 	return result
 }
 
 // extractSpotifyRegion 从Spotify响应中提取地区信息
-func (d *SpotifyDetector) extractSpotifyRegion(body string) string {
+func extractSpotifyRegion(body string) string {
 	// 从响应中查找地区标识
 	regions := map[string]string{
 		`"country":"US"`:   "US",
@@ -103,7 +107,7 @@ func (d *SpotifyDetector) extractSpotifyRegion(body string) string {
 	return ""
 }
 
-// init 函数用于自动注册检测器
 func init() {
-	unlock.Register(NewSpotifyDetector())
+	// 注册 Spotify 测试
+	unlock.StreamTests = append(unlock.StreamTests, TestSpotify)
 }

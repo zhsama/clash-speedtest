@@ -1,89 +1,95 @@
 package detectors
 
 import (
-	"context"
 	"io"
+	"net/http"
 	"strings"
-	"time"
 
 	"github.com/faceair/clash-speedtest/unlock"
-	"github.com/metacubex/mihomo/constant"
 )
 
-// NetflixDetector Netflix检测器
-type NetflixDetector struct {
-	*unlock.BaseDetector
-}
-
-// NewNetflixDetector 创建Netflix检测器
-func NewNetflixDetector() *NetflixDetector {
-	return &NetflixDetector{
-		BaseDetector: unlock.NewBaseDetector("Netflix", 1), // 高优先级
+// TestNetflix 测试 Netflix 解锁情况
+func TestNetflix(client *http.Client) *unlock.StreamResult {
+	result := &unlock.StreamResult{
+		Platform: "Netflix",
 	}
-}
 
-// Detect 检测Netflix解锁状态
-func (d *NetflixDetector) Detect(ctx context.Context, proxy constant.Proxy) *unlock.UnlockResult {
-	d.LogDetectionStart(proxy)
-
-	client := unlock.CreateHTTPClient(ctx, proxy)
-
-	// 访问Netflix原创内容页面进行检测
-	resp, err := unlock.MakeRequest(ctx, client, "GET", "https://www.netflix.com/title/81280792", nil)
+	req, err := http.NewRequest("GET", "https://www.netflix.com/title/81280792", nil)
 	if err != nil {
-		result := d.CreateErrorResult("Failed to connect to Netflix", err)
-		d.LogDetectionResult(proxy, result)
+		result.Status = "Failed"
+		result.Info = "Create Request Error"
+		return result
+	}
+
+	req.Header.Set("User-Agent", unlock.UA_Browser)
+	req.Header.Set("Accept-Language", "en-US,en;q=0.9")
+	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		result.Status = "Failed"
+		result.Info = "Network Connection Error"
 		return result
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		result := d.CreateErrorResult("Failed to read Netflix response", err)
-		d.LogDetectionResult(proxy, result)
+		result.Status = "Failed"
+		result.Info = "Read Response Error"
 		return result
 	}
 
-	bodyStr := string(body)
+	htmlContent := string(body)
 
-	// 分析响应内容
-	var result *unlock.UnlockResult
-	if strings.Contains(bodyStr, "Not Available") ||
-		strings.Contains(bodyStr, "page-404") ||
-		strings.Contains(bodyStr, "NSEZ-403") {
-		result = d.CreateResult(unlock.StatusLocked, "", "Netflix content not available in this region")
-	} else if strings.Contains(bodyStr, "requestCountry") {
-		// 尝试提取国家代码
-		region := d.extractCountryCode(bodyStr)
-		result = d.CreateResult(unlock.StatusUnlocked, region, "Netflix accessible")
-	} else if resp.StatusCode == 200 && strings.Contains(bodyStr, "netflix") {
-		result = d.CreateResult(unlock.StatusUnlocked, "", "Netflix accessible")
-	} else {
-		result = d.CreateResult(unlock.StatusFailed, "", "Unable to determine Netflix status")
+	// 检查是否解锁
+	switch {
+	case strings.Contains(htmlContent, "Not Available"):
+		fallthrough
+	case strings.Contains(htmlContent, "Netflix hasn't come to this country yet"):
+		result.Status = "Failed"
+		result.Info = "Not Available"
+		return result
+
+	case strings.Contains(htmlContent, "Sorry, we are unable to process your request"):
+		result.Status = "Failed"
+		result.Info = "Error"
+		return result
+
+	case strings.Contains(htmlContent, "page-404"):
+		fallthrough
+	case strings.Contains(htmlContent, "NSEZ-403"):
+		result.Status = "Failed"
+		result.Info = "Blocked"
+		return result
 	}
 
-	result.CheckedAt = time.Now()
-	d.LogDetectionResult(proxy, result)
+	// 尝试获取地区信息
+	if strings.Contains(htmlContent, `"requestCountry":`) {
+		start := strings.Index(htmlContent, `"requestCountry":"`) + 17
+		end := strings.Index(htmlContent[start:], `"`) + start
+		if end > start {
+			result.Status = "Success"
+			result.Region = htmlContent[start:end]
+			return result
+		}
+	}
+
+	// 检查是否显示播放界面
+	if strings.Contains(htmlContent, "watch-video") ||
+		strings.Contains(htmlContent, "video-title") ||
+		strings.Contains(htmlContent, "player-title-link") {
+		result.Status = "Success"
+		result.Region = "Available"
+		return result
+	}
+
+	result.Status = "Failed"
+	result.Info = "Unknown Error"
 	return result
 }
 
-// extractCountryCode 从响应中提取国家代码
-func (d *NetflixDetector) extractCountryCode(body string) string {
-	// 简单的国家代码提取逻辑
-	if strings.Contains(body, `"country":"US"`) || strings.Contains(body, `"requestCountry":"US"`) {
-		return "US"
-	}
-	if strings.Contains(body, `"country":"JP"`) || strings.Contains(body, `"requestCountry":"JP"`) {
-		return "JP"
-	}
-	if strings.Contains(body, `"country":"GB"`) || strings.Contains(body, `"requestCountry":"GB"`) {
-		return "GB"
-	}
-	// 可以继续添加更多国家代码的识别逻辑
-	return ""
-}
-
-// init 函数用于自动注册检测器
 func init() {
-	unlock.Register(NewNetflixDetector())
+	// 注册 Netflix 测试
+	unlock.StreamTests = append(unlock.StreamTests, TestNetflix)
 }

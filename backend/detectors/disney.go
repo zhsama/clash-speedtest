@@ -1,79 +1,86 @@
 package detectors
 
 import (
-	"context"
 	"io"
+	"net/http"
 	"strings"
-	"time"
 
 	"github.com/faceair/clash-speedtest/unlock"
-	"github.com/metacubex/mihomo/constant"
 )
 
-// DisneyDetector Disney+检测器
-type DisneyDetector struct {
-	*unlock.BaseDetector
-}
-
-// NewDisneyDetector 创建Disney+检测器
-func NewDisneyDetector() *DisneyDetector {
-	return &DisneyDetector{
-		BaseDetector: unlock.NewBaseDetector("Disney+", 1), // 高优先级
+// TestDisney 测试 Disney+ 解锁情况
+func TestDisney(client *http.Client) *unlock.StreamResult {
+	result := &unlock.StreamResult{
+		Platform: "Disney+",
 	}
-}
 
-// Detect 检测Disney+解锁状态
-func (d *DisneyDetector) Detect(ctx context.Context, proxy constant.Proxy) *unlock.UnlockResult {
-	d.LogDetectionStart(proxy)
-
-	client := unlock.CreateHTTPClient(ctx, proxy)
-
-	// 访问Disney+主页
-	resp, err := unlock.MakeRequest(ctx, client, "GET", "https://www.disneyplus.com", nil)
+	req, err := http.NewRequest("GET", "https://www.disneyplus.com", nil)
 	if err != nil {
-		result := d.CreateErrorResult("Failed to connect to Disney+", err)
-		d.LogDetectionResult(proxy, result)
+		result.Status = "Failed"
+		result.Info = "Create Request Error"
+		return result
+	}
+
+	req.Header.Set("User-Agent", unlock.UA_Browser)
+	req.Header.Set("Accept-Language", "en-US,en;q=0.9")
+	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		result.Status = "Failed"
+		result.Info = "Network Connection Error"
 		return result
 	}
 	defer resp.Body.Close()
 
 	// 检查重定向URL
 	finalURL := resp.Request.URL.String()
-
-	var result *unlock.UnlockResult
 	if strings.Contains(finalURL, "/unavailable") ||
 		strings.Contains(finalURL, "/blocked") ||
 		strings.Contains(finalURL, "/unsupported") {
-		result = d.CreateResult(unlock.StatusLocked, "", "Disney+ not available in this region")
-	} else {
-		// 读取响应内容进行进一步检查
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			result = d.CreateErrorResult("Failed to read Disney+ response", err)
-		} else {
-			bodyStr := string(body)
-			if strings.Contains(bodyStr, "not available") ||
-				strings.Contains(bodyStr, "access denied") {
-				result = d.CreateResult(unlock.StatusLocked, "", "Disney+ blocked in this region")
-			} else if strings.Contains(bodyStr, "sign up") ||
-				strings.Contains(bodyStr, "subscribe") ||
-				strings.Contains(bodyStr, "bundle") {
-				// 提取地区信息
-				region := d.extractDisneyRegion(finalURL, bodyStr)
-				result = d.CreateResult(unlock.StatusUnlocked, region, "Disney+ available")
-			} else {
-				result = d.CreateResult(unlock.StatusFailed, "", "Unable to determine Disney+ status")
-			}
-		}
+		result.Status = "Failed"
+		result.Info = "Not Available"
+		return result
 	}
 
-	result.CheckedAt = time.Now()
-	d.LogDetectionResult(proxy, result)
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		result.Status = "Failed"
+		result.Info = "Read Response Error"
+		return result
+	}
+
+	htmlContent := string(body)
+
+	// 检查是否被阻止
+	if strings.Contains(htmlContent, "not available") ||
+		strings.Contains(htmlContent, "access denied") {
+		result.Status = "Failed"
+		result.Info = "Blocked"
+		return result
+	}
+
+	// 检查是否正常显示
+	if strings.Contains(htmlContent, "sign up") ||
+		strings.Contains(htmlContent, "subscribe") ||
+		strings.Contains(htmlContent, "bundle") {
+		// 提取地区信息
+		region := extractDisneyRegion(finalURL, htmlContent)
+		result.Status = "Success"
+		result.Region = region
+		if region == "" {
+			result.Region = "Available"
+		}
+		return result
+	}
+
+	result.Status = "Failed"
+	result.Info = "Unknown Error"
 	return result
 }
 
 // extractDisneyRegion 从Disney+响应中提取地区信息
-func (d *DisneyDetector) extractDisneyRegion(url, body string) string {
+func extractDisneyRegion(url, body string) string {
 	// 从URL中提取地区
 	if strings.Contains(url, "disneyplus.com") {
 		return "US"
@@ -105,7 +112,7 @@ func (d *DisneyDetector) extractDisneyRegion(url, body string) string {
 	return ""
 }
 
-// init 函数用于自动注册检测器
 func init() {
-	unlock.Register(NewDisneyDetector())
+	// 注册 Disney+ 测试
+	unlock.StreamTests = append(unlock.StreamTests, TestDisney)
 }

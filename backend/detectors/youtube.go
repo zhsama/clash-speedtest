@@ -1,72 +1,80 @@
 package detectors
 
 import (
-	"context"
 	"io"
+	"net/http"
 	"strings"
-	"time"
 
 	"github.com/faceair/clash-speedtest/unlock"
-	"github.com/metacubex/mihomo/constant"
 )
 
-// YouTubeDetector YouTube Premium检测器
-type YouTubeDetector struct {
-	*unlock.BaseDetector
-}
-
-// NewYouTubeDetector 创建YouTube检测器
-func NewYouTubeDetector() *YouTubeDetector {
-	return &YouTubeDetector{
-		BaseDetector: unlock.NewBaseDetector("YouTube", 1), // 高优先级
+// TestYouTube 测试 YouTube Premium 解锁情况
+func TestYouTube(client *http.Client) *unlock.StreamResult {
+	result := &unlock.StreamResult{
+		Platform: "YouTube",
 	}
-}
 
-// Detect 检测YouTube Premium解锁状态
-func (d *YouTubeDetector) Detect(ctx context.Context, proxy constant.Proxy) *unlock.UnlockResult {
-	d.LogDetectionStart(proxy)
-
-	client := unlock.CreateHTTPClient(ctx, proxy)
-
-	// 访问YouTube Premium页面
-	resp, err := unlock.MakeRequest(ctx, client, "GET", "https://www.youtube.com/premium", nil)
+	req, err := http.NewRequest("GET", "https://www.youtube.com/premium", nil)
 	if err != nil {
-		result := d.CreateErrorResult("Failed to connect to YouTube", err)
-		d.LogDetectionResult(proxy, result)
+		result.Status = "Failed"
+		result.Info = "Create Request Error"
+		return result
+	}
+
+	req.Header.Set("User-Agent", unlock.UA_Browser)
+	req.Header.Set("Accept-Language", "en-US,en;q=0.9")
+	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		result.Status = "Failed"
+		result.Info = "Network Connection Error"
 		return result
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		result := d.CreateErrorResult("Failed to read YouTube response", err)
-		d.LogDetectionResult(proxy, result)
+		result.Status = "Failed"
+		result.Info = "Read Response Error"
 		return result
 	}
 
-	bodyStr := string(body)
+	htmlContent := string(body)
 
-	var result *unlock.UnlockResult
-	if strings.Contains(bodyStr, "Premium is not available") ||
-		strings.Contains(bodyStr, "isn't available") {
-		result = d.CreateResult(unlock.StatusLocked, "", "YouTube Premium not available in this region")
-	} else if strings.Contains(bodyStr, "countryCode") {
-		// 尝试提取国家代码
-		region := d.extractYouTubeRegion(bodyStr)
-		result = d.CreateResult(unlock.StatusUnlocked, region, "YouTube Premium available")
-	} else if resp.StatusCode == 200 && strings.Contains(bodyStr, "youtube") {
-		result = d.CreateResult(unlock.StatusUnlocked, "", "YouTube Premium available")
-	} else {
-		result = d.CreateResult(unlock.StatusFailed, "", "Unable to determine YouTube Premium status")
+	// 检查是否不可用
+	if strings.Contains(htmlContent, "Premium is not available") ||
+		strings.Contains(htmlContent, "isn't available") {
+		result.Status = "Failed"
+		result.Info = "Not Available"
+		return result
 	}
 
-	result.CheckedAt = time.Now()
-	d.LogDetectionResult(proxy, result)
+	// 检查是否可用并提取地区信息
+	if strings.Contains(htmlContent, "countryCode") {
+		region := extractYouTubeRegion(htmlContent)
+		result.Status = "Success"
+		result.Region = region
+		if region == "" {
+			result.Region = "Available"
+		}
+		return result
+	}
+
+	// 如果页面正常显示
+	if resp.StatusCode == 200 && strings.Contains(htmlContent, "youtube") {
+		result.Status = "Success"
+		result.Region = "Available"
+		return result
+	}
+
+	result.Status = "Failed"
+	result.Info = "Unknown Error"
 	return result
 }
 
 // extractYouTubeRegion 从YouTube响应中提取地区信息
-func (d *YouTubeDetector) extractYouTubeRegion(body string) string {
+func extractYouTubeRegion(body string) string {
 	// 简单的地区提取逻辑
 	regions := map[string]string{
 		`"countryCode":"US"`: "US",
@@ -89,7 +97,7 @@ func (d *YouTubeDetector) extractYouTubeRegion(body string) string {
 	return ""
 }
 
-// init 函数用于自动注册检测器
 func init() {
-	unlock.Register(NewYouTubeDetector())
+	// 注册 YouTube 测试
+	unlock.StreamTests = append(unlock.StreamTests, TestYouTube)
 }

@@ -1,137 +1,194 @@
 package detectors
 
 import (
-	"context"
+	"crypto/md5"
+	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/faceair/clash-speedtest/unlock"
-	"github.com/metacubex/mihomo/constant"
 )
 
-// BilibiliDetector Bilibili检测器
-type BilibiliDetector struct {
-	*unlock.BaseDetector
-}
-
-// NewBilibiliDetector 创建Bilibili检测器
-func NewBilibiliDetector() *BilibiliDetector {
-	return &BilibiliDetector{
-		BaseDetector: unlock.NewBaseDetector("Bilibili", 2), // 中优先级
-	}
-}
-
-// Detect 检测Bilibili解锁状态
-func (d *BilibiliDetector) Detect(ctx context.Context, proxy constant.Proxy) *unlock.UnlockResult {
-	d.LogDetectionStart(proxy)
-
-	client := unlock.CreateHTTPClient(ctx, proxy)
-
-	// 方法1: 检测台湾专属内容
-	result1 := d.checkTaiwanContent(ctx, client)
-	if result1.Status == unlock.StatusUnlocked && result1.Region == "TW" {
-		result1.CheckedAt = time.Now()
-		d.LogDetectionResult(proxy, result1)
-		return result1
+// TestBilibiliMainland 测试哔哩哔哩大陆限定解锁情况
+func TestBilibiliMainland(client *http.Client) *unlock.StreamResult {
+	result := &unlock.StreamResult{
+		Platform: "Bilibili China Mainland Only",
 	}
 
-	// 方法2: 检测港澳台内容
-	result2 := d.checkHKMOTWContent(ctx, client)
-	if result2.Status == unlock.StatusUnlocked {
-		result2.CheckedAt = time.Now()
-		d.LogDetectionResult(proxy, result2)
-		return result2
-	}
+	// 生成随机session
+	session := fmt.Sprintf("%x", md5.Sum([]byte(fmt.Sprintf("%d", time.Now().UnixNano()))))
 
-	// 方法3: 检测大陆内容访问
-	result3 := d.checkMainlandContent(ctx, client)
-
-	result3.CheckedAt = time.Now()
-	d.LogDetectionResult(proxy, result3)
-	return result3
-}
-
-// checkTaiwanContent 检测台湾专属内容
-func (d *BilibiliDetector) checkTaiwanContent(ctx context.Context, client *http.Client) *unlock.UnlockResult {
-	// 访问台湾专属动画
-	resp, err := unlock.MakeRequest(ctx, client, "GET", "https://www.bilibili.com/bangumi/play/ss21542", nil)
+	req, err := http.NewRequest("GET", fmt.Sprintf("https://api.bilibili.com/pgc/player/web/playurl?avid=82846771&qn=0&type=&otype=json&ep_id=307247&fourk=1&fnver=0&fnval=16&session=%s&module=bangumi", session), nil)
 	if err != nil {
-		return d.CreateErrorResult("Failed to connect to Bilibili", err)
+		result.Status = "Failed"
+		result.Info = "Create Request Error"
+		return result
+	}
+
+	req.Header.Set("User-Agent", unlock.UA_Browser)
+
+	resp, err := client.Do(req)
+	if err != nil {
+		result.Status = "Failed"
+		result.Info = "Network Connection Error"
+		return result
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return d.CreateErrorResult("Failed to read Bilibili response", err)
+		result.Status = "Failed"
+		result.Info = "Read Response Error"
+		return result
 	}
 
-	bodyStr := string(body)
-
-	if strings.Contains(bodyStr, "地区限制") ||
-		strings.Contains(bodyStr, "区域限制") ||
-		strings.Contains(bodyStr, "版权方要求") {
-		return d.CreateResult(unlock.StatusLocked, "", "Taiwan exclusive content blocked")
+	var response struct {
+		Code int `json:"code"`
 	}
 
-	if resp.StatusCode == 200 &&
-		!strings.Contains(bodyStr, "error") &&
-		strings.Contains(bodyStr, "bangumi") {
-		return d.CreateResult(unlock.StatusUnlocked, "TW", "Taiwan exclusive content accessible")
+	if err := json.Unmarshal(body, &response); err != nil {
+		result.Status = "Failed"
+		result.Info = "Parse Response Error"
+		return result
 	}
 
-	return d.CreateResult(unlock.StatusFailed, "", "Unable to determine Taiwan content status")
+	switch response.Code {
+	case 0:
+		result.Status = "Success"
+		result.Region = "CHN"
+		return result
+	case -10403:
+		result.Status = "Failed"
+		result.Info = "Region Restricted"
+		return result
+	default:
+		result.Status = "Failed"
+		result.Info = fmt.Sprintf("Error Code: %d", response.Code)
+		return result
+	}
 }
 
-// checkHKMOTWContent 检测港澳台内容
-func (d *BilibiliDetector) checkHKMOTWContent(ctx context.Context, client *http.Client) *unlock.UnlockResult {
-	// 访问港澳台内容
-	resp, err := unlock.MakeRequest(ctx, client, "GET", "https://www.bilibili.com/bangumi/play/ss28341", nil)
+// TestBilibiliHKMCTW 测试哔哩哔哩港澳台限定解锁情况
+func TestBilibiliHKMCTW(client *http.Client) *unlock.StreamResult {
+	result := &unlock.StreamResult{
+		Platform: "Bilibili HongKong/Macau/Taiwan",
+	}
+
+	// 生成随机session
+	session := fmt.Sprintf("%x", md5.Sum([]byte(fmt.Sprintf("%d", time.Now().UnixNano()))))
+
+	req, err := http.NewRequest("GET", fmt.Sprintf("https://api.bilibili.com/pgc/player/web/playurl?avid=18281381&cid=29892777&qn=0&type=&otype=json&ep_id=183799&fourk=1&fnver=0&fnval=16&session=%s&module=bangumi", session), nil)
 	if err != nil {
-		return d.CreateErrorResult("Failed to connect to Bilibili", err)
+		result.Status = "Failed"
+		result.Info = "Create Request Error"
+		return result
+	}
+
+	req.Header.Set("User-Agent", unlock.UA_Browser)
+
+	resp, err := client.Do(req)
+	if err != nil {
+		result.Status = "Failed"
+		result.Info = "Network Connection Error"
+		return result
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return d.CreateErrorResult("Failed to read Bilibili response", err)
+		result.Status = "Failed"
+		result.Info = "Read Response Error"
+		return result
 	}
 
-	bodyStr := string(body)
-
-	if strings.Contains(bodyStr, "地区限制") ||
-		strings.Contains(bodyStr, "区域限制") ||
-		strings.Contains(bodyStr, "版权方要求") {
-		return d.CreateResult(unlock.StatusLocked, "", "HKMOTW content blocked")
+	var response struct {
+		Code int `json:"code"`
 	}
 
-	if resp.StatusCode == 200 &&
-		!strings.Contains(bodyStr, "error") &&
-		strings.Contains(bodyStr, "bangumi") {
-		return d.CreateResult(unlock.StatusUnlocked, "HKMOTW", "HKMOTW content accessible")
+	if err := json.Unmarshal(body, &response); err != nil {
+		result.Status = "Failed"
+		result.Info = "Parse Response Error"
+		return result
 	}
 
-	return d.CreateResult(unlock.StatusFailed, "", "Unable to determine HKMOTW content status")
+	switch response.Code {
+	case 0:
+		result.Status = "Success"
+		result.Region = "HKG/MAC/TWN"
+		return result
+	case -10403:
+		result.Status = "Failed"
+		result.Info = "Region Restricted"
+		return result
+	default:
+		result.Status = "Failed"
+		result.Info = fmt.Sprintf("Error Code: %d", response.Code)
+		return result
+	}
 }
 
-// checkMainlandContent 检测大陆内容访问
-func (d *BilibiliDetector) checkMainlandContent(ctx context.Context, client *http.Client) *unlock.UnlockResult {
-	// 访问主站首页
-	resp, err := unlock.MakeRequest(ctx, client, "GET", "https://www.bilibili.com", nil)
+// TestBilibiliTW 测试哔哩哔哩台湾限定解锁情况
+func TestBilibiliTW(client *http.Client) *unlock.StreamResult {
+	result := &unlock.StreamResult{
+		Platform: "Bilibili Taiwan Only",
+	}
+
+	// 生成随机session
+	session := fmt.Sprintf("%x", md5.Sum([]byte(fmt.Sprintf("%d", time.Now().UnixNano()))))
+
+	req, err := http.NewRequest("GET", fmt.Sprintf("https://api.bilibili.com/pgc/player/web/playurl?avid=50762638&cid=100279344&qn=0&type=&otype=json&ep_id=268176&fourk=1&fnver=0&fnval=16&session=%s&module=bangumi", session), nil)
 	if err != nil {
-		return d.CreateErrorResult("Failed to connect to Bilibili", err)
+		result.Status = "Failed"
+		result.Info = "Create Request Error"
+		return result
+	}
+
+	req.Header.Set("User-Agent", unlock.UA_Browser)
+
+	resp, err := client.Do(req)
+	if err != nil {
+		result.Status = "Failed"
+		result.Info = "Network Connection Error"
+		return result
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode == 200 {
-		return d.CreateResult(unlock.StatusUnlocked, "CN", "Bilibili mainland accessible")
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		result.Status = "Failed"
+		result.Info = "Read Response Error"
+		return result
 	}
 
-	return d.CreateResult(unlock.StatusLocked, "", "Bilibili not accessible")
+	var response struct {
+		Code int `json:"code"`
+	}
+
+	if err := json.Unmarshal(body, &response); err != nil {
+		result.Status = "Failed"
+		result.Info = "Parse Response Error"
+		return result
+	}
+
+	switch response.Code {
+	case 0:
+		result.Status = "Success"
+		result.Region = "TWN"
+		return result
+	case -10403:
+		result.Status = "Failed"
+		result.Info = "Region Restricted"
+		return result
+	default:
+		result.Status = "Failed"
+		result.Info = fmt.Sprintf("Error Code: %d", response.Code)
+		return result
+	}
 }
 
-// init 函数用于自动注册检测器
 func init() {
-	unlock.Register(NewBilibiliDetector())
+	// 注册 Bilibili 测试
+	unlock.StreamTests = append(unlock.StreamTests, TestBilibiliMainland, TestBilibiliHKMCTW, TestBilibiliTW)
 }

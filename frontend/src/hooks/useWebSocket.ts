@@ -155,7 +155,7 @@ export const useWebSocket = (url: string): UseWebSocketReturn => {
       switch (message.type) {
         case "test_start":
           setTestStartData(message.data as TestStartData);
-          setTestProgress(null);
+          // setTestProgress(null);
           setTestResults([]);
           setTestCompleteData(null);
           setError(null);

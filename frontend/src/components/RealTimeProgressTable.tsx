@@ -19,10 +19,8 @@ import {
   TrendingUp,
   Globe,
   Shield,
-  Clock,
   Lock,
   Unlock,
-  AlertCircle
 } from "lucide-react"
 import ClientIcon from "./ClientIcon"
 import type { TestResultData, TestProgressData, TestCompleteData, TestCancelledData, UnlockResult } from "../hooks/useWebSocket"

@@ -378,6 +378,12 @@ export default function SpeedTestPro() {
     }
   }, [testCompleteData, testing])
   
+  // 监听testMode变化，清理旧的测试数据
+  useEffect(() => {
+    // 只在测试模式改变时清理数据，不要在测试完成时清理
+    clearData()
+  }, [testConfig.testMode, clearData])
+  
   useEffect(() => {
     if (testCancelledData && testing) {
       setTesting(false)

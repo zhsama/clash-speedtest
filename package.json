@@ -7,7 +7,7 @@
     "dev:frontend": "turbo run dev --filter=frontend",
     "dev:backend": "turbo run dev --filter=backend",
     "dev:api": "turbo run api:dev --filter=backend",
-    "debug": "turbo run debug --filter=backend",
+    "debug": "turbo run debug",
     "debug:backend": "turbo run debug --filter=backend",
     "build": "turbo run build",
     "build:frontend": "turbo run build --filter=frontend",

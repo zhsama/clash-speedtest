@@ -219,7 +219,7 @@ export default function TUNWarning({ onTUNStatusChange, showDetails = false }: T
       {/* 详细信息 */}
       {showDetailedInfo && (
         <Card className="card-standard">
-          <h4 className="form-element-label flex items-center gap-2">
+          <h4 className="text-lg font-semibold text-lavender-50 flex items-center gap-2 mb-2">
             <ClientIcon icon={Network} className="h-4 w-4 text-lavender-400" />
             TUN 模式详细信息
           </h4>

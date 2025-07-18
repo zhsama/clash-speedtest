@@ -867,7 +867,8 @@ export default function SpeedTestPro() {
             <Card className="card-standard">
               <h4 className="text-lg font-semibold text-lavender-50 flex items-center gap-2 mb-2">
                 <ClientIcon icon={Filter} className="h-4 w-4 text-lavender-400" />
-                「方案选单」              </h4>
+                方案选单
+              </h4>
             
               <div className="space-y-2">
                 <div>

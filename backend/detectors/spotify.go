@@ -1,10 +1,17 @@
+// detectors/spotify.go
 package detectors
 
 import (
+	"encoding/base64"
+	"encoding/json"
+	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
+	"regexp"
 	"strings"
 
+	"github.com/faceair/clash-speedtest/logger"
 	"github.com/faceair/clash-speedtest/unlock"
 )
 
@@ -33,7 +40,7 @@ func TestSpotify(client *http.Client) *unlock.StreamResult {
 	}
 	defer resp.Body.Close()
 
-	// 检查是否被重定向到不可用页面
+	// 若被重定向到 /unavailable 视为未解锁
 	finalURL := resp.Request.URL.String()
 	if strings.Contains(finalURL, "unavailable") {
 		result.Status = "Failed"
@@ -47,64 +54,55 @@ func TestSpotify(client *http.Client) *unlock.StreamResult {
 		result.Info = "Read Response Error"
 		return result
 	}
-
 	htmlContent := string(body)
 
-	// 检查是否被阻止
-	if strings.Contains(htmlContent, "not available") ||
-		strings.Contains(htmlContent, "blocked") {
+	logger.Logger.Debug("Spotify Response", slog.String("content", htmlContent))
+
+	// 从 HTML 提取 market 国家码
+	market, err := extractMarket(htmlContent)
+	if err != nil {
 		result.Status = "Failed"
-		result.Info = "Blocked"
+		result.Info = "Region Blocked or Unknown"
 		return result
 	}
 
-	// 检查是否正常显示
-	if strings.Contains(htmlContent, "spotify") &&
-		(strings.Contains(htmlContent, "sign up") ||
-			strings.Contains(htmlContent, "login") ||
-			strings.Contains(htmlContent, "premium")) {
-		// 提取地区信息
-		region := extractSpotifyRegion(htmlContent)
+	if market != "" {
 		result.Status = "Success"
-		result.Region = region
-		if region == "" {
-			result.Region = "Available"
-		}
-		return result
+		result.Region = market
+	} else {
+		result.Status = "Success"
+		result.Region = "Available"
 	}
-
-	result.Status = "Failed"
-	result.Info = "Unknown Error"
 	return result
 }
 
-// extractSpotifyRegion 从Spotify响应中提取地区信息
-func extractSpotifyRegion(body string) string {
-	// 从响应中查找地区标识
-	regions := map[string]string{
-		`"country":"US"`:   "US",
-		`"country":"GB"`:   "GB",
-		`"country":"DE"`:   "DE",
-		`"country":"JP"`:   "JP",
-		`"country":"CA"`:   "CA",
-		`"country":"AU"`:   "AU",
-		`"country":"KR"`:   "KR",
-		`"country":"TW"`:   "TW",
-		`"country":"HK"`:   "HK",
-		`"country":"SG"`:   "SG",
-		`"locale":"en-US"`: "US",
-		`"locale":"en-GB"`: "GB",
-		`"locale":"de-DE"`: "DE",
-		`"locale":"ja-JP"`: "JP",
+// extractMarket 解析首页 HTML，返回 Spotify 判定的国家码
+func extractMarket(html string) (string, error) {
+	// (?s) 让 . 跨行匹配；只抓 id="appServerConfig" 这一个脚本
+	re := regexp.MustCompile(`(?s)<script[^>]+id="appServerConfig"[^>]*>([^<]+)</script>`)
+	m := re.FindStringSubmatch(html)
+	if len(m) < 2 {
+		return "", fmt.Errorf("appServerConfig not found")
 	}
+	raw := strings.TrimSpace(m[1])
 
-	for pattern, region := range regions {
-		if strings.Contains(body, pattern) {
-			return region
+	// 尝试标准 Base64，再尝试 URL-safe Base64
+	data, err := base64.StdEncoding.DecodeString(raw)
+	if err != nil {
+		data, err = base64.URLEncoding.DecodeString(raw)
+		if err != nil {
+			return "", fmt.Errorf("base64 decode: %w", err)
 		}
 	}
 
-	return ""
+	// 解 JSON，只关心 market 字段
+	var cfg struct {
+		Market string `json:"market"`
+	}
+	if err := json.Unmarshal(data, &cfg); err != nil {
+		return "", fmt.Errorf("json unmarshal: %w", err)
+	}
+	return strings.ToUpper(cfg.Market), nil
 }
 
 func init() {

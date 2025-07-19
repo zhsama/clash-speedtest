@@ -92,13 +92,6 @@ export default function SpeedTestTable({ results, title = "速度测试结果" }
     }
   }
 
-  // 检查结果是否包含速度测试数据
-  const hasSpeedData = (result: TestResultData) => {
-    return result.latency_ms > 0 || 
-           result.download_speed_mbps > 0 || 
-           result.upload_speed_mbps > 0
-  }
-
   // 显示所有结果，不进行过滤
   const speedResults = results
 
@@ -127,8 +120,9 @@ export default function SpeedTestTable({ results, title = "速度测试结果" }
           </Badge>
         </div>
 
-        <div className="overflow-x-auto">
-          <Table className="table-standard table-speed-mode">
+        <div className="table-scroll-container">
+          <div className="overflow-x-auto table-horizontal-scroll">
+            <Table className="table-standard table-speed-mode">
             <TableHeader>
               <TableRow>
                 <TableHead className="text-lavender-400 w-24">
@@ -260,6 +254,7 @@ export default function SpeedTestTable({ results, title = "速度测试结果" }
             </TableBody>
           </Table>
         </div>
+      </div>
       </div>
     </Card>
   )

@@ -120,12 +120,6 @@ export default function UnlockTestTable({ results, title = "解锁检测结果" 
     )
   }
 
-  // 检查结果是否包含解锁检测数据
-  const hasUnlockData = (result: TestResultData) => {
-    return (result.unlock_results && result.unlock_results.length > 0) || 
-           (result.unlock_summary && result.unlock_summary.total_tested > 0)
-  }
-
   // 显示所有结果，不进行过滤
   const unlockResults = results
 
@@ -154,8 +148,9 @@ export default function UnlockTestTable({ results, title = "解锁检测结果" 
           </Badge>
         </div>
 
-        <div className="overflow-x-auto">
-          <Table className="table-standard table-unlock-mode">
+        <div className="table-scroll-container">
+          <div className="overflow-x-auto table-horizontal-scroll">
+            <Table className="table-standard table-unlock-mode">
             <TableHeader>
               <TableRow>
                 <TableHead className="text-lavender-400 w-24">
@@ -256,6 +251,7 @@ export default function UnlockTestTable({ results, title = "解锁检测结果" 
             </TableBody>
           </Table>
         </div>
+      </div>
       </div>
     </Card>
   )

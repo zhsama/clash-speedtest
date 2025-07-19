@@ -148,45 +148,44 @@ export default function UnlockTestTable({ results, title = "解锁检测结果" 
           </Badge>
         </div>
 
-        <div className="table-scroll-container">
-          <div className="overflow-x-auto table-horizontal-scroll">
-            <Table className="table-standard table-unlock-mode">
+        <div className="table-wrapper">
+          <Table className="table-standard table-content">
             <TableHeader>
               <TableRow>
-                <TableHead className="text-lavender-400 w-24">
+                <TableHead className="text-lavender-400" >
                   <div className="flex items-center gap-1">
                     状态
                   </div>
                 </TableHead>
-                <TableHead className="text-lavender-400 min-w-48">
+                <TableHead className="text-lavender-400" >
                   <div className="flex items-center gap-1">
                     节点名称
                   </div>
                 </TableHead>
-                <TableHead className="text-lavender-400 w-20">
+                <TableHead className="text-lavender-400">
                   <div className="flex items-center gap-1">
                     类型
                   </div>
                 </TableHead>
-                <TableHead className="text-lavender-400 w-32">
+                <TableHead className="text-lavender-400">
                   <div className="flex items-center gap-1">
                     <ClientIcon icon={Globe} className="h-4 w-4" />
                     IP地址
                   </div>
                 </TableHead>
-                <TableHead className="text-lavender-400 w-32">
+                <TableHead className="text-lavender-400">
                   <div className="flex items-center gap-1">
                     <ClientIcon icon={Shield} className="h-4 w-4" />
                     解锁摘要
                   </div>
                 </TableHead>
-                <TableHead className="text-lavender-400 min-w-48">
+                <TableHead className="text-lavender-400" >
                   <div className="flex items-center gap-1">
                     <ClientIcon icon={Globe} className="h-4 w-4" />
                     平台详情
                   </div>
                 </TableHead>
-                <TableHead className="text-lavender-400 min-w-40">
+                <TableHead className="text-lavender-400">
                   <div className="flex items-center gap-1">
                     错误详情
                   </div>
@@ -251,7 +250,6 @@ export default function UnlockTestTable({ results, title = "解锁检测结果" 
             </TableBody>
           </Table>
         </div>
-      </div>
       </div>
     </Card>
   )

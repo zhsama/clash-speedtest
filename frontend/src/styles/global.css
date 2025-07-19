@@ -312,235 +312,68 @@
   }
 }
 
-/* 通用滚动条样式 - 增强可见性 */
+/* 滚动条样式 */
 .dark ::-webkit-scrollbar {
-  width: 12px;
-  height: 12px;
+  width: 8px;
+  height: 8px;
 }
 
 .dark ::-webkit-scrollbar-track {
-  background: linear-gradient(
-    90deg,
-    hsla(var(--lavender-900), 0.6) 0%,
-    hsla(var(--lavender-850), 0.7) 100%
-  );
-  border-radius: calc(var(--radius) * 0.75);
-  border: 1px solid hsla(var(--lavender-600), 0.4);
+  background: hsla(var(--lavender-900), 0.5);
+  border-radius: 4px;
 }
 
 .dark ::-webkit-scrollbar-thumb {
-  background: linear-gradient(
-    135deg,
-    hsla(var(--lavender-500), 0.8) 0%,
-    hsla(var(--lavender-600), 0.9) 100%
-  );
-  border-radius: calc(var(--radius) * 0.75);
-  border: 1px solid hsla(var(--lavender-400), 0.6);
-  box-shadow: 0 1px 4px hsla(var(--lavender-950), 0.5);
+  background: hsla(var(--lavender-500), 0.8);
+  border-radius: 4px;
 }
 
 .dark ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(
-    135deg,
-    hsla(var(--lavender-400), 0.9) 0%,
-    hsla(var(--lavender-500), 1) 100%
-  );
-  border-color: hsla(var(--lavender-300), 0.8);
-  box-shadow: 0 2px 6px hsla(var(--lavender-950), 0.7);
-  transform: scale(1.02);
-  transition: all 0.15s ease-in-out;
+  background: hsla(var(--lavender-400), 0.9);
 }
 
-/* 表格容器专用滚动条样式 - 高对比度可见 */
-.table-scroll-container ::-webkit-scrollbar,
-[data-slot="table-container"] ::-webkit-scrollbar,
-.overflow-x-auto ::-webkit-scrollbar {
-  width: 16px;
-  height: 16px;
-}
-
-.table-scroll-container ::-webkit-scrollbar-track,
-[data-slot="table-container"] ::-webkit-scrollbar-track,
-.overflow-x-auto ::-webkit-scrollbar-track {
-  background: linear-gradient(
-    90deg,
-    hsla(var(--lavender-900), 0.8) 0%,
-    hsla(var(--lavender-800), 0.9) 100%
-  );
-  border-radius: 8px;
-  border: 2px solid hsla(var(--lavender-600), 0.6);
-  box-shadow: inset 0 2px 4px hsla(var(--lavender-950), 0.8);
-}
-
-.table-scroll-container ::-webkit-scrollbar-thumb,
-[data-slot="table-container"] ::-webkit-scrollbar-thumb,
-.overflow-x-auto ::-webkit-scrollbar-thumb {
-  background: linear-gradient(
-    135deg,
-    hsla(var(--lavender-400), 0.95) 0%,
-    hsla(var(--lavender-500), 0.95) 50%,
-    hsla(var(--lavender-600), 0.95) 100%
-  );
-  border-radius: 8px;
-  border: 2px solid hsla(var(--lavender-300), 0.8);
-  box-shadow: 0 2px 8px hsla(var(--lavender-950), 0.6),
-    inset 0 1px 2px hsla(var(--lavender-200), 0.3);
-}
-
-.table-scroll-container ::-webkit-scrollbar-thumb:hover,
-[data-slot="table-container"] ::-webkit-scrollbar-thumb:hover,
-.overflow-x-auto ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(
-    135deg,
-    hsla(var(--lavender-300), 1) 0%,
-    hsla(var(--lavender-400), 1) 50%,
-    hsla(var(--lavender-500), 1) 100%
-  );
-  border-color: hsla(var(--lavender-200), 1);
-  box-shadow: 0 4px 12px hsla(var(--lavender-950), 0.8),
-    inset 0 1px 3px hsla(var(--lavender-100), 0.4);
-  transform: scale(1.05);
-  transition: all 0.2s ease-in-out;
-}
-
-.table-scroll-container ::-webkit-scrollbar-thumb:active,
-[data-slot="table-container"] ::-webkit-scrollbar-thumb:active,
-.overflow-x-auto ::-webkit-scrollbar-thumb:active {
-  background: linear-gradient(
-    135deg,
-    hsla(var(--lavender-200), 1) 0%,
-    hsla(var(--lavender-300), 1) 50%,
-    hsla(var(--lavender-400), 1) 100%
-  );
-  transform: scale(0.95);
-}
-
-/* 滚动条角落样式 */
-.table-scroll-container ::-webkit-scrollbar-corner,
-[data-slot="table-container"] ::-webkit-scrollbar-corner,
-.overflow-x-auto ::-webkit-scrollbar-corner {
-  background: hsla(var(--lavender-900), 0.8);
-  border: 2px solid hsla(var(--lavender-600), 0.6);
-  border-radius: 8px;
-}
-
-/* 表格横向滚动区域 */
-.table-horizontal-scroll {
+/* 表格专用滚动样式 - 直接且明确 */
+.table-wrapper {
+  width: 100%;
   overflow-x: auto;
   overflow-y: visible;
+  border: 1px solid hsl(var(--lavender-500));
+  border-radius: var(--radius);
+  background: hsla(0, 0%, 6%, 0.6);
+}
+
+.table-wrapper::-webkit-scrollbar {
+  width: 14px;
+  height: 14px;
+}
+
+.table-wrapper::-webkit-scrollbar-track {
+  background: #2a1f3d;
+  border-radius: 7px;
+  border: 1px solid #4a3f5e;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb {
+  background: linear-gradient(45deg, #8b5cf6 0%, #a855f7 100%);
+  border-radius: 7px;
+  border: 1px solid #c084fc;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(45deg, #a855f7 0%, #c084fc 100%);
+  border-color: #e879f9;
+}
+
+/* Firefox 滚动条 */
+.table-wrapper {
   scrollbar-width: auto;
-  scrollbar-color: hsla(var(--lavender-400), 0.95)
-    hsla(var(--lavender-800), 0.9);
-  scroll-behavior: smooth;
+  scrollbar-color: #8b5cf6 #2a1f3d;
 }
 
-/* 确保滚动条在所有情况下都显示 */
-.table-scroll-container,
-.table-horizontal-scroll,
-[data-slot="table-container"] {
-  overflow: auto !important;
-  scrollbar-width: auto !important;
-}
-
-/* Firefox 专用滚动条优化 */
-@-moz-document url-prefix() {
-  .table-horizontal-scroll,
-  [data-slot="table-container"] {
-    scrollbar-width: auto !important;
-    scrollbar-color: hsla(var(--lavender-300), 1) hsla(var(--lavender-800), 1) !important;
-  }
-}
-
-/* 通用 Firefox 滚动条样式 */
-.table-horizontal-scroll,
-[data-slot="table-container"] {
-  scrollbar-width: auto;
-  scrollbar-color: hsla(var(--lavender-300), 1) hsla(var(--lavender-800), 1);
-}
-
-/* 滚动提示和指示器 */
-.table-scroll-container {
-  position: relative;
-}
-
-/* 右侧滚动提示渐变 */
-.table-scroll-container::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 20px;
-  height: 100%;
-  background: linear-gradient(
-    to left,
-    hsla(var(--lavender-950), 0.8) 0%,
-    hsla(var(--lavender-950), 0.4) 50%,
-    transparent 100%
-  );
-  pointer-events: none;
-  z-index: 1;
-  opacity: 0;
-  transition: opacity 0.3s ease-in-out;
-}
-
-/* 当内容可滚动时显示提示 */
-.table-scroll-container:hover::after {
-  opacity: 1;
-}
-
-/* 滚动时的视觉反馈 */
-.table-horizontal-scroll::-webkit-scrollbar-track:hover,
-[data-slot="table-container"]::-webkit-scrollbar-track:hover,
-.overflow-x-auto::-webkit-scrollbar-track:hover {
-  background: linear-gradient(
-    90deg,
-    hsla(var(--lavender-800), 0.9) 0%,
-    hsla(var(--lavender-700), 1) 100%
-  );
-}
-
-/* 滚动条区域的额外padding确保可见性 */
-.table-horizontal-scroll,
-[data-slot="table-container"] {
-  padding-bottom: 4px;
-  margin-bottom: -4px;
-}
-
-/* 强制显示滚动条 - 高优先级样式 */
-.table-scroll-container *::-webkit-scrollbar,
-.table-horizontal-scroll::-webkit-scrollbar,
-[data-slot="table-container"]::-webkit-scrollbar {
-  width: 18px !important;
-  height: 18px !important;
-  display: block !important;
-}
-
-.table-scroll-container *::-webkit-scrollbar-track,
-.table-horizontal-scroll::-webkit-scrollbar-track,
-[data-slot="table-container"]::-webkit-scrollbar-track {
-  background: linear-gradient(
-    90deg,
-    hsla(var(--lavender-900), 0.9) 0%,
-    hsla(var(--lavender-800), 1) 100%
-  ) !important;
-  border-radius: 9px !important;
-  border: 3px solid hsla(var(--lavender-500), 0.8) !important;
-  box-shadow: inset 0 3px 6px hsla(var(--lavender-950), 0.9) !important;
-}
-
-.table-scroll-container *::-webkit-scrollbar-thumb,
-.table-horizontal-scroll::-webkit-scrollbar-thumb,
-[data-slot="table-container"]::-webkit-scrollbar-thumb {
-  background: linear-gradient(
-    135deg,
-    hsla(var(--lavender-300), 1) 0%,
-    hsla(var(--lavender-400), 1) 50%,
-    hsla(var(--lavender-500), 1) 100%
-  ) !important;
-  border-radius: 9px !important;
-  border: 3px solid hsla(var(--lavender-200), 1) !important;
-  box-shadow: 0 3px 10px hsla(var(--lavender-950), 0.8),
-    inset 0 2px 4px hsla(var(--lavender-100), 0.5) !important;
+/* 表格内容样式 */
+.table-content {
+  min-width: 1200px; /* 强制最小宽度触发滚动 */
+  width: 100%;
 }
 
 /* 保留必要的兼容性样式 */

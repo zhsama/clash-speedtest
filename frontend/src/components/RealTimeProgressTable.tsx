@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { 
   TrendingUp,
   CheckCircle,
@@ -7,6 +8,8 @@ import {
   Zap,
   Download,
   Shield,
+  FileText,
+  TableIcon,
 } from "lucide-react"
 import ClientIcon from "./ClientIcon"
 import SpeedTestTable from "./SpeedTestTable"
@@ -20,6 +23,10 @@ interface RealTimeProgressTableProps {
   cancelledData: TestCancelledData | null
   isConnected: boolean
   testMode?: string
+  // 导出功能相关
+  onExportMarkdown?: () => void
+  onExportCSV?: () => void
+  showExportButtons?: boolean
 }
 
 export default function RealTimeProgressTable({ 
@@ -28,7 +35,10 @@ export default function RealTimeProgressTable({
   completeData,
   cancelledData,
   isConnected,
-  testMode = "both"
+  testMode = "both",
+  onExportMarkdown,
+  onExportCSV,
+  showExportButtons = false
 }: RealTimeProgressTableProps) {
   
   // 获取当前测试阶段的显示
@@ -166,17 +176,41 @@ export default function RealTimeProgressTable({
 
     switch (testMode) {
       case "speed_only":
-        return <SpeedTestTable results={results} />
+        return (
+          <SpeedTestTable 
+            results={results} 
+            onExportMarkdown={onExportMarkdown}
+            onExportCSV={onExportCSV}
+            showExportButtons={showExportButtons}
+          />
+        )
       
       case "unlock_only":
-        return <UnlockTestTable results={results} />
+        return (
+          <UnlockTestTable 
+            results={results} 
+            onExportMarkdown={onExportMarkdown}
+            onExportCSV={onExportCSV}
+            showExportButtons={showExportButtons}
+          />
+        )
       
       case "both":
       default:
         return (
           <div className="space-y-6">
-            <SpeedTestTable results={results} />
-            <UnlockTestTable results={results} />
+            <SpeedTestTable 
+              results={results} 
+              onExportMarkdown={onExportMarkdown}
+              onExportCSV={onExportCSV}
+              showExportButtons={showExportButtons}
+            />
+            <UnlockTestTable 
+              results={results} 
+              onExportMarkdown={onExportMarkdown}
+              onExportCSV={onExportCSV}
+              showExportButtons={showExportButtons}
+            />
           </div>
         )
     }
@@ -307,7 +341,9 @@ export default function RealTimeProgressTable({
       )}
 
       {/* Results Tables */}
-      {renderTablesByMode()}
+      <div className="space-y-4">
+        {renderTablesByMode()}
+      </div>
     </div>
   )
 }

@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import { 
   Activity, 
   Download, 
@@ -16,6 +17,8 @@ import {
   XCircle,
   Loader2,
   Globe,
+  FileText,
+  TableIcon,
 } from "lucide-react"
 import ClientIcon from "./ClientIcon"
 import type { TestResultData } from "../hooks/useWebSocket"
@@ -23,9 +26,19 @@ import type { TestResultData } from "../hooks/useWebSocket"
 interface SpeedTestTableProps {
   results: TestResultData[]
   title?: string
+  // 导出功能相关
+  onExportMarkdown?: () => void
+  onExportCSV?: () => void
+  showExportButtons?: boolean
 }
 
-export default function SpeedTestTable({ results, title = "速度测试结果" }: SpeedTestTableProps) {
+export default function SpeedTestTable({ 
+  results, 
+  title = "速度测试结果",
+  onExportMarkdown,
+  onExportCSV,
+  showExportButtons = false
+}: SpeedTestTableProps) {
   // 工具函数
   const formatLatency = (latencyMs: number | null | undefined) => {
     return latencyMs && latencyMs > 0 ? `${latencyMs}ms` : "N/A"
@@ -115,9 +128,37 @@ export default function SpeedTestTable({ results, title = "速度测试结果" }
             <ClientIcon icon={Download} className="h-5 w-5 text-blue-400" />
             {title}
           </h2>
-          <Badge variant="outline" className="badge-standard">
-            {speedResults.length} 个结果
-          </Badge>
+          <div className="flex items-center gap-3">
+            {showExportButtons && (onExportMarkdown || onExportCSV) && (
+              <div className="flex gap-2">
+                {onExportMarkdown && (
+                  <Button
+                    onClick={onExportMarkdown}
+                    variant="outline"
+                    size="sm"
+                    className="button-dark border-lavender-600 hover:border-lavender-500 text-lavender-200 hover:text-white"
+                  >
+                    <ClientIcon icon={FileText} className="h-4 w-4 mr-2" />
+                    导出 Markdown
+                  </Button>
+                )}
+                {onExportCSV && (
+                  <Button
+                    onClick={onExportCSV}
+                    variant="outline"
+                    size="sm"
+                    className="button-dark border-lavender-600 hover:border-lavender-500 text-lavender-200 hover:text-white"
+                  >
+                    <ClientIcon icon={TableIcon} className="h-4 w-4 mr-2" />
+                    导出 CSV
+                  </Button>
+                )}
+              </div>
+            )}
+            <Badge variant="outline" className="badge-standard">
+              {speedResults.length} 个结果
+            </Badge>
+          </div>
         </div>
 
         <div className="table-wrapper">

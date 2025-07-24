@@ -246,11 +246,8 @@ func (m *Manager) Start() {
 		ticker := time.NewTicker(1 * time.Hour)
 		defer ticker.Stop()
 		
-		for {
-			select {
-			case <-ticker.C:
-				m.CleanupCompletedTasks(24 * time.Hour)
-			}
+		for range ticker.C {
+			m.CleanupCompletedTasks(24 * time.Hour)
 		}
 	}()
 	

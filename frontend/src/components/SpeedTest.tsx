@@ -699,13 +699,13 @@ export default function SpeedTestPro() {
   
   const handleIncludeNodesChange = (value: string) => {
     setIncludeNodesInput(value)
-    const nodes = value.split(',').map(s => s.trim()).filter(s => s.length > 0)
+    const nodes = value.split(/[,，]/).map(s => s.trim()).filter(s => s.length > 0)
     setFilterConfig(prev => ({ ...prev, includeNodes: nodes }))
   }
   
   const handleExcludeNodesChange = (value: string) => {
     setExcludeNodesInput(value)
-    const nodes = value.split(',').map(s => s.trim()).filter(s => s.length > 0)
+    const nodes = value.split(/[,，]/).map(s => s.trim()).filter(s => s.length > 0)
     setFilterConfig(prev => ({ ...prev, excludeNodes: nodes }))
   }
   

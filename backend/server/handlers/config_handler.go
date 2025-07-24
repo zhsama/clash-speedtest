@@ -5,10 +5,11 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/faceair/clash-speedtest/logger"
-	"github.com/faceair/clash-speedtest/server/response"
-	"github.com/faceair/clash-speedtest/speedtester"
-	"github.com/faceair/clash-speedtest/utils/export"
+	"github.com/zhsama/clash-speedtest/logger"
+	"github.com/zhsama/clash-speedtest/server/response"
+	"github.com/zhsama/clash-speedtest/speedtester"
+	"github.com/zhsama/clash-speedtest/unlock"
+	"github.com/zhsama/clash-speedtest/utils/export"
 )
 
 // ConfigHandler 配置处理器
@@ -191,5 +192,51 @@ func (h *ConfigHandler) HandleExportResults(w http.ResponseWriter, r *http.Reque
 		"message": "Export functionality will be implemented",
 		"format":  exportReq.Options.Format,
 		"path":    exportReq.Options.OutputPath,
+	})
+}
+
+// HandleGetUnlockPlatforms 处理获取支持的解锁检测平台请求
+func (h *ConfigHandler) HandleGetUnlockPlatforms(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	
+	if r.Method != http.MethodGet {
+		h.handleMethodNotAllowed(ctx, w, r, "GET")
+		return
+	}
+	
+	logger.Logger.DebugContext(ctx, "Getting supported unlock platforms")
+	
+	// 获取所有注册的检测器
+	detectors := unlock.GetDetectors()
+	
+	// 构建平台信息列表
+	platforms := make([]unlock.PlatformInfo, 0, len(detectors))
+	for name, detector := range detectors {
+		platforms = append(platforms, unlock.PlatformInfo{
+			Name:        name,
+			DisplayName: name,
+			Category:    unlock.CategoryStreaming, // 默认分类，后续可以根据需要细化
+			Priority:    detector.GetPriority(),
+			Enabled:     true,
+			Description: "Support for " + name + " unlock detection",
+		})
+	}
+	
+	// 按优先级排序
+	for i := range platforms {
+		for j := i + 1; j < len(platforms); j++ {
+			if platforms[i].Priority > platforms[j].Priority {
+				platforms[i], platforms[j] = platforms[j], platforms[i]
+			}
+		}
+	}
+	
+	logger.Logger.DebugContext(ctx, "Found unlock platforms", 
+		slog.Int("count", len(platforms)),
+		slog.Any("platforms", platforms))
+	
+	response.SendSuccess(ctx, w, map[string]interface{}{
+		"platforms": platforms,
+		"total":     len(platforms),
 	})
 }

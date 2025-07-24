@@ -157,9 +157,6 @@ export default function TUNWarning({ onTUNStatusChange, showDetails = false }: T
                   <div className="font-medium form-element-label text-yellow-200">检测到 TUN 模式已启用</div>
                   <div className="text-sm text-yellow-200">{warning}</div>
                 </div>
-                <span className="badge-standard border-yellow-500 text-yellow-400 ml-4">
-                  TUN 模式
-                </span>
               </div>
             </div>
           </div>

@@ -436,7 +436,7 @@ import (
     "strings"
     "time"
     
-    "github.com/faceair/clash-speedtest/unlock"
+    "github.com/zhsama/clash-speedtest/unlock"
     "github.com/metacubex/mihomo/constant"
 )
 

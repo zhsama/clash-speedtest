@@ -3,9 +3,9 @@ package server
 import (
 	"net/http"
 
-	"github.com/faceair/clash-speedtest/server/handlers"
-	"github.com/faceair/clash-speedtest/server/middleware"
-	"github.com/faceair/clash-speedtest/websocket"
+	"github.com/zhsama/clash-speedtest/server/handlers"
+	"github.com/zhsama/clash-speedtest/server/middleware"
+	"github.com/zhsama/clash-speedtest/websocket"
 )
 
 // Router 服务器路由器
@@ -51,6 +51,9 @@ func (r *Router) Setup() {
 	r.mux.HandleFunc("/config/nodes", r.withMiddleware(r.configHandler.HandleGetNodes))
 	r.mux.HandleFunc("/api/nodes", r.withMiddleware(r.configHandler.HandleGetNodes))
 	r.mux.HandleFunc("/config/export", r.withMiddleware(r.configHandler.HandleExportResults))
+	
+	// 解锁检测相关路由
+	r.mux.HandleFunc("/api/unlock/platforms", r.withMiddleware(r.configHandler.HandleGetUnlockPlatforms))
 }
 
 // withMiddleware 应用中间件

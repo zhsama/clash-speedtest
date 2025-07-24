@@ -26,15 +26,15 @@
 
 ### 方法一：Go Install (推荐)
 ```bash
-go install github.com/faceair/clash-speedtest@latest
+go install github.com/zhsama/clash-speedtest@latest
 ```
 
 ### 方法二：预编译二进制文件
-从 [Releases](https://github.com/faceair/clash-speedtest/releases) 页面下载对应平台的二进制文件。
+从 [Releases](https://github.com/zhsama/clash-speedtest/releases) 页面下载对应平台的二进制文件。
 
 ### 方法三：源码编译
 ```bash
-git clone https://github.com/faceair/clash-speedtest.git
+git clone https://github.com/zhsama/clash-speedtest.git
 cd clash-speedtest/backend
 go build -o clash-speedtest .
 ```
@@ -42,7 +42,7 @@ go build -o clash-speedtest .
 ### 方法四：开发环境安装
 ```bash
 # 克隆仓库
-git clone https://github.com/faceair/clash-speedtest.git
+git clone https://github.com/zhsama/clash-speedtest.git
 cd clash-speedtest
 
 # 安装依赖
@@ -307,7 +307,7 @@ ws://localhost:8080/ws
 
 #### 1. 克隆项目
 ```bash
-git clone https://github.com/faceair/clash-speedtest.git
+git clone https://github.com/zhsama/clash-speedtest.git
 cd clash-speedtest
 ```
 
@@ -471,7 +471,7 @@ Cloudflare 是全球知名的 CDN 服务商，一般情况下无需自建测速�
 
 ```bash
 # 在测速服务器上安装和启动
-go install github.com/faceair/clash-speedtest/download-server@latest
+go install github.com/zhsama/clash-speedtest/download-server@latest
 download-server
 
 # 使用自建服务器测试
@@ -531,8 +531,8 @@ clash-speedtest --server-url "http://your-server-ip:8080"
 
 ## 📞 支持与反馈
 
-- 🐛 [问题反馈](https://github.com/faceair/clash-speedtest/issues)
-- 💬 [讨论区](https://github.com/faceair/clash-speedtest/discussions)
+- 🐛 [问题反馈](https://github.com/zhsama/clash-speedtest/issues)
+- 💬 [讨论区](https://github.com/zhsama/clash-speedtest/discussions)
 - 📧 邮件支持：请通过 GitHub Issues 联系
 
 ---

@@ -136,6 +136,7 @@
 
   /* 统一表单元素样式 */
   .form-element {
+    margin-top: var(--form-element-spacing);
     margin-bottom: var(--form-element-spacing);
   }
 

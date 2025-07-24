@@ -108,38 +108,40 @@ const SpeedTestConfig = ({ testConfig, setTestConfig, filterConfig, setFilterCon
         />
       </div>
       
-      <div>
-        <label className="form-element-label">
-          并发数: {testConfig.concurrent}
-        </label>
-        <Slider
-          value={[testConfig.concurrent]}
-          onValueChange={(v) => setTestConfig(prev => ({ 
-            ...prev, 
-            concurrent: v[0] 
-          }))}
-          max={16}
-          min={1}
-          step={1}
-          className="slider-dark"
-        />
-      </div>
-      
-      <div>
-        <label className="form-element-label">
-          超时时间: {testConfig.timeout} 秒
-        </label>
-        <Slider
-          value={[testConfig.timeout]}
-          onValueChange={(v) => setTestConfig(prev => ({ 
-            ...prev, 
-            timeout: v[0] 
-          }))}
-          max={30}
-          min={5}
-          step={5}
-          className="slider-dark"
-        />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="form-element-label">
+            并发数: {testConfig.concurrent}
+          </label>
+          <Slider
+            value={[testConfig.concurrent]}
+            onValueChange={(v) => setTestConfig(prev => ({ 
+              ...prev, 
+              concurrent: v[0] 
+            }))}
+            max={16}
+            min={1}
+            step={1}
+            className="slider-dark"
+          />
+        </div>
+        
+        <div>
+          <label className="form-element-label">
+            超时时间: {testConfig.timeout} 秒
+          </label>
+          <Slider
+            value={[testConfig.timeout]}
+            onValueChange={(v) => setTestConfig(prev => ({ 
+              ...prev, 
+              timeout: v[0] 
+            }))}
+            max={30}
+            min={5}
+            step={5}
+            className="slider-dark"
+          />
+        </div>
       </div>
     </div>
 
@@ -150,38 +152,40 @@ const SpeedTestConfig = ({ testConfig, setTestConfig, filterConfig, setFilterCon
         速度过滤条件
       </h4>
       <div className="space-y-2">
-        <div>
-          <label className="form-element-label">
-            最低下载速度: {filterConfig.minDownloadSpeed} MB/s
-          </label>
-          <Slider
-            value={[filterConfig.minDownloadSpeed]}
-            onValueChange={(v) => setFilterConfig(prev => ({ 
-              ...prev, 
-              minDownloadSpeed: v[0] 
-            }))}
-            max={100}
-            min={0}
-            step={1}
-            className="slider-dark"
-          />
-        </div>
-        
-        <div>
-          <label className="form-element-label">
-            最低上传速度: {filterConfig.minUploadSpeed} MB/s
-          </label>
-          <Slider
-            value={[filterConfig.minUploadSpeed]}
-            onValueChange={(v) => setFilterConfig(prev => ({ 
-              ...prev, 
-              minUploadSpeed: v[0] 
-            }))}
-            max={50}
-            min={0}
-            step={1}
-            className="slider-dark"
-          />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="form-element-label">
+              最低下载速度: {filterConfig.minDownloadSpeed} MB/s
+            </label>
+            <Slider
+              value={[filterConfig.minDownloadSpeed]}
+              onValueChange={(v) => setFilterConfig(prev => ({ 
+                ...prev, 
+                minDownloadSpeed: v[0] 
+              }))}
+              max={100}
+              min={0}
+              step={1}
+              className="slider-dark"
+            />
+          </div>
+          
+          <div>
+            <label className="form-element-label">
+              最低上传速度: {filterConfig.minUploadSpeed} MB/s
+            </label>
+            <Slider
+              value={[filterConfig.minUploadSpeed]}
+              onValueChange={(v) => setFilterConfig(prev => ({ 
+                ...prev, 
+                minUploadSpeed: v[0] 
+              }))}
+              max={50}
+              min={0}
+              step={1}
+              className="slider-dark"
+            />
+          </div>
         </div>
         
         <div>
@@ -210,75 +214,116 @@ const UnlockTestConfig = ({ testConfig, setTestConfig, hasSpeedConfig }: {
   testConfig: TestConfig; 
   setTestConfig: React.Dispatch<React.SetStateAction<TestConfig>>;
   hasSpeedConfig: boolean;
-}) => (
-  <div className={`form-element ${hasSpeedConfig ? "border-t border-lavender-700 pt-4" : ""}`}>
-    <h4 className="text-lg font-semibold text-lavender-50 flex items-center gap-2 mb-2">
-      <ClientIcon icon={Globe} className="h-5 w-5 text-lavender-400" />
-      流媒体解锁检测
-    </h4>
-    
-    <div className="space-y-2">
-      <div>
-        <label className="form-element-label">
-          解锁检测并发数: {testConfig.unlockConcurrent}
-        </label>
-        <Slider
-          value={[testConfig.unlockConcurrent]}
-          onValueChange={(v) => setTestConfig(prev => ({ 
-            ...prev, 
-            unlockConcurrent: v[0] 
-          }))}
-          max={10}
-          min={1}
-          step={1}
-          className="slider-dark"
-        />
+}) => {
+  const [availablePlatforms, setAvailablePlatforms] = useState<string[]>([])
+  const [platformsLoading, setPlatformsLoading] = useState(false)
+
+  // 获取支持的解锁检测平台
+  useEffect(() => {
+    const fetchUnlockPlatforms = async () => {
+      setPlatformsLoading(true)
+      let platforms = ["Netflix", "YouTube", "Disney+", "ChatGPT", "Spotify", "Bilibili"]
+      try {
+        const response = await fetch(`${config.apiUrl}/api/unlock/platforms`)
+        const data = await response.json()
+        
+        if (data.success && data.data && data.data.platforms) {
+          platforms = data.data.platforms
+            .map((platform: any) => platform.display_name || platform.name)
+            .sort((a: string, b: string) => a.localeCompare(b))
+          setAvailablePlatforms(platforms)
+        } else {
+          setAvailablePlatforms(platforms.sort((a, b) => a.localeCompare(b)))
+          console.warn("Failed to fetch unlock platforms, using defaults")
+        }
+      } catch (error) {
+        console.error("Error fetching unlock platforms:", error)
+        setAvailablePlatforms(platforms.sort((a, b) => a.localeCompare(b)))
+      } finally {
+        setPlatformsLoading(false)
+      }
+    }
+
+    fetchUnlockPlatforms()
+  }, [])
+
+  return (
+    <div className={`form-element ${hasSpeedConfig ? "border-t border-lavender-700 pt-4" : ""}`}>
+      <h4 className="text-lg font-semibold text-lavender-50 flex items-center gap-2 mb-2">
+        <ClientIcon icon={Globe} className="h-5 w-5 text-lavender-400" />
+        流媒体解锁检测
+      </h4>
+      
+      <div className="space-y-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="form-element-label">
+              解锁检测并发数: {testConfig.unlockConcurrent}
+            </label>
+            <Slider
+              value={[testConfig.unlockConcurrent]}
+              onValueChange={(v) => setTestConfig(prev => ({ 
+                ...prev, 
+                unlockConcurrent: v[0] 
+              }))}
+              max={10}
+              min={1}
+              step={1}
+              className="slider-dark"
+            />
+          </div>
+          
+          <div>
+            <label className="form-element-label">
+              解锁检测超时: {testConfig.unlockTimeout} 秒
+            </label>
+            <Slider
+              value={[testConfig.unlockTimeout]}
+              onValueChange={(v) => setTestConfig(prev => ({ 
+                ...prev, 
+                unlockTimeout: v[0] 
+              }))}
+              max={30}
+              min={5}
+              step={5}
+              className="slider-dark"
+            />
+          </div>
+        </div>
       </div>
       
-      <div>
+      <div className="form-element">
         <label className="form-element-label">
-          解锁检测超时: {testConfig.unlockTimeout} 秒
+          检测平台 {platformsLoading && <span className="text-xs text-lavender-400">(加载中...)</span>}
         </label>
-        <Slider
-          value={[testConfig.unlockTimeout]}
-          onValueChange={(v) => setTestConfig(prev => ({ 
-            ...prev, 
-            unlockTimeout: v[0] 
-          }))}
-          max={30}
-          min={5}
-          step={5}
-          className="slider-dark"
-        />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 component-gap">
+          {availablePlatforms.map((platform) => (
+            <label key={platform} className="flex items-center gap-2 cursor-pointer min-w-0">
+              <Checkbox
+                checked={testConfig.unlockPlatforms.includes(platform)}
+                onCheckedChange={(checked) => {
+                  setTestConfig(prev => ({
+                    ...prev,
+                    unlockPlatforms: checked
+                      ? [...prev.unlockPlatforms, platform]
+                      : prev.unlockPlatforms.filter(p => p !== platform)
+                  }))
+                }}
+                className="checkbox-dark"
+              />
+              <span className="text-lavender-100 text-sm truncate">{platform}</span>
+            </label>
+          ))}
+        </div>
+        {availablePlatforms.length === 0 && !platformsLoading && (
+          <div className="text-center text-lavender-400 py-4">
+            无可用的解锁检测平台
+          </div>
+        )}
       </div>
     </div>
-    
-    <div className="form-element">
-      <label className="form-element-label">
-        检测平台
-      </label>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 component-gap">
-        {["Netflix", "YouTube", "Disney+", "ChatGPT", "Spotify", "Bilibili"].map((platform) => (
-          <label key={platform} className="flex items-center gap-2 cursor-pointer min-w-0">
-            <Checkbox
-              checked={testConfig.unlockPlatforms.includes(platform)}
-              onCheckedChange={(checked) => {
-                setTestConfig(prev => ({
-                  ...prev,
-                  unlockPlatforms: checked
-                    ? [...prev.unlockPlatforms, platform]
-                    : prev.unlockPlatforms.filter(p => p !== platform)
-                }))
-              }}
-              className="checkbox-dark"
-            />
-            <span className="text-lavender-100 text-sm truncate">{platform}</span>
-          </label>
-        ))}
-      </div>
-    </div>
-  </div>
-)
+  )
+}
 
 export default function SpeedTestPro() {
   const [configUrl, setConfigUrl] = useState("")
@@ -306,9 +351,9 @@ export default function SpeedTestPro() {
     uploadSize: 20,
     timeout: 10,
     concurrent: 4,
-    // 解锁检测配置
+    // 解锁检测配置 - 初始为空，等待API返回后动态填充
     testMode: "both", // both, speed_only, unlock_only
-    unlockPlatforms: ["Netflix", "YouTube", "Disney+", "ChatGPT", "Spotify", "Bilibili"],
+    unlockPlatforms: [], // 将由API动态填充
     unlockConcurrent: 5,
     unlockTimeout: 10,
     unlockRetry: true,
@@ -333,25 +378,67 @@ export default function SpeedTestPro() {
   } = useWebSocket(wsUrl)
   
   useEffect(() => {
-    const savedConfig = localStorage.getItem("clash-speedtest-config")
-    if (savedConfig) {
-      try {
-        const parsed = JSON.parse(savedConfig)
-        if (parsed.configUrl) setConfigUrl(parsed.configUrl)
-        if (parsed.filterConfig) {
-          setFilterConfig(prev => ({
-            ...prev,
-            ...parsed.filterConfig,
-            protocolFilter: prev.protocolFilter
-          }))
-          handleIncludeNodesChange(parsed.filterConfig.includeNodes?.join(', ') || '')
-          handleExcludeNodesChange(parsed.filterConfig.excludeNodes?.join(', ') || '')
+    const initializeConfig = async () => {
+      // 首先尝试从localStorage加载配置
+      const savedConfig = localStorage.getItem("clash-speedtest-config")
+      let hasStoredUnlockPlatforms = false
+      
+      if (savedConfig) {
+        try {
+          const parsed = JSON.parse(savedConfig)
+          if (parsed.configUrl) setConfigUrl(parsed.configUrl)
+          if (parsed.filterConfig) {
+            setFilterConfig(prev => ({
+              ...prev,
+              ...parsed.filterConfig,
+              protocolFilter: prev.protocolFilter
+            }))
+            handleIncludeNodesChange(parsed.filterConfig.includeNodes?.join(', ') || '')
+            handleExcludeNodesChange(parsed.filterConfig.excludeNodes?.join(', ') || '')
+          }
+          if (parsed.testConfig) {
+            setTestConfig(prev => ({ ...prev, ...parsed.testConfig }))
+            // 检查是否有保存的解锁平台配置
+            hasStoredUnlockPlatforms = parsed.testConfig.unlockPlatforms && 
+                                      parsed.testConfig.unlockPlatforms.length > 0
+          }
+        } catch (error) {
+          console.error("Failed to load saved config:", error)
         }
-        if (parsed.testConfig) setTestConfig(prev => ({ ...prev, ...parsed.testConfig }))
-      } catch (error) {
-        console.error("Failed to load saved config:", error)
+      }
+      
+      // 只有在没有保存的解锁平台配置时，才初始化默认的解锁平台
+      if (!hasStoredUnlockPlatforms) {
+        try {
+          const response = await fetch(`${config.apiUrl}/api/unlock/platforms`)
+          const data = await response.json()
+          
+          if (data.success && data.data && data.data.platforms) {
+            // 选择前6个平台作为默认选中的平台（按首字母排序后选择）
+            const sortedPlatforms = data.data.platforms
+              .map((platform: any) => platform.display_name || platform.name)
+              .sort((a: string, b: string) => a.localeCompare(b))
+            
+            const defaultPlatforms = sortedPlatforms.slice(0, 6)
+            
+            setTestConfig(prev => ({
+              ...prev,
+              unlockPlatforms: defaultPlatforms
+            }))
+          }
+        } catch (error) {
+          console.error("Error initializing unlock platforms:", error)
+          // 使用硬编码的默认值作为fallback
+          const fallbackPlatforms = ["Netflix", "YouTube", "Disney+", "ChatGPT", "Spotify", "Bilibili"]
+          setTestConfig(prev => ({
+            ...prev,
+            unlockPlatforms: fallbackPlatforms.sort((a, b) => a.localeCompare(b))
+          }))
+        }
       }
     }
+
+    initializeConfig()
   }, [])
   
   useEffect(() => {
@@ -727,10 +814,94 @@ export default function SpeedTestPro() {
           )}
         </Card>
 
-        {/* 主体内容 - 两栏布局 */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* 左侧面板 - 节点列表和测试结果 */}
+          {/* 左侧面板 */}
           <div className="lg:col-span-2 space-y-6">
+            {/* 节点过滤条件 */}
+            <Card className="card-standard">
+              <h4 className="text-lg font-semibold text-lavender-50 flex items-center gap-2 mb-2">
+                <ClientIcon icon={Filter} className="h-4 w-4 text-lavender-400" />
+                过滤条件
+              </h4>
+            
+              <div className="space-y-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="form-element-label">
+                      包含节点 (逗号分隔)
+                    </label>
+                    <Input
+                      placeholder="例如: 香港, HK, 新加坡..."
+                      value={includeNodesInput}
+                      onChange={(e) => handleIncludeNodesChange(e.target.value)}
+                      className="input-standard"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="form-element-label">
+                      排除节点 (逗号分隔)
+                    </label>
+                    <Input
+                      placeholder="例如: 过期, 测试, 备用..."
+                      value={excludeNodesInput}
+                      onChange={(e) => handleExcludeNodesChange(e.target.value)}
+                      className="input-standard"
+                    />
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {availableProtocols.length > 0 && (
+                    <div>
+                      <label className="form-element-label">
+                        协议过滤
+                      </label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 component-gap">
+                        {availableProtocols.map((protocol) => (
+                          <div key={protocol} className="flex items-center gap-2 min-w-0">
+                            <Checkbox
+                              id={`protocol-${protocol}`}
+                              checked={isProtocolSelected(protocol)}
+                              onCheckedChange={(checked: boolean) => 
+                                handleProtocolFilterChange(protocol, checked)
+                              }
+                              className="checkbox-dark"
+                            />
+                            <label 
+                              htmlFor={`protocol-${protocol}`} 
+                              className="text-sm text-lavender-100 cursor-pointer truncate"
+                            >
+                              {protocol}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div>
+                    <label className="form-element-label">
+                      其他选项
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        id="stashCompatible"
+                        checked={filterConfig.stashCompatible}
+                        onCheckedChange={(checked) => setFilterConfig(prev => ({ 
+                          ...prev, 
+                          stashCompatible: checked 
+                        }))}
+                        className="switch-dark"
+                      />
+                      <label htmlFor="stashCompatible" className="text-lavender-100">
+                        Stash 兼容模式
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
             {/* 节点列表预览 */}
             <Card className="card-standard">
               <div className="flex items-center justify-between form-element">
@@ -755,9 +926,9 @@ export default function SpeedTestPro() {
                   <Table>
                     <TableHeader className="table-header-fixed">
                       <TableRow>
-                        <TableHead>节点名称</TableHead>
-                        <TableHead>类型</TableHead>
-                        <TableHead>服务器</TableHead>
+                        <TableHead>名称</TableHead>
+                        <TableHead>协议</TableHead>
+                        <TableHead>IP / 域名</TableHead>
                         <TableHead>端口</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -861,85 +1032,6 @@ export default function SpeedTestPro() {
                   </>
                 )}
               </Button>
-            </Card>
-
-            {/* 节点过滤条件 */}
-            <Card className="card-standard">
-              <h4 className="text-lg font-semibold text-lavender-50 flex items-center gap-2 mb-2">
-                <ClientIcon icon={Filter} className="h-4 w-4 text-lavender-400" />
-                方案选单
-              </h4>
-            
-              <div className="space-y-2">
-                <div>
-                  <label className="form-element-label">
-                    包含节点 (逗号分隔)
-                  </label>
-                  <Textarea
-                    placeholder="例如: 香港, HK, 新加坡..."
-                    value={includeNodesInput}
-                    onChange={(e) => handleIncludeNodesChange(e.target.value)}
-                    className="input-standard resize-none"
-                    rows={2}
-                  />
-                </div>
-                
-                <div>
-                  <label className="form-element-label">
-                    排除节点 (逗号分隔)
-                  </label>
-                  <Textarea
-                    placeholder="例如: 过期, 测试, 备用..."
-                    value={excludeNodesInput}
-                    onChange={(e) => handleExcludeNodesChange(e.target.value)}
-                    className="input-standard resize-none"
-                    rows={2}
-                  />
-                </div>
-                
-                {availableProtocols.length > 0 && (
-                  <div>
-                    <label className="form-element-label">
-                      协议过滤
-                    </label>
-                    <div className="grid grid-cols-1 md:grid-cols-2 component-gap">
-                      {availableProtocols.map((protocol) => (
-                        <div key={protocol} className="flex items-center gap-2 min-w-0">
-                          <Checkbox
-                            id={`protocol-${protocol}`}
-                            checked={isProtocolSelected(protocol)}
-                            onCheckedChange={(checked: boolean) => 
-                              handleProtocolFilterChange(protocol, checked)
-                            }
-                            className="checkbox-dark"
-                          />
-                          <label 
-                            htmlFor={`protocol-${protocol}`} 
-                            className="text-sm text-lavender-100 cursor-pointer truncate"
-                          >
-                            {protocol}
-                          </label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                
-                <div className="flex items-center gap-2">
-                  <Switch
-                    id="stashCompatible"
-                    checked={filterConfig.stashCompatible}
-                    onCheckedChange={(checked) => setFilterConfig(prev => ({ 
-                      ...prev, 
-                      stashCompatible: checked 
-                    }))}
-                    className="switch-dark"
-                  />
-                  <label htmlFor="stashCompatible" className="text-lavender-100">
-                    Stash 兼容模式
-                  </label>
-                </div>
-              </div>
             </Card>
 
             {/* 高级配置 */}

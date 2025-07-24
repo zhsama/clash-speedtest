@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/faceair/clash-speedtest/server/response"
+	"github.com/zhsama/clash-speedtest/server/response"
 )
 
 // AuthConfig 认证配置

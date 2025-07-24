@@ -8,9 +8,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/faceair/clash-speedtest/logger"
-	"github.com/faceair/clash-speedtest/server/response"
-	"github.com/faceair/clash-speedtest/utils/system"
+	"github.com/zhsama/clash-speedtest/logger"
+	"github.com/zhsama/clash-speedtest/server/response"
+	"github.com/zhsama/clash-speedtest/utils/system"
 )
 
 // SystemHandler 系统处理器

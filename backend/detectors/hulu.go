@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/faceair/clash-speedtest/unlock"
+	"github.com/zhsama/clash-speedtest/unlock"
 )
 
 // TestHulu 测试 Hulu 解锁情况

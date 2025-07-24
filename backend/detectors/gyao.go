@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/faceair/clash-speedtest/unlock"
+	"github.com/zhsama/clash-speedtest/unlock"
 )
 
 // TestGYAO 测试 GYAO 解锁情况

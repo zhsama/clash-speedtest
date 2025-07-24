@@ -12,8 +12,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/faceair/clash-speedtest/logger"
-	"github.com/faceair/clash-speedtest/unlock"
+	"github.com/zhsama/clash-speedtest/logger"
+	"github.com/zhsama/clash-speedtest/unlock"
 	"github.com/metacubex/mihomo/constant"
 )
 

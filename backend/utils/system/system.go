@@ -14,7 +14,7 @@ import (
 
 	"log/slog"
 
-	"github.com/faceair/clash-speedtest/logger"
+	"github.com/zhsama/clash-speedtest/logger"
 )
 
 // TUNStatus 表示 TUN 模式的状态信息

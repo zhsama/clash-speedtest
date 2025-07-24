@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/faceair/clash-speedtest/unlock"
+	"github.com/zhsama/clash-speedtest/unlock"
 )
 
 // TestVideoMarket 测试 VideoMarket 解锁情况

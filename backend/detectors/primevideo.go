@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/faceair/clash-speedtest/unlock"
+	"github.com/zhsama/clash-speedtest/unlock"
 )
 
 // TestPrimeVideo 测试 Prime Video 解锁情况

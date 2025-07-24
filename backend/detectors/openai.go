@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/faceair/clash-speedtest/unlock"
+	"github.com/zhsama/clash-speedtest/unlock"
 )
 
 // TestOpenAI 测试 ChatGPT/OpenAI 解锁情况

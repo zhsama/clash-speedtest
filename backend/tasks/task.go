@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/faceair/clash-speedtest/server/common"
-	"github.com/faceair/clash-speedtest/speedtester"
+	"github.com/zhsama/clash-speedtest/server/common"
+	"github.com/zhsama/clash-speedtest/speedtester"
 )
 
 // TaskStatus 任务状态枚举

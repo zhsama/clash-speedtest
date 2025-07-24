@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/faceair/clash-speedtest/unlock"
+	"github.com/zhsama/clash-speedtest/unlock"
 )
 
 // TestSteam 测试 Steam 商店货币区域

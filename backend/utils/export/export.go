@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/faceair/clash-speedtest/utils/stats"
+	"github.com/zhsama/clash-speedtest/utils/stats"
 	"gopkg.in/yaml.v3"
 )
 

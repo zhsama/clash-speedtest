@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/faceair/clash-speedtest/config"
+	"github.com/zhsama/clash-speedtest/config"
 )
 
 var Logger *slog.Logger

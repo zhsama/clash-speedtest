@@ -3,7 +3,7 @@ package detectors
 import (
 	"net/http"
 
-	"github.com/faceair/clash-speedtest/unlock"
+	"github.com/zhsama/clash-speedtest/unlock"
 )
 
 // TestFunimation 测试 Funimation 解锁情况

@@ -11,8 +11,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/faceair/clash-speedtest/logger"
-	"github.com/faceair/clash-speedtest/unlock"
+	"github.com/zhsama/clash-speedtest/logger"
+	"github.com/zhsama/clash-speedtest/unlock"
 )
 
 // TestSpotify 测试 Spotify 解锁情况

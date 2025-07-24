@@ -5,7 +5,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/faceair/clash-speedtest/unlock"
+	"github.com/zhsama/clash-speedtest/unlock"
 )
 
 // TestCatchplay 测试 Catchplay+ 解锁情况

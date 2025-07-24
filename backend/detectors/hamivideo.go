@@ -5,7 +5,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/faceair/clash-speedtest/unlock"
+	"github.com/zhsama/clash-speedtest/unlock"
 )
 
 // TestHamiVideo 测试 HamiVideo 解锁情况

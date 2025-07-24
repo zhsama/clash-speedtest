@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/faceair/clash-speedtest/unlock"
+	"github.com/zhsama/clash-speedtest/unlock"
 )
 
 // TestBilibiliMainland 测试哔哩哔哩大陆限定解锁情况

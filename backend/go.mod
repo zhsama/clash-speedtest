@@ -1,8 +1,9 @@
-module github.com/faceair/clash-speedtest
+module github.com/zhsama/clash-speedtest
 
 go 1.24
 
 require (
+	github.com/andybalholm/brotli v1.0.6
 	github.com/gobwas/ws v1.4.0
 	github.com/metacubex/mihomo v1.19.10
 	gopkg.in/yaml.v3 v3.0.1
@@ -12,7 +13,6 @@ require (
 	github.com/3andne/restls-client-go v0.1.6 // indirect
 	github.com/RyuaNerin/go-krypto v1.3.0 // indirect
 	github.com/Yawning/aez v0.0.0-20211027044916-e49e68abd344 // indirect
-	github.com/andybalholm/brotli v1.0.6 // indirect
 	github.com/bahlo/generic-list-go v0.2.0 // indirect
 	github.com/cloudflare/circl v1.3.7 // indirect
 	github.com/coreos/go-iptables v0.8.0 // indirect

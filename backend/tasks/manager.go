@@ -9,9 +9,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/faceair/clash-speedtest/logger"
-	"github.com/faceair/clash-speedtest/server/common"
-	"github.com/faceair/clash-speedtest/websocket"
+	"github.com/zhsama/clash-speedtest/logger"
+	"github.com/zhsama/clash-speedtest/server/common"
+	"github.com/zhsama/clash-speedtest/websocket"
 )
 
 // Manager 任务管理器

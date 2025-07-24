@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/faceair/clash-speedtest/logger"
+	"github.com/zhsama/clash-speedtest/logger"
 	"github.com/metacubex/mihomo/constant"
 )
 

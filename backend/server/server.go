@@ -10,8 +10,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/faceair/clash-speedtest/logger"
-	"github.com/faceair/clash-speedtest/websocket"
+	"github.com/zhsama/clash-speedtest/logger"
+	"github.com/zhsama/clash-speedtest/websocket"
 )
 
 // Server 服务器结构

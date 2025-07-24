@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/faceair/clash-speedtest/logger"
+	"github.com/zhsama/clash-speedtest/logger"
 )
 
 // contextKey 用于在 context 中存储值的键类型

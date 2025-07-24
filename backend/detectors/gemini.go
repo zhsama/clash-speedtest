@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/faceair/clash-speedtest/unlock"
+	"github.com/zhsama/clash-speedtest/unlock"
 )
 
 // TestGemini 测试 Google Gemini 区域限制

@@ -5,7 +5,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/faceair/clash-speedtest/unlock"
+	"github.com/zhsama/clash-speedtest/unlock"
 )
 
 // TestTelasa 测试 Telasa 解锁情况

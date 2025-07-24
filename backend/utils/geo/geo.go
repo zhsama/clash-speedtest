@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/faceair/clash-speedtest/logger"
+	"github.com/zhsama/clash-speedtest/logger"
 )
 
 // GeoLocation represents geographical location information

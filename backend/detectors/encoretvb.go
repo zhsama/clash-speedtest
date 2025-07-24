@@ -5,7 +5,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/faceair/clash-speedtest/unlock"
+	"github.com/zhsama/clash-speedtest/unlock"
 )
 
 // TestEncoreTVB 测试 encoreTVB 解锁情况

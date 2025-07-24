@@ -8,8 +8,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/faceair/clash-speedtest/logger"
-	"github.com/faceair/clash-speedtest/speedtester"
+	"github.com/zhsama/clash-speedtest/logger"
+	"github.com/zhsama/clash-speedtest/speedtester"
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
 )

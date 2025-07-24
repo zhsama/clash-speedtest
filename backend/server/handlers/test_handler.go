@@ -9,11 +9,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/faceair/clash-speedtest/logger"
-	"github.com/faceair/clash-speedtest/server/common"
-	"github.com/faceair/clash-speedtest/server/response"
-	"github.com/faceair/clash-speedtest/speedtester"
-	"github.com/faceair/clash-speedtest/websocket"
+	"github.com/zhsama/clash-speedtest/logger"
+	"github.com/zhsama/clash-speedtest/server/common"
+	"github.com/zhsama/clash-speedtest/server/response"
+	"github.com/zhsama/clash-speedtest/speedtester"
+	"github.com/zhsama/clash-speedtest/websocket"
 )
 
 // TestHandler 测试处理器

@@ -15,6 +15,7 @@ import {
   ServerCog,
   RefreshCw,
   Loader2,
+  History,
 } from "lucide-react"
 import ClientIcon from "./ClientIcon"
 import RealTimeProgressTable from "./RealTimeProgressTable"
@@ -22,6 +23,8 @@ import TUNWarning from "./TUNWarning"
 import { useWebSocket } from "../hooks/useWebSocket"
 import type { TestProgressData } from "../hooks/useWebSocket"
 import { config } from "@/lib/env"
+import { useTestResultSaver } from '../hooks/useTestResultSaver'
+import TestHistoryModal from './TestHistoryModal'
 import {
   Table,
   TableBody,
@@ -363,6 +366,10 @@ export default function SpeedTestPro() {
   const [excludeNodesInput, setExcludeNodesInput] = useState("")
   const [availableProtocols, setAvailableProtocols] = useState<string[]>([])
   
+  // 新增：历史记录相关状态
+  const [showHistory, setShowHistory] = useState(false)
+  const { saveTestSession } = useTestResultSaver()
+  
   const wsUrl = `${config.wsUrl}/ws`
   const {
     isConnected,
@@ -373,6 +380,7 @@ export default function SpeedTestPro() {
     testResults,
     testCompleteData,
     testCancelledData,
+    testStartData,
     clearData,
     setTestProgress
   } = useWebSocket(wsUrl)
@@ -480,6 +488,25 @@ export default function SpeedTestPro() {
       )
     }
   }, [testCancelledData, testing])
+  
+  // 新增：自动保存测试完成结果
+  useEffect(() => {
+    if (testCompleteData && testStartData && testResults.length > 0) {
+      // 根据testConfig.testMode确定测试类型
+      const testType: 'speed' | 'unlock' | 'both' = 
+        testConfig.testMode === 'speed_only' ? 'speed' :
+        testConfig.testMode === 'unlock_only' ? 'unlock' : 
+        'both'
+      
+      // 异步保存，不阻塞UI
+      saveTestSession(
+        testStartData,
+        testResults,
+        testCompleteData,
+        testType
+      ).catch(console.error)
+    }
+  }, [testCompleteData, testStartData, testResults, saveTestSession, testConfig.testMode])
   
   const fetchConfig = async () => {
     if (!configUrl.trim()) {
@@ -907,11 +934,22 @@ export default function SpeedTestPro() {
     <div className="min-h-screen bg-gradient-dark">
       <div className="max-w-7xl mx-auto p-6 space-y-6">
         {/* Header */}
-        <div className="text-center">
-          <h1 className="text-4xl font-bold mb-3">
-            <span className="text-gradient">Clash SpeedTest Pro</span>
-          </h1>
-          <p className="text-lavender-400">专业的代理节点性能测试工具</p>
+        <div className="flex justify-between items-center">
+          <div className="text-center flex-1">
+            <h1 className="text-4xl font-bold mb-3">
+              <span className="text-gradient">Clash SpeedTest Pro</span>
+            </h1>
+            <p className="text-lavender-400">专业的代理节点性能测试工具</p>
+          </div>
+          
+          {/* 新增：历史记录按钮 */}
+          <Button 
+            onClick={() => setShowHistory(true)}
+            className="btn-outlined"
+          >
+            <ClientIcon icon={History} className="h-4 w-4 mr-2" />
+            历史记录
+          </Button>
         </div>
         
         {/* TUN 模式检测警告 */}
@@ -1234,6 +1272,11 @@ export default function SpeedTestPro() {
           </div>
         </div>
       </div>
+      
+      {/* 新增：历史记录模态框 */}
+      {showHistory && (
+        <TestHistoryModal onClose={() => setShowHistory(false)} />
+      )}
     </div>
   )
 }

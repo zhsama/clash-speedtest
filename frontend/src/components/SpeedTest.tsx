@@ -86,7 +86,7 @@ const SpeedTestConfig = ({ testConfig, setTestConfig, filterConfig, setFilterCon
             ...prev, 
             serverUrl: e.target.value 
           }))}
-          className="input-standard"
+          className="input-outlined"
         />
       </div>
       
@@ -921,7 +921,7 @@ export default function SpeedTestPro() {
         />
         
         {/* 配置获取 */}
-        <Card className="card-standard">
+        <Card className="card-elevated">
           <div className="flex items-center gap-2 form-element">
             <ClientIcon icon={Globe} className="h-5 w-5 text-lavender-400" />
             <h2 className="text-lg font-semibold text-lavender-50">配置获取</h2>
@@ -945,13 +945,13 @@ export default function SpeedTestPro() {
               placeholder="输入配置文件路径或订阅链接..."
               value={configUrl}
               onChange={(e) => setConfigUrl(e.target.value)}
-              className="flex-1 input-standard"
+              className="flex-1 input-outlined"
               disabled={loading || testing}
             />
             <Button
               onClick={fetchConfig}
               disabled={loading || testing}
-              className="button-standard min-w-[120px]"
+              className="btn-filled min-w-[120px]"
             >
               {loading ? (
                 <>
@@ -988,7 +988,7 @@ export default function SpeedTestPro() {
           {/* 左侧面板 */}
           <div className="lg:col-span-2 space-y-6">
             {/* 节点过滤条件 */}
-            <Card className="card-standard">
+            <Card className="card-elevated">
               <h4 className="text-lg font-semibold text-lavender-50 flex items-center gap-2 mb-2">
                 <ClientIcon icon={Filter} className="h-4 w-4 text-lavender-400" />
                 过滤条件
@@ -1004,7 +1004,7 @@ export default function SpeedTestPro() {
                       placeholder="例如: 香港, HK, 新加坡..."
                       value={includeNodesInput}
                       onChange={(e) => handleIncludeNodesChange(e.target.value)}
-                      className="input-standard"
+                      className="input-outlined"
                     />
                   </div>
                   
@@ -1016,7 +1016,7 @@ export default function SpeedTestPro() {
                       placeholder="例如: 过期, 测试, 备用..."
                       value={excludeNodesInput}
                       onChange={(e) => handleExcludeNodesChange(e.target.value)}
-                      className="input-standard"
+                      className="input-outlined"
                     />
                   </div>
                 </div>
@@ -1073,7 +1073,7 @@ export default function SpeedTestPro() {
               </div>
             </Card>
             {/* 节点列表预览 */}
-            <Card className="card-standard">
+            <Card className="card-elevated">
               <div className="flex items-center justify-between form-element">
                 <h2 className="text-lg font-semibold text-lavender-50 flex items-center gap-2">
                   <ClientIcon icon={ServerCog} className="h-5 w-5 text-lavender-400" />
@@ -1083,7 +1083,7 @@ export default function SpeedTestPro() {
                   onClick={() => applyFilters()}
                   variant="outline"
                   size="sm"
-                  className="button-standard"
+                  className="btn-outlined"
                   disabled={testing}
                 >
                   <ClientIcon icon={RefreshCw} className="h-4 w-4 mr-1" />
@@ -1091,49 +1091,47 @@ export default function SpeedTestPro() {
                 </Button>
               </div>
               
-              <div className="table-scroll-container">
-                <div className="table-scroll-content">
-                  <Table>
-                    <TableHeader className="table-header-fixed">
-                      <TableRow>
-                        <TableHead>名称</TableHead>
-                        <TableHead>协议</TableHead>
-                        <TableHead>IP / 域名</TableHead>
-                        <TableHead>端口</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredNodes.length > 0 ? (
-                        filteredNodes.map((node, index) => (
-                          <TableRow key={`${node.name}-${index}`}>
-                            <TableCell className="font-medium text-lavender-50">
-                              <div className="truncate max-w-xs" title={node.name}>
-                                {node.name}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <span className="badge-standard">
-                                {node.type}
-                              </span>
-                            </TableCell>
-                            <TableCell className="text-lavender-300 font-mono text-sm">
-                              {node.server}
-                            </TableCell>
-                            <TableCell className="text-lavender-300">
-                              {node.port}
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={4} className="text-center text-lavender-400 py-8">
-                            {nodes.length === 0 ? "暂无节点信息" : "没有符合条件的节点"}
+              <div className="table-container scrollbar-modern">
+                <Table className="table-modern">
+                  <TableHeader style={{position: 'sticky', top: 0, zIndex: 10, backdropFilter: 'blur(8px)'}}>
+                    <TableRow>
+                      <TableHead>名称</TableHead>
+                      <TableHead>协议</TableHead>
+                      <TableHead>IP / 域名</TableHead>
+                      <TableHead>端口</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredNodes.length > 0 ? (
+                      filteredNodes.map((node, index) => (
+                        <TableRow key={`${node.name}-${index}`}>
+                          <TableCell className="font-medium text-lavender-50">
+                            <div className="truncate max-w-xs" title={node.name}>
+                              {node.name}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <span className={`badge-filled protocol-${node.type.toLowerCase()}`}>
+                              {node.type}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-lavender-300 font-mono text-sm">
+                            {node.server}
+                          </TableCell>
+                          <TableCell className="text-lavender-300">
+                            {node.port}
                           </TableCell>
                         </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center text-lavender-400 py-8">
+                          {nodes.length === 0 ? "暂无节点信息" : "没有符合条件的节点"}
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
               </div>
             </Card>
 
@@ -1156,7 +1154,7 @@ export default function SpeedTestPro() {
           {/* 右侧面板 - 测试配置和控制 */}
           <div className="space-y-4">
             {/* 测试配置 */}
-            <Card className="card-standard">
+            <Card className="card-elevated">
               <div className="flex items-center gap-2 mb-2">
                 <ClientIcon icon={Filter} className="h-5 w-5 text-lavender-400" />
                 <h2 className="text-lg font-semibold text-lavender-50">测试配置</h2>
@@ -1191,7 +1189,7 @@ export default function SpeedTestPro() {
                 onClick={testing ? stopTest : startTest}
                 disabled={!isConnected || nodes.length === 0 || loading}
                 size="lg"
-                className={`w-full ${testing ? "bg-red-600 hover:bg-red-700 text-white" : "button-standard"}`}
+                className={`w-full ${testing ? "bg-destructive hover:bg-destructive/90 text-destructive-foreground" : "btn-filled"}`}
               >
                 {testing ? (
                   <>
@@ -1212,7 +1210,7 @@ export default function SpeedTestPro() {
               <summary className="cursor-pointer text-lavender-300 hover:text-lavender-100 transition-colors">
                 高级测试配置
               </summary>
-              <Card className="card-standard mt-4">
+              <Card className="card-elevated mt-4">
                 {/* 速度测试配置 - 条件显示 */}
                 {(testConfig.testMode === "both" || testConfig.testMode === "speed_only") && (
                   <SpeedTestConfig 

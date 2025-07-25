@@ -1,88 +1,238 @@
 @import "tailwindcss";
 
+/* ============================================================================
+   Clash SpeedTest - Material 3 Design System
+   基于Material Design 3.0标准的前端样式系统
+   ============================================================================ */
+
 @layer base {
   :root {
-    --lavender-50: 144 85% 90%;
-    --lavender-100: 147 88% 77%;
-    --lavender-200: 149 69% 67%;
-    --lavender-300: 149 55% 61%;
-    --lavender-400: 149 40% 54%;
-    --lavender-500: 150 35% 45%;
-    --lavender-600: 150 37% 36%;
-    --lavender-700: 149 39% 27%;
-    --lavender-800: 149 41% 18%;
-    --lavender-900: 150 52% 9%;
-    --lavender-950: 148 60% 5%;
-
-    /* 优雅薰衣草紫配色 */
-    --lavender-50: 280 44% 98%;
-    --lavender-100: 280 40% 95%;
-    --lavender-200: 280 35% 90%;
-    --lavender-300: 280 30% 82%;
-    --lavender-400: 280 25% 74%;
-    --lavender-500: 280 20% 66%;
-    --lavender-600: 280 18% 58%;
-    --lavender-700: 280 20% 48%;
-    --lavender-800: 280 25% 38%;
-    --lavender-900: 280 30% 28%;
-    --lavender-950: 280 35% 18%;
-
-    /* 统一间距标准 */
-    --spacing-xs: 0.25rem; /* 4px */
-    --spacing-sm: 0.5rem; /* 8px */
-    --spacing-md: 1rem; /* 16px */
-    --spacing-lg: 1.5rem; /* 24px */
-    --spacing-xl: 2rem; /* 32px */
-    --spacing-2xl: 3rem; /* 48px */
-
-    /* 组件间距 */
-    --component-gap: var(--spacing-lg);
-    --section-gap: var(--spacing-xl);
-    --card-padding: var(--spacing-lg);
-    --form-element-spacing: var(--spacing-md);
-
-    --background: 0 0% 100%;
-    --foreground: var(--lavender-950);
-    --card: 0 0% 100%;
-    --card-foreground: var(--lavender-950);
-    --popover: 0 0% 100%;
-    --popover-foreground: var(--lavender-950);
-    --primary: var(--lavender-600);
-    --primary-foreground: var(--lavender-50);
-    --secondary: var(--lavender-100);
-    --secondary-foreground: var(--lavender-800);
-    --muted: var(--lavender-100);
-    --muted-foreground: var(--lavender-600);
-    --accent: var(--lavender-200);
-    --accent-foreground: var(--lavender-800);
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: var(--lavender-200);
-    --input: var(--lavender-200);
-    --ring: var(--lavender-500);
-    --radius: 0.5rem;
+    /* ========================================================================
+       Material 3 色彩系统 - 薰衣草紫主题
+       ======================================================================== */
+    
+    /* Primary - 薰衣草紫主色调 */
+    --md-primary-10: 280 35% 8%;
+    --md-primary-20: 280 35% 16%;
+    --md-primary-30: 280 30% 24%;
+    --md-primary-40: 280 25% 32%;
+    --md-primary-50: 280 20% 40%;
+    --md-primary-60: 280 18% 48%;
+    --md-primary-70: 280 18% 56%;
+    --md-primary-80: 280 18% 64%;
+    --md-primary-90: 280 20% 80%;
+    --md-primary-95: 280 25% 90%;
+    --md-primary-99: 280 30% 98%;
+    
+    /* Secondary - 青绿辅助色 */
+    --md-secondary-10: 160 35% 8%;
+    --md-secondary-20: 160 35% 16%;
+    --md-secondary-30: 160 30% 24%;
+    --md-secondary-40: 160 25% 32%;
+    --md-secondary-50: 160 20% 40%;
+    --md-secondary-60: 160 18% 48%;
+    --md-secondary-70: 160 18% 56%;
+    --md-secondary-80: 160 18% 64%;
+    --md-secondary-90: 160 20% 80%;
+    
+    /* Tertiary - 暖紫强调色 */
+    --md-tertiary-10: 320 35% 8%;
+    --md-tertiary-20: 320 35% 16%;
+    --md-tertiary-30: 320 30% 24%;
+    --md-tertiary-40: 320 25% 32%;
+    --md-tertiary-80: 320 18% 64%;
+    
+    /* Neutral - 现代灰色系 */
+    --md-neutral-4: 280 5% 4%;
+    --md-neutral-6: 280 5% 6%;
+    --md-neutral-10: 280 5% 10%;
+    --md-neutral-12: 280 5% 12%;
+    --md-neutral-17: 280 5% 17%;
+    --md-neutral-22: 280 5% 22%;
+    --md-neutral-24: 280 5% 24%;
+    --md-neutral-87: 280 5% 87%;
+    --md-neutral-90: 280 5% 90%;
+    --md-neutral-94: 280 5% 94%;
+    --md-neutral-96: 280 5% 96%;
+    --md-neutral-98: 280 5% 98%;
+    
+    /* Neutral Variant - 色调灰色系 */
+    --md-neutral-variant-30: 280 8% 30%;
+    --md-neutral-variant-50: 280 8% 50%;
+    --md-neutral-variant-80: 280 8% 80%;
+    --md-neutral-variant-90: 280 8% 90%;
+    
+    /* 语义化功能颜色 */
+    --md-success-40: 120 60% 40%;
+    --md-success-80: 120 60% 80%;
+    --md-warning-40: 45 100% 50%;
+    --md-warning-80: 45 100% 75%;
+    --md-error-40: 0 68% 50%;
+    --md-error-80: 0 68% 75%;
+    --md-info-40: 210 100% 50%;
+    --md-info-80: 210 100% 75%;
+    
+    /* ========================================================================
+       Material 3 字体系统
+       ======================================================================== */
+    
+    /* Display */
+    --md-display-large-font: 400 3.563rem/4rem "Inter", "Roboto", system-ui, sans-serif;
+    --md-display-medium-font: 400 2.813rem/3.25rem "Inter", "Roboto", system-ui, sans-serif;
+    --md-display-small-font: 400 2.25rem/2.75rem "Inter", "Roboto", system-ui, sans-serif;
+    
+    /* Headline */
+    --md-headline-large-font: 400 2rem/2.5rem "Inter", "Roboto", system-ui, sans-serif;
+    --md-headline-medium-font: 400 1.75rem/2.25rem "Inter", "Roboto", system-ui, sans-serif;
+    --md-headline-small-font: 400 1.5rem/2rem "Inter", "Roboto", system-ui, sans-serif;
+    
+    /* Title */
+    --md-title-large-font: 500 1.375rem/1.75rem "Inter", "Roboto", system-ui, sans-serif;
+    --md-title-medium-font: 500 1rem/1.5rem "Inter", "Roboto", system-ui, sans-serif;
+    --md-title-small-font: 500 0.875rem/1.25rem "Inter", "Roboto", system-ui, sans-serif;
+    
+    /* Body */
+    --md-body-large-font: 400 1rem/1.5rem "Inter", "Roboto", system-ui, sans-serif;
+    --md-body-medium-font: 400 0.875rem/1.25rem "Inter", "Roboto", system-ui, sans-serif;
+    --md-body-small-font: 400 0.75rem/1rem "Inter", "Roboto", system-ui, sans-serif;
+    
+    /* Label */
+    --md-label-large-font: 500 0.875rem/1.25rem "Inter", "Roboto", system-ui, sans-serif;
+    --md-label-medium-font: 500 0.75rem/1rem "Inter", "Roboto", system-ui, sans-serif;
+    --md-label-small-font: 500 0.6875rem/1rem "Inter", "Roboto", system-ui, sans-serif;
+    
+    /* ========================================================================
+       Material 3 间距系统
+       ======================================================================== */
+    
+    --md-space-0: 0;
+    --md-space-1: 0.25rem;   /* 4px */
+    --md-space-2: 0.5rem;    /* 8px */
+    --md-space-3: 0.75rem;   /* 12px */
+    --md-space-4: 1rem;      /* 16px */
+    --md-space-5: 1.25rem;   /* 20px */
+    --md-space-6: 1.5rem;    /* 24px */
+    --md-space-8: 2rem;      /* 32px */
+    --md-space-10: 2.5rem;   /* 40px */
+    --md-space-12: 3rem;     /* 48px */
+    
+    /* ========================================================================
+       Material 3 圆角系统
+       ======================================================================== */
+    
+    --md-corner-none: 0;
+    --md-corner-xs: 0.25rem;   /* 4px */
+    --md-corner-sm: 0.5rem;    /* 8px */
+    --md-corner-md: 0.75rem;   /* 12px */
+    --md-corner-lg: 1rem;      /* 16px */
+    --md-corner-xl: 1.75rem;   /* 28px */
+    --md-corner-full: 9999px;
+    
+    /* ========================================================================
+       Material 3 阴影系统
+       ======================================================================== */
+    
+    --md-elevation-0: none;
+    --md-elevation-1: 
+      0px 1px 2px 0px rgba(0, 0, 0, 0.3),
+      0px 1px 3px 1px rgba(0, 0, 0, 0.15);
+    --md-elevation-2: 
+      0px 1px 2px 0px rgba(0, 0, 0, 0.3),
+      0px 2px 6px 2px rgba(0, 0, 0, 0.15);
+    --md-elevation-3: 
+      0px 1px 3px 0px rgba(0, 0, 0, 0.3),
+      0px 4px 8px 3px rgba(0, 0, 0, 0.15);
+    --md-elevation-4: 
+      0px 2px 3px 0px rgba(0, 0, 0, 0.3),
+      0px 6px 10px 4px rgba(0, 0, 0, 0.15);
+    --md-elevation-5: 
+      0px 4px 4px 0px rgba(0, 0, 0, 0.3),
+      0px 8px 12px 6px rgba(0, 0, 0, 0.15);
+    
+    /* ========================================================================
+       Material 3 动效系统
+       ======================================================================== */
+    
+    --md-motion-duration-short1: 50ms;
+    --md-motion-duration-short2: 100ms;
+    --md-motion-duration-short3: 150ms;
+    --md-motion-duration-short4: 200ms;
+    --md-motion-duration-medium1: 250ms;
+    --md-motion-duration-medium2: 300ms;
+    --md-motion-duration-medium3: 350ms;
+    --md-motion-duration-medium4: 400ms;
+    --md-motion-duration-long1: 450ms;
+    --md-motion-duration-long2: 500ms;
+    --md-motion-duration-long3: 550ms;
+    --md-motion-duration-long4: 600ms;
+    
+    --md-motion-easing-linear: cubic-bezier(0, 0, 1, 1);
+    --md-motion-easing-standard: cubic-bezier(0.2, 0, 0, 1);
+    --md-motion-easing-emphasized: cubic-bezier(0.2, 0, 0, 1);
+    --md-motion-easing-decelerated: cubic-bezier(0, 0, 0, 1);
+    --md-motion-easing-accelerated: cubic-bezier(0.3, 0, 1, 1);
+    
+    /* ========================================================================
+       亮色主题 Token 映射
+       ======================================================================== */
+    
+    --background: var(--md-neutral-98);
+    --foreground: var(--md-neutral-10);
+    --card: var(--md-neutral-98);
+    --card-foreground: var(--md-neutral-10);
+    --popover: var(--md-neutral-96);
+    --popover-foreground: var(--md-neutral-10);
+    --primary: var(--md-primary-40);
+    --primary-foreground: var(--md-neutral-98);
+    --secondary: var(--md-secondary-40);
+    --secondary-foreground: var(--md-neutral-98);
+    --muted: var(--md-neutral-variant-90);
+    --muted-foreground: var(--md-neutral-variant-30);
+    --accent: var(--md-tertiary-40);
+    --accent-foreground: var(--md-neutral-98);
+    --destructive: var(--md-error-40);
+    --destructive-foreground: var(--md-neutral-98);
+    --border: var(--md-neutral-variant-50);
+    --input: var(--md-neutral-variant-50);
+    --ring: var(--md-primary-40);
+    --success: var(--md-success-40);
+    --success-foreground: var(--md-neutral-98);
+    --warning: var(--md-warning-40);
+    --warning-foreground: var(--md-neutral-10);
+    --info: var(--md-info-40);
+    --info-foreground: var(--md-neutral-98);
   }
 
   .dark {
-    --background: 0 0% 0%;
-    --foreground: var(--lavender-50);
-    --card: 0 0% 5%;
-    --card-foreground: var(--lavender-50);
-    --popover: 0 0% 5%;
-    --popover-foreground: var(--lavender-50);
-    --primary: var(--lavender-400);
-    --primary-foreground: var(--lavender-950);
-    --secondary: var(--lavender-800);
-    --secondary-foreground: var(--lavender-100);
-    --muted: var(--lavender-800);
-    --muted-foreground: var(--lavender-400);
-    --accent: var(--lavender-700);
-    --accent-foreground: var(--lavender-100);
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: var(--lavender-50);
-    --border: var(--lavender-700);
-    --input: var(--lavender-700);
-    --ring: var(--lavender-400);
+    /* ========================================================================
+       暗色主题 Token 映射
+       ======================================================================== */
+    
+    --background: var(--md-neutral-6);
+    --foreground: var(--md-neutral-90);
+    --card: var(--md-neutral-10);
+    --card-foreground: var(--md-neutral-90);
+    --popover: var(--md-neutral-12);
+    --popover-foreground: var(--md-neutral-90);
+    --primary: var(--md-primary-80);
+    --primary-foreground: var(--md-primary-20);
+    --secondary: var(--md-secondary-80);
+    --secondary-foreground: var(--md-secondary-20);
+    --muted: var(--md-neutral-22);
+    --muted-foreground: var(--md-neutral-variant-80);
+    --accent: var(--md-tertiary-80);
+    --accent-foreground: var(--md-tertiary-20);
+    --destructive: var(--md-error-80);
+    --destructive-foreground: var(--md-error-20);
+    --border: var(--md-neutral-variant-30);
+    --input: var(--md-neutral-24);
+    --ring: var(--md-primary-80);
+    --success: var(--md-success-80);
+    --success-foreground: var(--md-success-20);
+    --warning: var(--md-warning-80);
+    --warning-foreground: var(--md-warning-20);
+    --info: var(--md-info-80);
+    --info-foreground: var(--md-info-20);
   }
 }
 
@@ -90,407 +240,587 @@
   * {
     border-color: hsl(var(--border));
   }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
+    font: var(--md-body-large-font);
     font-feature-settings: "rlig" 1, "calt" 1;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
-      sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
-  /* 确保暗色主题下的基本样式 */
+  /* 暗色主题专用背景 */
   .dark body {
-    background: linear-gradient(
-      180deg,
-      hsl(0 0% 0%) 0%,
-      hsl(0 0% 3%) 50%,
-      hsl(0 0% 0%) 100%
+    background: radial-gradient(
+      ellipse 80% 50% at 50% -20%,
+      hsl(var(--md-primary-20)) 0%,
+      hsl(var(--md-neutral-4)) 50%,
+      hsl(var(--md-neutral-6)) 100%
     );
-    color: hsl(var(--lavender-50));
     min-height: 100vh;
+  }
+
+  /* 标题层级 */
+  h1 { font: var(--md-headline-large-font); }
+  h2 { font: var(--md-headline-medium-font); }
+  h3 { font: var(--md-headline-small-font); }
+  h4 { font: var(--md-title-large-font); }
+  h5 { font: var(--md-title-medium-font); }
+  h6 { font: var(--md-title-small-font); }
+
+  /* 文本样式 */
+  p { font: var(--md-body-large-font); margin-bottom: var(--md-space-4); }
+  small { font: var(--md-body-small-font); }
+
+  /* 链接样式 */
+  a {
+    color: hsl(var(--primary));
+    text-decoration: none;
+    transition: color var(--md-motion-duration-short2) var(--md-motion-easing-standard);
+  }
+  
+  a:hover {
+    color: hsl(var(--primary) / 0.8);
+    text-decoration: underline;
+  }
+
+  /* 表单元素重置 */
+  button, input, optgroup, select, textarea {
+    font: inherit;
+    color: inherit;
+  }
+
+  /* 焦点样式 */
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+
+  /* 选择文本样式 */
+  ::selection {
+    background-color: hsl(var(--primary) / 0.2);
+    color: hsl(var(--foreground));
   }
 }
 
-/* 统一组件样式 */
-@layer utilities {
-  /* 布局间距 */
-  .component-gap {
-    gap: var(--component-gap);
+/* ============================================================================
+   Material 3 组件样式系统
+   ============================================================================ */
+
+@layer components {
+  /* ========================================================================
+     Surface 层级系统
+     ======================================================================== */
+  
+  .surface-container-lowest {
+    background-color: hsl(var(--background));
+  }
+  
+  .surface-container-low {
+    background-color: hsl(var(--card));
+  }
+  
+  .surface-container {
+    background-color: hsl(var(--muted));
+  }
+  
+  .surface-container-high {
+    background-color: hsl(var(--card));
+    box-shadow: var(--md-elevation-1);
+  }
+  
+  .surface-container-highest {
+    background-color: hsl(var(--card));
+    box-shadow: var(--md-elevation-2);
   }
 
-  .section-gap {
-    gap: var(--section-gap);
+  /* ========================================================================
+     按钮组件系统
+     ======================================================================== */
+  
+  /* Filled Button - 主要操作 */
+  .btn-filled {
+    @apply inline-flex items-center justify-center gap-2;
+    background-color: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    border: none;
+    border-radius: var(--md-corner-xl);
+    padding: var(--md-space-2) var(--md-space-6);
+    font: var(--md-label-large-font);
+    cursor: pointer;
+    transition: all var(--md-motion-duration-short2) var(--md-motion-easing-standard);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .btn-filled:hover {
+    background-color: hsl(var(--primary) / 0.92);
+    box-shadow: var(--md-elevation-1);
+  }
+  
+  .btn-filled:active {
+    background-color: hsl(var(--primary) / 0.88);
+    box-shadow: var(--md-elevation-0);
+  }
+  
+  .btn-filled:disabled {
+    background-color: hsl(var(--foreground) / 0.12);
+    color: hsl(var(--foreground) / 0.38);
+    cursor: not-allowed;
+    box-shadow: none;
   }
 
-  /* 统一卡片样式 */
-  .card-standard {
-    background: hsla(0, 0%, 8%, 0.8);
-    border: 1px solid hsl(var(--lavender-500));
-    border-radius: var(--radius);
-    padding: var(--card-padding);
+  /* Outlined Button - 次要操作 */
+  .btn-outlined {
+    @apply inline-flex items-center justify-center gap-2;
+    background-color: transparent;
+    color: hsl(var(--primary));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--md-corner-xl);
+    padding: var(--md-space-2) var(--md-space-6);
+    font: var(--md-label-large-font);
+    cursor: pointer;
+    transition: all var(--md-motion-duration-short2) var(--md-motion-easing-standard);
   }
-
-  .card-standard:hover {
-    border-color: hsl(var(--lavender-400));
+  
+  .btn-outlined:hover {
+    background-color: hsl(var(--primary) / 0.08);
+    border-color: hsl(var(--primary));
   }
-
-  /* 统一表单元素样式 */
-  .form-element {
-    margin-top: var(--form-element-spacing);
-    margin-bottom: var(--form-element-spacing);
+  
+  .btn-outlined:active {
+    background-color: hsl(var(--primary) / 0.12);
   }
-
-  .form-element-label {
-    display: block;
-    margin-bottom: var(--spacing-sm);
-    color: hsl(var(--lavender-100));
-    font-size: 0.875rem;
-    font-weight: 500;
-  }
-
-  /* 统一输入框样式 */
-  .input-standard {
-    background: hsla(0, 0%, 12%, 0.9);
-    border: 1px solid hsl(var(--lavender-500));
-    border-radius: var(--radius);
-    color: hsl(var(--lavender-50));
-    padding: var(--spacing-sm) var(--spacing-md);
-    transition: border-color 0.2s ease;
-  }
-
-  .input-standard:focus {
-    border-color: hsl(var(--lavender-400));
-    outline: none;
-    box-shadow: 0 0 0 2px hsla(var(--lavender-500), 0.2);
-  }
-
-  .input-standard::placeholder {
-    color: hsl(var(--lavender-400));
-  }
-
-  /* 统一按钮样式 */
-  .button-standard {
-    background: hsl(var(--lavender-600));
-    border: 1px solid hsl(var(--lavender-600));
-    border-radius: var(--radius);
-    color: hsl(var(--lavender-50));
-    padding: var(--spacing-sm) var(--spacing-md);
-    font-size: 0.875rem;
-    font-weight: 500;
-    transition: all 0.2s ease;
-  }
-
-  .button-standard:hover {
-    background: hsl(var(--lavender-700));
-    border-color: hsl(var(--lavender-700));
-  }
-
-  .button-standard:disabled {
-    background: hsl(var(--lavender-800));
-    border-color: hsl(var(--lavender-800));
-    color: hsl(var(--lavender-400));
+  
+  .btn-outlined:disabled {
+    color: hsl(var(--foreground) / 0.38);
+    border-color: hsl(var(--foreground) / 0.12);
     cursor: not-allowed;
   }
 
-  /* 统一表格样式 */
-  .table-standard {
-    background: hsla(0, 0%, 6%, 0.6);
-    border: 1px solid hsl(var(--lavender-500));
-    border-radius: var(--radius);
+  /* Text Button - 辅助操作 */
+  .btn-text {
+    @apply inline-flex items-center justify-center gap-2;
+    background-color: transparent;
+    color: hsl(var(--primary));
+    border: none;
+    border-radius: var(--md-corner-xl);
+    padding: var(--md-space-2) var(--md-space-3);
+    font: var(--md-label-large-font);
+    cursor: pointer;
+    transition: all var(--md-motion-duration-short2) var(--md-motion-easing-standard);
+  }
+  
+  .btn-text:hover {
+    background-color: hsl(var(--primary) / 0.08);
+  }
+  
+  .btn-text:active {
+    background-color: hsl(var(--primary) / 0.12);
+  }
+  
+  .btn-text:disabled {
+    color: hsl(var(--foreground) / 0.38);
+    cursor: not-allowed;
   }
 
-  /* 表格滚动容器样式 */
-  .table-scroll-container {
-    background: hsla(0, 0%, 6%, 0.6);
-    border: 1px solid hsl(var(--lavender-500));
-    border-radius: var(--radius);
+  /* ========================================================================
+     卡片组件系统
+     ======================================================================== */
+  
+  .card-elevated {
+    background-color: hsl(var(--card));
+    color: hsl(var(--card-foreground));
+    border-radius: var(--md-corner-md);
+    padding: var(--md-space-6);
+    box-shadow: var(--md-elevation-1);
+    transition: box-shadow var(--md-motion-duration-short2) var(--md-motion-easing-standard);
+  }
+  
+  .card-elevated:hover {
+    box-shadow: var(--md-elevation-2);
+  }
+
+  .card-filled {
+    background-color: hsl(var(--muted));
+    color: hsl(var(--muted-foreground));
+    border-radius: var(--md-corner-md);
+    padding: var(--md-space-6);
+  }
+
+  .card-outlined {
+    background-color: hsl(var(--card));
+    color: hsl(var(--card-foreground));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--md-corner-md);
+    padding: var(--md-space-6);
+  }
+
+  /* ========================================================================
+     输入组件系统
+     ======================================================================== */
+  
+  .input-filled {
+    background-color: hsl(var(--input));
+    color: hsl(var(--foreground));
+    border: none;
+    border-bottom: 2px solid hsl(var(--border));
+    border-radius: var(--md-corner-xs) var(--md-corner-xs) 0 0;
+    padding: var(--md-space-4);
+    font: var(--md-body-large-font);
+    transition: all var(--md-motion-duration-short2) var(--md-motion-easing-standard);
+  }
+  
+  .input-filled:focus {
+    border-bottom-color: hsl(var(--primary));
+    outline: none;
+  }
+  
+  .input-filled::placeholder {
+    color: hsl(var(--muted-foreground));
+  }
+
+  .input-outlined {
+    background-color: transparent;
+    color: hsl(var(--foreground));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--md-corner-xs);
+    padding: var(--md-space-4);
+    font: var(--md-body-large-font);
+    transition: all var(--md-motion-duration-short2) var(--md-motion-easing-standard);
+  }
+  
+  .input-outlined:focus {
+    border-color: hsl(var(--primary));
+    border-width: 2px;
+    outline: none;
+  }
+  
+  .input-outlined::placeholder {
+    color: hsl(var(--muted-foreground));
+  }
+
+  /* ========================================================================
+     表格组件系统
+     ======================================================================== */
+  
+  .table-container {
+    background-color: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--md-corner-md);
     overflow: hidden;
   }
 
-  .table-scroll-content {
-    max-height: 24rem; /* 96 * 0.25rem = 24rem */
-    overflow-y: auto;
-    overflow-x: hidden;
+  .table-modern {
+    width: 100%;
+    border-collapse: collapse;
   }
 
-  /* 固定表头样式 */
-  .table-header-fixed {
+  .table-modern thead {
+    background-color: hsl(var(--muted));
+  }
+
+  .table-modern th {
+    color: hsl(var(--muted-foreground));
+    font: var(--md-label-large-font);
+    text-align: left;
+    padding: var(--md-space-4);
+    border-bottom: 1px solid hsl(var(--border));
     position: sticky;
     top: 0;
     z-index: 10;
-    background: hsla(0, 0%, 10%, 0.95);
     backdrop-filter: blur(8px);
   }
 
-  .table-standard th {
-    background: hsla(0, 0%, 10%, 0.9);
-    color: hsl(var(--lavender-300));
-    font-weight: 500;
-    padding: var(--spacing-sm) var(--spacing-md);
-    text-align: left;
-    border-bottom: 1px solid hsl(var(--lavender-500));
+  .table-modern td {
+    padding: var(--md-space-4);
+    border-bottom: 1px solid hsl(var(--border) / 0.5);
+    font: var(--md-body-medium-font);
   }
 
-  .table-standard td {
-    padding: var(--spacing-sm) var(--spacing-md);
-    border-bottom: 1px solid hsla(var(--lavender-500), 0.5);
+  .table-modern tbody tr:hover {
+    background-color: hsl(var(--muted) / 0.5);
   }
 
-  .table-standard tr:hover {
-    background: hsla(0, 0%, 15%, 0.3);
+  .table-modern tbody tr:last-child td {
+    border-bottom: none;
   }
 
-  /* 统一徽章样式 */
-  .badge-standard {
-    background: hsla(var(--lavender-800), 0.9);
-    border: 1px solid hsl(var(--lavender-500));
-    border-radius: calc(var(--radius) * 0.5);
-    color: hsl(var(--lavender-200));
-    padding: var(--spacing-xs) var(--spacing-sm);
-    font-size: 0.75rem;
-    font-weight: 500;
+  /* ========================================================================
+     徽章和标签系统
+     ======================================================================== */
+  
+  .badge-filled {
+    @apply inline-flex items-center gap-1;
+    background-color: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    border-radius: var(--md-corner-sm);
+    padding: var(--md-space-1) var(--md-space-2);
+    font: var(--md-label-small-font);
   }
 
-  /* 简化的渐变背景 */
-  .bg-gradient-dark {
-    background: linear-gradient(180deg, hsl(0 0% 0%) 0%, hsl(0 0% 3%) 100%);
-    min-height: 100vh;
+  .badge-outlined {
+    @apply inline-flex items-center gap-1;
+    background-color: transparent;
+    color: hsl(var(--primary));
+    border: 1px solid hsl(var(--primary));
+    border-radius: var(--md-corner-sm);
+    padding: var(--md-space-1) var(--md-space-2);
+    font: var(--md-label-small-font);
   }
 
-  /* 简化的文本渐变 */
-  .text-gradient {
-    background: linear-gradient(
-      135deg,
-      hsl(var(--lavender-400)) 0%,
-      hsl(var(--lavender-300)) 100%
-    );
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-
-  /* 移除复杂动画，保留基础过渡 */
-  .progress-indicator {
-    background: hsl(var(--lavender-500));
-    height: 4px;
-    border-radius: 2px;
-    transition: width 0.3s ease;
-  }
-
-  /* 状态指示器 */
+  /* ========================================================================
+     状态指示器
+     ======================================================================== */
+  
   .status-indicator {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--spacing-xs);
+    @apply inline-flex items-center gap-2;
   }
 
   .status-dot {
     width: 8px;
     height: 8px;
-    border-radius: 50%;
-    background: currentColor;
+    border-radius: var(--md-corner-full);
+    background-color: currentColor;
   }
 
-  .status-dot.success {
-    color: hsl(var(--lavender-400));
+  .status-success { color: hsl(var(--success)); }
+  .status-warning { color: hsl(var(--warning)); }
+  .status-error { color: hsl(var(--destructive)); }
+  .status-info { color: hsl(var(--info)); }
+
+  /* ========================================================================
+     进度指示器
+     ======================================================================== */
+  
+  .progress-linear {
+    width: 100%;
+    height: 4px;
+    background-color: hsl(var(--primary) / 0.2);
+    border-radius: var(--md-corner-sm);
+    overflow: hidden;
   }
 
-  .status-dot.error {
-    color: hsl(var(--destructive));
+  .progress-linear-indicator {
+    height: 100%;
+    background-color: hsl(var(--primary));
+    border-radius: var(--md-corner-sm);
+    transition: width var(--md-motion-duration-medium2) var(--md-motion-easing-emphasized);
   }
 
-  .status-dot.warning {
-    color: hsl(45 93% 58%);
+  /* ========================================================================
+     速度测试专用样式
+     ======================================================================== */
+  
+  /* 速度等级颜色编码 */
+  .speed-excellent { color: hsl(var(--success)); }
+  .speed-good { color: hsl(120 50% 60%); }
+  .speed-average { color: hsl(var(--warning)); }
+  .speed-poor { color: hsl(30 100% 60%); }
+  .speed-bad { color: hsl(var(--destructive)); }
+
+  /* 延迟等级颜色编码 */
+  .latency-low { color: hsl(var(--success)); }
+  .latency-medium { color: hsl(var(--warning)); }
+  .latency-high { color: hsl(var(--destructive)); }
+
+  /* 协议类型徽章 */
+  .protocol-vmess { 
+    @apply inline-flex items-center gap-1;
+    background-color: hsl(var(--md-primary-40));
+    color: hsl(var(--primary-foreground));
+    border-radius: var(--md-corner-sm);
+    padding: var(--md-space-1) var(--md-space-2);
+    font: var(--md-label-small-font);
+  }
+  .protocol-vless { 
+    @apply inline-flex items-center gap-1;
+    background-color: hsl(var(--md-secondary-40));
+    color: hsl(var(--primary-foreground));
+    border-radius: var(--md-corner-sm);
+    padding: var(--md-space-1) var(--md-space-2);
+    font: var(--md-label-small-font);
+  }
+  .protocol-trojan { 
+    @apply inline-flex items-center gap-1;
+    background-color: hsl(var(--md-tertiary-40));
+    color: hsl(var(--primary-foreground));
+    border-radius: var(--md-corner-sm);
+    padding: var(--md-space-1) var(--md-space-2);
+    font: var(--md-label-small-font);
+  }
+  .protocol-ss { 
+    @apply inline-flex items-center gap-1;
+    background-color: hsl(var(--info));
+    color: hsl(var(--info-foreground));
+    border-radius: var(--md-corner-sm);
+    padding: var(--md-space-1) var(--md-space-2);
+    font: var(--md-label-small-font);
+  }
+  .protocol-ssr { 
+    @apply inline-flex items-center gap-1;
+    background-color: hsl(var(--warning));
+    color: hsl(var(--warning-foreground));
+    border-radius: var(--md-corner-sm);
+    padding: var(--md-space-1) var(--md-space-2);
+    font: var(--md-label-small-font);
   }
 
-  /* 响应式间距 */
-  @media (max-width: 768px) {
-    :root {
-      --card-padding: var(--spacing-md);
-      --component-gap: var(--spacing-md);
-      --section-gap: var(--spacing-lg);
-    }
+  /* ========================================================================
+     动效辅助类
+     ======================================================================== */
+  
+  .animate-fade-in {
+    animation: fadeIn var(--md-motion-duration-medium2) var(--md-motion-easing-standard);
+  }
+
+  .animate-slide-up {
+    animation: slideUp var(--md-motion-duration-medium3) var(--md-motion-easing-emphasized);
+  }
+
+  .animate-pulse-gentle {
+    animation: pulseGentle 2s var(--md-motion-easing-standard) infinite;
+  }
+
+  /* ========================================================================
+     滚动条样式
+     ======================================================================== */
+  
+  .scrollbar-modern {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--primary) / 0.3) transparent;
+  }
+
+  .scrollbar-modern::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .scrollbar-modern::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: var(--md-corner-xs);
+  }
+
+  .scrollbar-modern::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--primary) / 0.3);
+    border-radius: var(--md-corner-xs);
+    transition: background-color var(--md-motion-duration-short2) var(--md-motion-easing-standard);
+  }
+
+  .scrollbar-modern::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--primary) / 0.5);
   }
 }
 
-/* 滚动条样式 */
-.dark ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+/* ============================================================================
+   动画关键帧
+   ============================================================================ */
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-.dark ::-webkit-scrollbar-track {
-  background: hsla(var(--lavender-900), 0.5);
-  border-radius: 4px;
+@keyframes slideUp {
+  from { 
+    opacity: 0; 
+    transform: translateY(16px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
 }
 
-.dark ::-webkit-scrollbar-thumb {
-  background: hsla(var(--lavender-500), 0.8);
-  border-radius: 4px;
+@keyframes pulseGentle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
 }
 
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: hsla(var(--lavender-400), 0.9);
+/* ============================================================================
+   响应式设计
+   ============================================================================ */
+
+@media (max-width: 640px) {
+  :root {
+    --md-space-4: 0.75rem;
+    --md-space-6: 1rem;
+    --md-space-8: 1.5rem;
+  }
+  
+  .card-elevated,
+  .card-filled,
+  .card-outlined {
+    padding: var(--md-space-4);
+  }
+  
+  .btn-filled,
+  .btn-outlined {
+    padding: var(--md-space-2) var(--md-space-4);
+    font: var(--md-label-medium-font);
+  }
 }
 
-/* 表格专用滚动样式 - 直接且明确 */
-.table-wrapper {
-  width: 100%;
-  overflow-x: auto;
-  overflow-y: visible;
-  border: 1px solid hsl(var(--lavender-500));
-  border-radius: var(--radius);
-  background: hsla(0, 0%, 6%, 0.6);
+@media (max-width: 480px) {
+  .table-container {
+    overflow-x: auto;
+  }
+  
+  .table-modern {
+    min-width: 600px;
+  }
 }
 
-.table-wrapper::-webkit-scrollbar {
-  width: 14px;
-  height: 14px;
+/* ============================================================================
+   打印样式
+   ============================================================================ */
+
+@media print {
+  * {
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
+  }
+  
+  .btn-filled,
+  .btn-outlined,
+  .btn-text {
+    border: 1px solid black !important;
+  }
 }
 
-.table-wrapper::-webkit-scrollbar-track {
-  background: #2a1f3d;
-  border-radius: 7px;
-  border: 1px solid #4a3f5e;
+/* ============================================================================
+   高对比度模式支持
+   ============================================================================ */
+
+@media (prefers-contrast: high) {
+  :root {
+    --md-primary-40: 280 50% 25%;
+    --md-primary-80: 280 50% 85%;
+  }
+  
+  .dark {
+    --md-primary-40: 280 50% 25%;
+    --md-primary-80: 280 50% 85%;
+  }
 }
 
-.table-wrapper::-webkit-scrollbar-thumb {
-  background: linear-gradient(45deg, #8b5cf6 0%, #a855f7 100%);
-  border-radius: 7px;
-  border: 1px solid #c084fc;
-}
+/* ============================================================================
+   减少动画偏好支持
+   ============================================================================ */
 
-.table-wrapper::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(45deg, #a855f7 0%, #c084fc 100%);
-  border-color: #e879f9;
-}
-
-/* Firefox 滚动条 */
-.table-wrapper {
-  scrollbar-width: auto;
-  scrollbar-color: #8b5cf6 #2a1f3d;
-}
-
-/* 表格内容样式 */
-.table-content {
-  min-width: 1200px; /* 强制最小宽度触发滚动 */
-  width: 100%;
-}
-
-/* 保留必要的兼容性样式 */
-.glass-morphism {
-  background: hsla(0, 0%, 8%, 0.6);
-  border: 1px solid hsl(var(--lavender-500));
-  border-radius: var(--radius);
-  padding: var(--card-padding);
-}
-
-.input-dark {
-  background: hsla(0, 0%, 12%, 0.9);
-  border: 1px solid hsl(var(--lavender-500));
-  color: hsl(var(--lavender-50));
-  transition: border-color 0.2s ease;
-}
-
-.input-dark:focus {
-  border-color: hsl(var(--lavender-400));
-  outline: none;
-  box-shadow: 0 0 0 2px hsla(var(--lavender-500), 0.1);
-}
-
-.button-gradient {
-  background: hsl(var(--lavender-600));
-  border: 1px solid hsl(var(--lavender-600));
-  color: hsl(var(--lavender-50));
-  transition: all 0.2s ease;
-}
-
-.button-gradient:hover {
-  background: hsl(var(--lavender-700));
-  border-color: hsl(var(--lavender-700));
-}
-
-.table-dark {
-  background: hsla(0, 0%, 6%, 0.4);
-  border: 1px solid hsl(var(--lavender-500));
-}
-
-.table-row-dark {
-  border-bottom: 1px solid hsla(var(--lavender-500), 0.3);
-  transition: background-color 0.2s ease;
-}
-
-.table-row-dark:hover {
-  background: hsla(0, 0%, 15%, 0.2);
-}
-
-.badge-dark {
-  background: hsla(var(--lavender-800), 0.8);
-  border: 1px solid hsl(var(--lavender-500));
-  color: hsl(var(--lavender-200));
-  padding: var(--spacing-xs) var(--spacing-sm);
-  font-size: 0.75rem;
-  border-radius: calc(var(--radius) * 0.5);
-}
-
-/* 测试模式选择器 */
-.test-mode-selector {
-  background: hsla(0, 0%, 12%, 0.9);
-  border: 1px solid hsl(var(--lavender-500));
-  color: hsl(var(--lavender-50));
-  padding: var(--spacing-sm) var(--spacing-md);
-  border-radius: var(--radius);
-  transition: border-color 0.2s ease;
-}
-
-.test-mode-selector:hover {
-  border-color: hsl(var(--lavender-400));
-}
-
-.test-mode-selector:focus {
-  border-color: hsl(var(--lavender-400));
-  outline: none;
-  box-shadow: 0 0 0 2px hsla(var(--lavender-500), 0.1);
-}
-
-/* 滑块样式 */
-.slider-dark [data-slot="slider-track"] {
-  background: hsl(0 0% 15%) !important;
-}
-
-.slider-dark [data-slot="slider-range"] {
-  background: hsl(var(--lavender-500)) !important;
-}
-
-.slider-dark [data-slot="slider-thumb"] {
-  background: hsl(var(--lavender-500)) !important;
-  border: 2px solid hsl(var(--lavender-50)) !important;
-}
-
-.slider-dark [data-slot="slider-thumb"]:hover {
-  background: hsl(var(--lavender-400)) !important;
-}
-
-/* 开关样式 */
-.switch-dark[data-state="unchecked"] {
-  background: hsl(0 0% 15%) !important;
-}
-
-.switch-dark[data-state="checked"] {
-  background: hsl(var(--lavender-500)) !important;
-}
-
-/* 复选框样式 */
-.checkbox-dark {
-  border-color: hsl(var(--lavender-500)) !important;
-  background: hsla(0, 0%, 12%, 0.9) !important;
-}
-
-.checkbox-dark[data-state="checked"] {
-  background: hsl(var(--lavender-500)) !important;
-  border-color: hsl(var(--lavender-500)) !important;
-}
-
-.checkbox-dark[data-state="checked"] svg {
-  color: hsl(var(--lavender-50)) !important;
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

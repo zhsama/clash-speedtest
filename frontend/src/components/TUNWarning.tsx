@@ -121,7 +121,7 @@ export default function TUNWarning({ onTUNStatusChange, showDetails = false }: T
 
   if (!tunStatus) {
     return (
-      <Card className="card-standard my-4">
+      <Card className="card-elevated my-4">
         <div className="flex items-center gap-2">
           <ClientIcon 
             icon={loading ? Loader2 : Network} 
@@ -133,7 +133,7 @@ export default function TUNWarning({ onTUNStatusChange, showDetails = false }: T
               variant="outline"
               size="sm"
               onClick={checkTUNMode}
-              className="button-standard ml-auto"
+              className="btn-outlined ml-auto"
             >
               <ClientIcon icon={RefreshCw} className="h-4 w-4 mr-1" />
               重新检测
@@ -148,7 +148,7 @@ export default function TUNWarning({ onTUNStatusChange, showDetails = false }: T
     <div className="form-element">
       {/* 主要警告信息 */}
       {tunStatus.enabled ? (
-        <Card className="card-standard border-yellow-500 bg-yellow-500/10">
+        <Card className="card-elevated border-yellow-500 bg-yellow-500/10">
           <div className="flex items-start gap-2">
             <ClientIcon icon={AlertTriangle} className="h-5 w-5 text-yellow-500 mt-0.5" />
             <div className="flex-1">
@@ -162,7 +162,7 @@ export default function TUNWarning({ onTUNStatusChange, showDetails = false }: T
           </div>
         </Card>
       ) : (
-        <Card className="card-standard border-green-500 bg-green-500/10">
+        <Card className="card-elevated border-green-500 bg-green-500/10">
           <div className="flex items-start gap-2">
             <ClientIcon icon={CheckCircle} className="h-5 w-5 text-green-500 mt-0.5" />
             <div className="flex-1">
@@ -171,7 +171,7 @@ export default function TUNWarning({ onTUNStatusChange, showDetails = false }: T
                   <div className="font-medium text-green-200">TUN 模式未启用</div>
                   <div className="text-sm text-green-200">系统网络配置正常，可以进行速度测试</div>
                 </div>
-                <span className="badge-standard border-green-500 text-green-400">
+                <span className="badge-filled border-green-500 text-green-400">
                   正常
                 </span>
               </div>
@@ -187,7 +187,7 @@ export default function TUNWarning({ onTUNStatusChange, showDetails = false }: T
           size="sm"
           onClick={checkTUNMode}
           disabled={loading}
-          className="button-standard"
+          className="btn-outlined"
         >
           <ClientIcon 
             icon={loading ? Loader2 : RefreshCw} 
@@ -200,7 +200,7 @@ export default function TUNWarning({ onTUNStatusChange, showDetails = false }: T
           variant="ghost"
           size="sm"
           onClick={() => setShowDetailedInfo(!showDetailedInfo)}
-          className="button-standard"
+          className="btn-text"
         >
           <ClientIcon icon={Info} className="h-4 w-4 mr-1" />
           {showDetailedInfo ? '隐藏详情' : '显示详情'}
@@ -215,7 +215,7 @@ export default function TUNWarning({ onTUNStatusChange, showDetails = false }: T
 
       {/* 详细信息 */}
       {showDetailedInfo && (
-        <Card className="card-standard">
+        <Card className="card-elevated">
           <h4 className="text-lg font-semibold text-lavender-50 flex items-center gap-2 mb-2">
             <ClientIcon icon={Network} className="h-4 w-4 text-lavender-400" />
             TUN 模式详细信息
@@ -252,14 +252,14 @@ export default function TUNWarning({ onTUNStatusChange, showDetails = false }: T
                 {tunStatus.interfaces.map((iface, index) => (
                   <div 
                     key={index} 
-                    className={`card-standard ${
+                    className={`card-elevated ${
                       iface.is_up ? 'border-green-600 bg-green-500/10' : 'border-lavender-600'
                     }`}
                   >
                     <div className="flex items-center justify-between form-element">
                       <span className="font-medium text-lavender-100">{iface.name}</span>
                       <div className="flex component-gap">
-                        <span className={`badge-standard ${
+                        <span className={`badge-filled ${
                           iface.is_up 
                             ? 'border-green-500 text-green-400' 
                             : 'border-lavender-500 text-lavender-400'
@@ -267,7 +267,7 @@ export default function TUNWarning({ onTUNStatusChange, showDetails = false }: T
                           {iface.is_up ? '启用' : '禁用'}
                         </span>
                         {iface.is_default && (
-                          <span className="badge-standard border-lavender-500 text-lavender-400">
+                          <span className="badge-outlined border-lavender-500 text-lavender-400">
                             默认
                           </span>
                         )}
@@ -292,10 +292,10 @@ export default function TUNWarning({ onTUNStatusChange, showDetails = false }: T
               <div className="form-element-label">检测到的代理进程</div>
               <div className="space-y-2">
                 {tunStatus.proxy_processes.map((process, index) => (
-                  <div key={index} className="card-standard border-orange-600 bg-orange-500/10">
+                  <div key={index} className="card-elevated border-orange-600 bg-orange-500/10">
                     <div className="flex items-center justify-between form-element">
                       <span className="font-medium text-lavender-100">{process.name}</span>
-                      <span className="badge-standard border-orange-500 text-orange-400">
+                      <span className="badge-filled border-orange-500 text-orange-400">
                         {process.process_type}
                       </span>
                     </div>
@@ -312,7 +312,7 @@ export default function TUNWarning({ onTUNStatusChange, showDetails = false }: T
           {tunStatus.default_route && (
             <div className="form-element">
               <div className="form-element-label">默认路由</div>
-              <div className="card-standard">
+              <div className="card-elevated">
                 <div className="text-sm space-y-1">
                   <div>
                     <span className="text-lavender-400">目标:</span>

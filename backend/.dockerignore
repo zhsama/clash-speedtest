@@ -1,0 +1,62 @@
+# Binaries
+clash-speedtest
+download-server
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test files
+*_test.go
+*.test
+testdata/
+
+# Build artifacts
+dist/
+build/
+*.o
+*.a
+
+# Logs
+logs/
+*.log
+
+# Go specific
+vendor/
+go.work
+go.work.sum
+
+# Development
+.env*
+*.env
+.air.toml
+tmp/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Documentation
+*.md
+docs/
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+
+# Git
+.git/
+.gitignore
+
+# Config examples
+*.example
+*.sample
+config-debug.yaml
+
+# OS files
+Thumbs.db
+.DS_Store

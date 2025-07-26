@@ -1,0 +1,114 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      # Enable BuildKit for better caching
+      args:
+        BUILDKIT_INLINE_CACHE: 1
+      cache_from:
+        - clash-backend:cache
+    image: clash-backend:optimized
+    container_name: clash-backend
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      # Read-only mounts for security
+      - ./config:/app/config:ro
+      - ./output:/app/output
+    environment:
+      - TZ=Asia/Shanghai
+    # Resource limits for production
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 128M
+    # Security options
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+    healthcheck:
+      test: ["CMD", "/app/clash-speedtest", "-h"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        BUILDKIT_INLINE_CACHE: 1
+      cache_from:
+        - clash-frontend:cache
+    image: clash-frontend:optimized
+    container_name: clash-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    environment:
+      - TZ=Asia/Shanghai
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 64M
+    # Security options
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /var/cache/nginx
+      - /var/log/nginx
+      - /var/run
+    healthcheck:
+      test: ["CMD", "sh", "-c", "[ -f /usr/share/nginx/html/index.html ]"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  # Optional: Download server for self-hosted speed tests
+  download-server:
+    profiles: ["tools"]
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: runtime
+    image: clash-backend:optimized
+    container_name: clash-download-server
+    restart: unless-stopped
+    ports:
+      - "8081:8080"
+    entrypoint: ["/app/download-server"]
+    command: ["-port", "8080"]
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 256M
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+
+networks:
+  default:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: clash-net

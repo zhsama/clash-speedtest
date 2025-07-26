@@ -1,10 +1,15 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "globalDependencies": [
-    "**/.env.*local"
+    "**/.env.*local",
+    "Dockerfile*",
+    "docker-compose*.yml"
   ],
   "globalEnv": [
-    "NODE_ENV"
+    "NODE_ENV",
+    "GOOS",
+    "GOARCH",
+    "CGO_ENABLED"
   ],
   "tasks": {
     "build": {
@@ -19,7 +24,46 @@
         "dist/**",
         ".next/**",
         "build/**"
+      ],
+      "env": [
+        "NODE_ENV"
       ]
+    },
+    "build:go": {
+      "dependsOn": [],
+      "inputs": [
+        "**/*.go",
+        "go.mod",
+        "go.sum"
+      ],
+      "outputs": [
+        "dist/**"
+      ],
+      "env": [
+        "GOOS",
+        "GOARCH",
+        "CGO_ENABLED"
+      ]
+    },
+    "build:docker": {
+      "dependsOn": [
+        "build"
+      ],
+      "inputs": [
+        "Dockerfile*",
+        ".dockerignore",
+        "dist/**",
+        "$TURBO_DEFAULT$"
+      ],
+      "outputs": [],
+      "cache": false
+    },
+    "build:all": {
+      "dependsOn": [
+        "build",
+        "build:docker"
+      ],
+      "outputs": []
     },
     "dev": {
       "cache": false,
@@ -32,10 +76,12 @@
     "lint": {
       "dependsOn": [
         "^lint"
-      ]
+      ],
+      "outputs": []
     },
     "format": {
-      "cache": false
+      "cache": false,
+      "outputs": []
     },
     "test": {
       "dependsOn": [
@@ -44,17 +90,41 @@
       "inputs": [
         "$TURBO_DEFAULT$",
         ".env*"
+      ],
+      "outputs": [
+        "coverage/**"
       ]
     },
-    "debug": {
-      "cache": false,
-      "persistent": true
-    },
-    "debug:backend": {
-      "cache": false,
-      "persistent": true
+    "typecheck": {
+      "dependsOn": [],
+      "outputs": []
     },
     "clean": {
+      "cache": false
+    },
+    "docker:build": {
+      "dependsOn": [
+        "build"
+      ],
+      "cache": false,
+      "inputs": [
+        "Dockerfile*",
+        "dist/**"
+      ]
+    },
+    "docker:push": {
+      "dependsOn": [
+        "docker:build"
+      ],
+      "cache": false
+    },
+    "release": {
+      "dependsOn": [
+        "test",
+        "lint",
+        "build",
+        "docker:build"
+      ],
       "cache": false
     }
   }

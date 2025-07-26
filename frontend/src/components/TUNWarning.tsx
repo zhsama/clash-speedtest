@@ -253,7 +253,7 @@ export default function TUNWarning({ onTUNStatusChange, showDetails = false }: T
               <div className="space-y-2">
                 {tunStatus.interfaces.map((iface, index) => (
                   <div
-                  key={index}
+                    key={index}
                     className={`card-elevated ${
                       iface.is_up ? "border-green-600 bg-green-500/10" : "border-lavender-600"
                     }`}

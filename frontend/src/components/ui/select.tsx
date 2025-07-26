@@ -87,7 +87,10 @@ function SelectLabel({ className, ...props }: React.ComponentProps<typeof Select
   return (
     <SelectPrimitive.Label
       data-slot="select-label"
-      className={cn("text-lavender-300 px-3 py-2 text-xs font-medium uppercase tracking-wide", className)}
+      className={cn(
+        "text-lavender-300 px-3 py-2 text-xs font-medium uppercase tracking-wide",
+        className
+      )}
       {...props}
     />
   )
@@ -137,7 +140,10 @@ function SelectScrollUpButton({
   return (
     <SelectPrimitive.ScrollUpButton
       data-slot="select-scroll-up-button"
-      className={cn("flex cursor-pointer items-center justify-center py-2 text-lavender-300 hover:text-lavender-100 hover:bg-lavender-700/50 transition-colors duration-150", className)}
+      className={cn(
+        "flex cursor-pointer items-center justify-center py-2 text-lavender-300 hover:text-lavender-100 hover:bg-lavender-700/50 transition-colors duration-150",
+        className
+      )}
       {...props}
     >
       <ChevronUpIcon className="size-4" />
@@ -152,7 +158,10 @@ function SelectScrollDownButton({
   return (
     <SelectPrimitive.ScrollDownButton
       data-slot="select-scroll-down-button"
-      className={cn("flex cursor-pointer items-center justify-center py-2 text-lavender-300 hover:text-lavender-100 hover:bg-lavender-700/50 transition-colors duration-150", className)}
+      className={cn(
+        "flex cursor-pointer items-center justify-center py-2 text-lavender-300 hover:text-lavender-100 hover:bg-lavender-700/50 transition-colors duration-150",
+        className
+      )}
       {...props}
     >
       <ChevronDownIcon className="size-4" />

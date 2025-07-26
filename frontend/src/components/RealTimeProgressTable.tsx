@@ -1,25 +1,25 @@
-import { Card } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import {
-  FaChartLine as TrendingUp,
   FaCheckCircle as CheckCircle,
+  FaDownload as Download,
+  FaFile as FileText,
+  FaShieldAlt as Shield,
+  FaTable as TableIcon,
+  FaChartLine as TrendingUp,
   FaTimesCircle as XCircle,
   FaBolt as Zap,
-  FaDownload as Download,
-  FaShieldAlt as Shield,
-  FaFile as FileText,
-  FaTable as TableIcon,
 } from "react-icons/fa"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import type {
+  TestCancelledData,
+  TestCompleteData,
+  TestProgressData,
+  TestResultData,
+} from "../hooks/useWebSocket"
 import ClientIcon from "./ClientIcon"
 import SpeedTestTable from "./SpeedTestTable"
 import UnlockTestTable from "./UnlockTestTable"
-import type {
-  TestResultData,
-  TestProgressData,
-  TestCompleteData,
-  TestCancelledData,
-} from "../hooks/useWebSocket"
 
 interface RealTimeProgressTableProps {
   results: TestResultData[]
@@ -58,7 +58,8 @@ export default function RealTimeProgressTable({
           <span className="text-sm text-blue-400">速度测试</span>
         </div>
       )
-    } else if (current_stage === "unlock_test") {
+    }
+    if (current_stage === "unlock_test") {
       return (
         <div className="flex items-center gap-2">
           <ClientIcon icon={Shield} className="h-4 w-4 text-green-400" />

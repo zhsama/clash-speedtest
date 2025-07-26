@@ -47,7 +47,7 @@ const DialogContent = React.forwardRef<
       onInteractOutside={(e) => {
         const target = e.target as HTMLElement
         // 防止点击 toast 时关闭 dialog
-        if (target.closest('[data-sonner-toast]')) {
+        if (target.closest("[data-sonner-toast]")) {
           e.preventDefault()
         }
       }}
@@ -63,16 +63,9 @@ const DialogContent = React.forwardRef<
 ))
 DialogContent.displayName = DialogPrimitive.Content.displayName
 
-const DialogHeader = ({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement>) => (
+const DialogHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
-    className={cn(
-      "flex flex-col space-y-1.5 p-6 pb-4",
-      "border-b border-border",
-      className
-    )}
+    className={cn("flex flex-col space-y-1.5 p-6 pb-4", "border-b border-border", className)}
     {...props}
   />
 )
@@ -84,10 +77,7 @@ const DialogTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Title
     ref={ref}
-    className={cn(
-      "text-lg font-semibold leading-none tracking-tight",
-      className
-    )}
+    className={cn("text-lg font-semibold leading-none tracking-tight", className)}
     {...props}
   />
 ))

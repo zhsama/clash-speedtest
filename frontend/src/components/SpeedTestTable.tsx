@@ -9,10 +9,10 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { 
-  FaChartLine as Activity, 
-  FaDownload as Download, 
-  FaUpload as Upload, 
+import {
+  FaChartLine as Activity,
+  FaDownload as Download,
+  FaUpload as Upload,
   FaCheckCircle as CheckCircle,
   FaTimesCircle as XCircle,
   FaSpinner as Loader2,
@@ -32,12 +32,12 @@ interface SpeedTestTableProps {
   showExportButtons?: boolean
 }
 
-export default function SpeedTestTable({ 
-  results, 
+export default function SpeedTestTable({
+  results,
   title = "速度测试结果",
   onExportMarkdown,
   onExportCSV,
-  showExportButtons = false
+  showExportButtons = false,
 }: SpeedTestTableProps) {
   // 工具函数
   const formatLatency = (latencyMs: number | null | undefined) => {
@@ -64,32 +64,32 @@ export default function SpeedTestTable({
 
   const getSpeedIndicator = (speedMbps: number | null | undefined, maxSpeed: number = 100) => {
     if (!speedMbps || speedMbps <= 0) return null
-    
-    const percentage = Math.min((speedMbps / maxSpeed) * 100, 100);
-    let colorClass = "bg-red-500";
-    
-    if (speedMbps >= 50) colorClass = "bg-green-500";
-    else if (speedMbps >= 20) colorClass = "bg-yellow-500";
-    else if (speedMbps >= 5) colorClass = "bg-orange-500";
-    
+
+    const percentage = Math.min((speedMbps / maxSpeed) * 100, 100)
+    let colorClass = "bg-red-500"
+
+    if (speedMbps >= 50) colorClass = "bg-green-500"
+    else if (speedMbps >= 20) colorClass = "bg-yellow-500"
+    else if (speedMbps >= 5) colorClass = "bg-orange-500"
+
     return (
       <div className="w-full mt-1 bg-lavender-800 rounded-full h-2">
-        <div 
+        <div
           className={`h-full rounded-full transition-all duration-300 ${colorClass}`}
           style={{ width: `${percentage}%` }}
         />
       </div>
-    );
+    )
   }
 
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "success":
-        return <CheckCircle className="h-4 w-4 text-green-400" />;
+        return <CheckCircle className="h-4 w-4 text-green-400" />
       case "failed":
-        return <XCircle className="h-4 w-4 text-red-400" />;
+        return <XCircle className="h-4 w-4 text-red-400" />
       default:
-        return <Loader2 className="h-4 w-4 text-lavender-400 animate-spin" />;
+        return <Loader2 className="h-4 w-4 text-lavender-400 animate-spin" />
     }
   }
 
@@ -97,11 +97,23 @@ export default function SpeedTestTable({
     const baseClasses = "text-xs"
     switch (status) {
       case "success":
-        return <Badge variant="default" className={`${baseClasses} bg-green-600 hover:bg-green-700`}>成功</Badge>
+        return (
+          <Badge variant="default" className={`${baseClasses} bg-green-600 hover:bg-green-700`}>
+            成功
+          </Badge>
+        )
       case "failed":
-        return <Badge variant="destructive" className={baseClasses}>失败</Badge>
+        return (
+          <Badge variant="destructive" className={baseClasses}>
+            失败
+          </Badge>
+        )
       default:
-        return <Badge variant="secondary" className={baseClasses}>测试中</Badge>
+        return (
+          <Badge variant="secondary" className={baseClasses}>
+            测试中
+          </Badge>
+        )
     }
   }
 
@@ -165,54 +177,44 @@ export default function SpeedTestTable({
           <Table className="table-standard table-content">
             <TableHeader>
               <TableRow>
-                <TableHead className="text-lavender-400" >
-                  <div className="flex items-center gap-1">
-                    状态
-                  </div>
+                <TableHead className="text-lavender-400">
+                  <div className="flex items-center gap-1">状态</div>
                 </TableHead>
-                <TableHead className="text-lavender-400" >
-                  <div className="flex items-center gap-1">
-                    节点名称
-                  </div>
+                <TableHead className="text-lavender-400">
+                  <div className="flex items-center gap-1">节点名称</div>
                 </TableHead>
-                <TableHead className="text-lavender-400" >
-                  <div className="flex items-center gap-1">
-                    类型
-                  </div>
+                <TableHead className="text-lavender-400">
+                  <div className="flex items-center gap-1">类型</div>
                 </TableHead>
-                <TableHead className="text-lavender-400" >
+                <TableHead className="text-lavender-400">
                   <div className="flex items-center gap-1">
                     <ClientIcon icon={Globe} className="h-4 w-4" />
                     IP地址
                   </div>
                 </TableHead>
-                <TableHead className="text-lavender-400" >
+                <TableHead className="text-lavender-400">
                   <div className="flex items-center gap-1">
                     <ClientIcon icon={Activity} className="h-4 w-4" />
                     延迟
                   </div>
                 </TableHead>
-                <TableHead className="text-lavender-400" >
+                <TableHead className="text-lavender-400">
                   <div className="flex items-center gap-1">
                     <ClientIcon icon={Download} className="h-4 w-4" />
                     下载
                   </div>
                 </TableHead>
-                <TableHead className="text-lavender-400" >
+                <TableHead className="text-lavender-400">
                   <div className="flex items-center gap-1">
                     <ClientIcon icon={Upload} className="h-4 w-4" />
                     上传
                   </div>
                 </TableHead>
-                <TableHead className="text-lavender-400" >
-                  <div className="flex items-center gap-1">
-                    丢包率
-                  </div>
+                <TableHead className="text-lavender-400">
+                  <div className="flex items-center gap-1">丢包率</div>
                 </TableHead>
-                <TableHead className="text-lavender-400" >
-                  <div className="flex items-center gap-1">
-                    错误详情
-                  </div>
+                <TableHead className="text-lavender-400">
+                  <div className="flex items-center gap-1">错误详情</div>
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -226,7 +228,10 @@ export default function SpeedTestTable({
                     </div>
                   </TableCell>
                   <TableCell className="min-w-48">
-                    <div className="truncate max-w-xs font-medium text-lavender-50" title={result.proxy_name}>
+                    <div
+                      className="truncate max-w-xs font-medium text-lavender-50"
+                      title={result.proxy_name}
+                    >
                       {result.proxy_name}
                     </div>
                   </TableCell>
@@ -237,7 +242,7 @@ export default function SpeedTestTable({
                   </TableCell>
                   <TableCell className="w-32">
                     <span className="text-lavender-400 font-mono text-xs">
-                      {result.proxy_ip || '-'}
+                      {result.proxy_ip || "-"}
                     </span>
                   </TableCell>
                   <TableCell className="w-20">
@@ -281,7 +286,10 @@ export default function SpeedTestTable({
                             </Badge>
                           )}
                         </div>
-                        <div className="text-xs text-lavender-500 truncate" title={result.error_message}>
+                        <div
+                          className="text-xs text-lavender-500 truncate"
+                          title={result.error_message}
+                        >
                           {result.error_message}
                         </div>
                       </div>

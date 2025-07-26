@@ -12,12 +12,7 @@ function Slider({
   ...props
 }: React.ComponentProps<typeof SliderPrimitive.Root>) {
   const _values = React.useMemo(
-    () =>
-      Array.isArray(value)
-        ? value
-        : Array.isArray(defaultValue)
-          ? defaultValue
-          : [min, max],
+    () => (Array.isArray(value) ? value : Array.isArray(defaultValue) ? defaultValue : [min, max]),
     [value, defaultValue, min, max]
   )
 
@@ -38,16 +33,13 @@ function Slider({
         data-slot="slider-track"
         className="relative grow overflow-hidden data-[orientation=horizontal]:h-2 data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-2"
       >
-        <SliderPrimitive.Range
-          data-slot="slider-range"
-          className="absolute h-full"
-        />
+        <SliderPrimitive.Range data-slot="slider-range" className="absolute h-full" />
       </SliderPrimitive.Track>
       {Array.from({ length: _values.length }, (_, index) => (
         <SliderPrimitive.Thumb
           data-slot="slider-thumb"
           key={index}
-                      className="block size-4 shrink-0 rounded-full focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 cursor-pointer"
+          className="block size-4 shrink-0 rounded-full focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 cursor-pointer"
         />
       ))}
     </SliderPrimitive.Root>

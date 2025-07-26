@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { 
-  FaExclamationTriangle as AlertTriangle, 
-  FaSync as RefreshCw, 
-  FaNetworkWired as Network, 
+import {
+  FaExclamationTriangle as AlertTriangle,
+  FaSync as RefreshCw,
+  FaNetworkWired as Network,
   FaCheckCircle as CheckCircle,
   FaInfoCircle as Info,
-  FaSpinner as Loader2
+  FaSpinner as Loader2,
 } from "react-icons/fa"
 import ClientIcon from "./ClientIcon"
 import { config } from "@/lib/env"
@@ -77,33 +77,33 @@ export default function TUNWarning({ onTUNStatusChange, showDetails = false }: T
     try {
       const response = await fetch(`${config.apiUrl}/api/tun-check`)
       const data: TUNCheckResponse = await response.json()
-      
+
       if (data.success) {
         setTunStatus(data.tun_status)
         setWarning(data.warning)
         setLastChecked(new Date())
-        
+
         // 通知父组件TUN状态变化
         onTUNStatusChange?.(data.tun_status.enabled)
-        
+
         if (data.tun_status.enabled) {
           toast.warning("检测到 TUN 模式", {
-            description: "建议关闭 TUN 模式以获得更准确的测试结果"
+            description: "建议关闭 TUN 模式以获得更准确的测试结果",
           })
         } else {
           toast.success("TUN 模式检测", {
-            description: "未检测到 TUN 模式，可以进行测试"
+            description: "未检测到 TUN 模式，可以进行测试",
           })
         }
       } else {
         toast.error("检测失败", {
-          description: "无法检测 TUN 模式状态"
+          description: "无法检测 TUN 模式状态",
         })
       }
     } catch (error) {
       console.error("TUN 模式检测失败:", error)
       toast.error("检测出错", {
-        description: "TUN 模式检测请求失败"
+        description: "TUN 模式检测请求失败",
       })
     } finally {
       setLoading(false)
@@ -116,16 +116,16 @@ export default function TUNWarning({ onTUNStatusChange, showDetails = false }: T
   }, [])
 
   const formatTime = (dateStr: string) => {
-    return new Date(dateStr).toLocaleString('zh-CN')
+    return new Date(dateStr).toLocaleString("zh-CN")
   }
 
   if (!tunStatus) {
     return (
       <Card className="card-elevated my-4">
         <div className="flex items-center gap-2">
-          <ClientIcon 
-            icon={loading ? Loader2 : Network} 
-            className={`h-5 w-5 text-lavender-400 ${loading ? 'animate-spin' : ''}`} 
+          <ClientIcon
+            icon={loading ? Loader2 : Network}
+            className={`h-5 w-5 text-lavender-400 ${loading ? "animate-spin" : ""}`}
           />
           <span className="text-lavender-100">检测 TUN 模式状态...</span>
           {!loading && (
@@ -154,7 +154,9 @@ export default function TUNWarning({ onTUNStatusChange, showDetails = false }: T
             <div className="flex-1">
               <div className="flex items-start justify-between">
                 <div>
-                  <div className="font-medium form-element-label text-yellow-200">检测到 TUN 模式已启用</div>
+                  <div className="font-medium form-element-label text-yellow-200">
+                    检测到 TUN 模式已启用
+                  </div>
                   <div className="text-sm text-yellow-200">{warning}</div>
                 </div>
               </div>
@@ -171,9 +173,7 @@ export default function TUNWarning({ onTUNStatusChange, showDetails = false }: T
                   <div className="font-medium text-green-200">TUN 模式未启用</div>
                   <div className="text-sm text-green-200">系统网络配置正常，可以进行速度测试</div>
                 </div>
-                <span className="badge-filled border-green-500 text-green-400">
-                  正常
-                </span>
+                <span className="badge-filled border-green-500 text-green-400">正常</span>
               </div>
             </div>
           </div>
@@ -189,13 +189,13 @@ export default function TUNWarning({ onTUNStatusChange, showDetails = false }: T
           disabled={loading}
           className="btn-outlined"
         >
-          <ClientIcon 
-            icon={loading ? Loader2 : RefreshCw} 
-            className={`h-4 w-4 mr-1 ${loading ? 'animate-spin' : ''}`} 
+          <ClientIcon
+            icon={loading ? Loader2 : RefreshCw}
+            className={`h-4 w-4 mr-1 ${loading ? "animate-spin" : ""}`}
           />
           重新检测
         </Button>
-        
+
         <Button
           variant="ghost"
           size="sm"
@@ -203,12 +203,12 @@ export default function TUNWarning({ onTUNStatusChange, showDetails = false }: T
           className="btn-text"
         >
           <ClientIcon icon={Info} className="h-4 w-4 mr-1" />
-          {showDetailedInfo ? '隐藏详情' : '显示详情'}
+          {showDetailedInfo ? "隐藏详情" : "显示详情"}
         </Button>
-        
+
         {lastChecked && (
           <span className="text-xs text-lavender-400 ml-auto">
-            最后检测: {lastChecked.toLocaleTimeString('zh-CN')}
+            最后检测: {lastChecked.toLocaleTimeString("zh-CN")}
           </span>
         )}
       </div>
@@ -239,7 +239,9 @@ export default function TUNWarning({ onTUNStatusChange, showDetails = false }: T
               </div>
               <div>
                 <span className="text-lavender-400">检测时间:</span>
-                <span className="text-lavender-100 ml-2">{formatTime(tunStatus.detection_time)}</span>
+                <span className="text-lavender-100 ml-2">
+                  {formatTime(tunStatus.detection_time)}
+                </span>
               </div>
             </div>
           </div>
@@ -250,21 +252,23 @@ export default function TUNWarning({ onTUNStatusChange, showDetails = false }: T
               <div className="form-element-label">TUN 接口</div>
               <div className="space-y-2">
                 {tunStatus.interfaces.map((iface, index) => (
-                  <div 
-                    key={index} 
+                  <div
+                  key={index}
                     className={`card-elevated ${
-                      iface.is_up ? 'border-green-600 bg-green-500/10' : 'border-lavender-600'
+                      iface.is_up ? "border-green-600 bg-green-500/10" : "border-lavender-600"
                     }`}
                   >
                     <div className="flex items-center justify-between form-element">
                       <span className="font-medium text-lavender-100">{iface.name}</span>
                       <div className="flex component-gap">
-                        <span className={`badge-filled ${
-                          iface.is_up 
-                            ? 'border-green-500 text-green-400' 
-                            : 'border-lavender-500 text-lavender-400'
-                        }`}>
-                          {iface.is_up ? '启用' : '禁用'}
+                        <span
+                          className={`badge-filled ${
+                            iface.is_up
+                              ? "border-green-500 text-green-400"
+                              : "border-lavender-500 text-lavender-400"
+                          }`}
+                        >
+                          {iface.is_up ? "启用" : "禁用"}
                         </span>
                         {iface.is_default && (
                           <span className="badge-outlined border-lavender-500 text-lavender-400">
@@ -277,7 +281,7 @@ export default function TUNWarning({ onTUNStatusChange, showDetails = false }: T
                       <div>类型: {iface.type}</div>
                       <div>MTU: {iface.mtu}</div>
                       {iface.ip_addresses.length > 0 && (
-                        <div>IP: {iface.ip_addresses.join(', ')}</div>
+                        <div>IP: {iface.ip_addresses.join(", ")}</div>
                       )}
                     </div>
                   </div>
@@ -316,20 +320,28 @@ export default function TUNWarning({ onTUNStatusChange, showDetails = false }: T
                 <div className="text-sm space-y-1">
                   <div>
                     <span className="text-lavender-400">目标:</span>
-                    <span className="text-lavender-100 ml-2">{tunStatus.default_route.destination}</span>
+                    <span className="text-lavender-100 ml-2">
+                      {tunStatus.default_route.destination}
+                    </span>
                   </div>
                   <div>
                     <span className="text-lavender-400">网关:</span>
-                    <span className="text-lavender-100 ml-2">{tunStatus.default_route.gateway}</span>
+                    <span className="text-lavender-100 ml-2">
+                      {tunStatus.default_route.gateway}
+                    </span>
                   </div>
                   <div>
                     <span className="text-lavender-400">接口:</span>
-                    <span className="text-lavender-100 ml-2">{tunStatus.default_route.interface}</span>
+                    <span className="text-lavender-100 ml-2">
+                      {tunStatus.default_route.interface}
+                    </span>
                   </div>
                   {tunStatus.default_route.metric > 0 && (
                     <div>
                       <span className="text-lavender-400">优先级:</span>
-                      <span className="text-lavender-100 ml-2">{tunStatus.default_route.metric}</span>
+                      <span className="text-lavender-100 ml-2">
+                        {tunStatus.default_route.metric}
+                      </span>
                     </div>
                   )}
                 </div>

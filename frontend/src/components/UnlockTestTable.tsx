@@ -9,7 +9,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { 
+import {
   FaCheckCircle as CheckCircle,
   FaTimesCircle as XCircle,
   FaSpinner as Loader2,
@@ -32,22 +32,21 @@ interface UnlockTestTableProps {
   showExportButtons?: boolean
 }
 
-export default function UnlockTestTable({ 
-  results, 
+export default function UnlockTestTable({
+  results,
   title = "解锁检测结果",
   onExportMarkdown,
   onExportCSV,
-  showExportButtons = false
+  showExportButtons = false,
 }: UnlockTestTableProps) {
-  
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "success":
-        return <CheckCircle className="h-4 w-4 text-green-400" />;
+        return <CheckCircle className="h-4 w-4 text-green-400" />
       case "failed":
-        return <XCircle className="h-4 w-4 text-red-400" />;
+        return <XCircle className="h-4 w-4 text-red-400" />
       default:
-        return <Loader2 className="h-4 w-4 text-lavender-400 animate-spin" />;
+        return <Loader2 className="h-4 w-4 text-lavender-400 animate-spin" />
     }
   }
 
@@ -55,11 +54,23 @@ export default function UnlockTestTable({
     const baseClasses = "text-xs"
     switch (status) {
       case "success":
-        return <Badge variant="default" className={`${baseClasses} bg-green-600 hover:bg-green-700`}>成功</Badge>
+        return (
+          <Badge variant="default" className={`${baseClasses} bg-green-600 hover:bg-green-700`}>
+            成功
+          </Badge>
+        )
       case "failed":
-        return <Badge variant="destructive" className={baseClasses}>失败</Badge>
+        return (
+          <Badge variant="destructive" className={baseClasses}>
+            失败
+          </Badge>
+        )
       default:
-        return <Badge variant="secondary" className={baseClasses}>测试中</Badge>
+        return (
+          <Badge variant="secondary" className={baseClasses}>
+            测试中
+          </Badge>
+        )
     }
   }
 
@@ -69,8 +80,8 @@ export default function UnlockTestTable({
       return <span className="text-lavender-500 text-xs">-</span>
     }
 
-    const supported = unlockResults.filter(r => r.supported)
-    const unsupported = unlockResults.filter(r => !r.supported)
+    const supported = unlockResults.filter((r) => r.supported)
+    const unsupported = unlockResults.filter((r) => !r.supported)
 
     return (
       <div className="space-y-1">
@@ -115,7 +126,7 @@ export default function UnlockTestTable({
 
     const { total_tested = 0, total_supported = 0 } = unlockSummary
     const supportedPlatforms = unlockSummary.supported_platforms || []
-    const supportRate = total_tested > 0 ? (total_supported / total_tested * 100).toFixed(0) : 0
+    const supportRate = total_tested > 0 ? ((total_supported / total_tested) * 100).toFixed(0) : 0
 
     return (
       <div className="space-y-1">
@@ -125,9 +136,7 @@ export default function UnlockTestTable({
           </Badge>
         </div>
         {supportedPlatforms.length > 0 && (
-          <div className="text-xs text-green-400">
-            {supportedPlatforms.join(', ')}
-          </div>
+          <div className="text-xs text-green-400">{supportedPlatforms.join(", ")}</div>
         )}
       </div>
     )
@@ -193,20 +202,14 @@ export default function UnlockTestTable({
           <Table className="table-standard table-content">
             <TableHeader>
               <TableRow>
-                <TableHead className="text-lavender-400" >
-                  <div className="flex items-center gap-1">
-                    状态
-                  </div>
-                </TableHead>
-                <TableHead className="text-lavender-400" >
-                  <div className="flex items-center gap-1">
-                    节点名称
-                  </div>
+                <TableHead className="text-lavender-400">
+                  <div className="flex items-center gap-1">状态</div>
                 </TableHead>
                 <TableHead className="text-lavender-400">
-                  <div className="flex items-center gap-1">
-                    类型
-                  </div>
+                  <div className="flex items-center gap-1">节点名称</div>
+                </TableHead>
+                <TableHead className="text-lavender-400">
+                  <div className="flex items-center gap-1">类型</div>
                 </TableHead>
                 <TableHead className="text-lavender-400">
                   <div className="flex items-center gap-1">
@@ -220,16 +223,14 @@ export default function UnlockTestTable({
                     解锁摘要
                   </div>
                 </TableHead>
-                <TableHead className="text-lavender-400" >
+                <TableHead className="text-lavender-400">
                   <div className="flex items-center gap-1">
                     <ClientIcon icon={Globe} className="h-4 w-4" />
                     平台详情
                   </div>
                 </TableHead>
                 <TableHead className="text-lavender-400">
-                  <div className="flex items-center gap-1">
-                    错误详情
-                  </div>
+                  <div className="flex items-center gap-1">错误详情</div>
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -243,7 +244,10 @@ export default function UnlockTestTable({
                     </div>
                   </TableCell>
                   <TableCell className="min-w-48">
-                    <div className="truncate max-w-xs font-medium text-lavender-50" title={result.proxy_name}>
+                    <div
+                      className="truncate max-w-xs font-medium text-lavender-50"
+                      title={result.proxy_name}
+                    >
                       {result.proxy_name}
                     </div>
                   </TableCell>
@@ -254,7 +258,7 @@ export default function UnlockTestTable({
                   </TableCell>
                   <TableCell className="w-32">
                     <span className="text-lavender-400 font-mono text-xs">
-                      {result.proxy_ip || '-'}
+                      {result.proxy_ip || "-"}
                     </span>
                   </TableCell>
                   <TableCell className="w-32">
@@ -278,7 +282,10 @@ export default function UnlockTestTable({
                             </Badge>
                           )}
                         </div>
-                        <div className="text-xs text-lavender-500 truncate" title={result.error_message}>
+                        <div
+                          className="text-xs text-lavender-500 truncate"
+                          title={result.error_message}
+                        >
                           {result.error_message}
                         </div>
                       </div>

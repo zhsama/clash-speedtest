@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { 
+import {
   FaChartLine as TrendingUp,
   FaCheckCircle as CheckCircle,
   FaTimesCircle as XCircle,
@@ -14,7 +14,12 @@ import {
 import ClientIcon from "./ClientIcon"
 import SpeedTestTable from "./SpeedTestTable"
 import UnlockTestTable from "./UnlockTestTable"
-import type { TestResultData, TestProgressData, TestCompleteData, TestCancelledData } from "../hooks/useWebSocket"
+import type {
+  TestResultData,
+  TestProgressData,
+  TestCompleteData,
+  TestCancelledData,
+} from "../hooks/useWebSocket"
 
 interface RealTimeProgressTableProps {
   results: TestResultData[]
@@ -29,18 +34,17 @@ interface RealTimeProgressTableProps {
   showExportButtons?: boolean
 }
 
-export default function RealTimeProgressTable({ 
-  results, 
-  progress, 
+export default function RealTimeProgressTable({
+  results,
+  progress,
   completeData,
   cancelledData,
   isConnected,
   testMode = "both",
   onExportMarkdown,
   onExportCSV,
-  showExportButtons = false
+  showExportButtons = false,
 }: RealTimeProgressTableProps) {
-  
   // 获取当前测试阶段的显示
   const getCurrentStageDisplay = (progress: TestProgressData | null) => {
     if (!progress) return null
@@ -77,86 +81,86 @@ export default function RealTimeProgressTable({
       {
         label: "成功",
         value: data.successful_tests,
-        color: "text-green-400"
+        color: "text-green-400",
       },
       {
-        label: "失败", 
+        label: "失败",
         value: data.failed_tests,
-        color: "text-red-400"
-      }
-    ];
+        color: "text-red-400",
+      },
+    ]
 
     const speedStats = [
       {
         label: "平均下载(MB/s)",
         value: data.average_download_mbps.toFixed(1),
-        color: "text-blue-400"
+        color: "text-blue-400",
       },
       {
         label: "平均延迟(ms)",
         value: data.average_latency.toFixed(0),
-        color: "text-purple-400"
-      }
-    ];
+        color: "text-purple-400",
+      },
+    ]
 
-    const unlockStats = [];
+    const unlockStats = []
     if (data.unlock_stats) {
       unlockStats.push(
         {
           label: "解锁成功",
           value: data.unlock_stats.successful_unlock_tests,
-          color: "text-green-400"
+          color: "text-green-400",
         },
         {
           label: "解锁总数",
           value: data.unlock_stats.total_unlock_tests,
-          color: "text-cyan-400"
+          color: "text-cyan-400",
         }
-      );
+      )
     }
 
     switch (mode) {
       case "speed_only":
-        return [...baseStats, ...speedStats];
+        return [...baseStats, ...speedStats]
       case "unlock_only":
-        return [...baseStats, ...unlockStats];
+        return [...baseStats, ...unlockStats]
       case "both":
       default:
-        return [...baseStats, ...speedStats, ...unlockStats];
+        return [...baseStats, ...speedStats, ...unlockStats]
     }
-  };
+  }
 
   // 处理最佳节点的显示
   const getBestNodeInfo = (data: TestCompleteData, mode: string) => {
-    if (!data.best_proxy) return null;
+    if (!data.best_proxy) return null
 
     const baseInfo = {
       name: data.best_proxy,
-      metric: ""
-    };
+      metric: "",
+    }
 
     switch (mode) {
       case "speed_only":
         return {
           ...baseInfo,
-          metric: `${data.best_download_speed_mbps.toFixed(2)} MB/s`
-        };
+          metric: `${data.best_download_speed_mbps.toFixed(2)} MB/s`,
+        }
       case "unlock_only":
         if (data.unlock_stats?.best_unlock_proxy) {
           return {
             name: data.unlock_stats.best_unlock_proxy,
-            metric: `支持 ${data.unlock_stats.best_unlock_platforms?.join(', ') || '多个平台'}`
-          };
+            metric: `支持 ${data.unlock_stats.best_unlock_platforms?.join(", ") || "多个平台"}`,
+          }
         }
-        return null;
+        return null
       case "both":
       default:
         return {
           ...baseInfo,
-          metric: `${data.best_download_speed_mbps.toFixed(2)} MB/s`
-        };
+          metric: `${data.best_download_speed_mbps.toFixed(2)} MB/s`,
+        }
     }
-  };
+  }
 
   // 根据测试模式渲染相应的表格组件
   const renderTablesByMode = () => {
@@ -177,36 +181,36 @@ export default function RealTimeProgressTable({
     switch (testMode) {
       case "speed_only":
         return (
-          <SpeedTestTable 
-            results={results} 
+          <SpeedTestTable
+            results={results}
             onExportMarkdown={onExportMarkdown}
             onExportCSV={onExportCSV}
             showExportButtons={showExportButtons}
           />
         )
-      
+
       case "unlock_only":
         return (
-          <UnlockTestTable 
-            results={results} 
+          <UnlockTestTable
+            results={results}
             onExportMarkdown={onExportMarkdown}
             onExportCSV={onExportCSV}
             showExportButtons={showExportButtons}
           />
         )
-      
+
       case "both":
       default:
         return (
           <div className="space-y-6">
-            <SpeedTestTable 
-              results={results} 
+            <SpeedTestTable
+              results={results}
               onExportMarkdown={onExportMarkdown}
               onExportCSV={onExportCSV}
               showExportButtons={showExportButtons}
             />
-            <UnlockTestTable 
-              results={results} 
+            <UnlockTestTable
+              results={results}
               onExportMarkdown={onExportMarkdown}
               onExportCSV={onExportCSV}
               showExportButtons={showExportButtons}
@@ -227,13 +231,13 @@ export default function RealTimeProgressTable({
               测试进度
             </h3>
             <div className="flex items-center gap-2">
-              <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`} />
-              <span className="text-sm text-lavender-400">
-                {isConnected ? '已连接' : '未连接'}
-              </span>
+              <div
+                className={`w-2 h-2 rounded-full ${isConnected ? "bg-green-400 animate-pulse" : "bg-red-400"}`}
+              />
+              <span className="text-sm text-lavender-400">{isConnected ? "已连接" : "未连接"}</span>
             </div>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 form-element">
             <div className="text-center">
               <div className="text-2xl font-bold text-lavender-50">{progress.completed_count}</div>
@@ -244,7 +248,9 @@ export default function RealTimeProgressTable({
               <div className="text-sm text-lavender-400">总数</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-lavender-500">{progress.progress_percent.toFixed(1)}%</div>
+              <div className="text-2xl font-bold text-lavender-500">
+                {progress.progress_percent.toFixed(1)}%
+              </div>
               <div className="text-sm text-lavender-400">进度</div>
             </div>
           </div>
@@ -255,18 +261,18 @@ export default function RealTimeProgressTable({
               style={{ width: `${progress.progress_percent}%` }}
             />
           </div>
-          
+
           <div className="space-y-2">
             {progress.current_proxy && (
               <div className="text-center">
                 <span className="text-sm text-lavender-400">当前测试: </span>
-                <span className="text-sm text-lavender-50 font-medium">{progress.current_proxy}</span>
+                <span className="text-sm text-lavender-50 font-medium">
+                  {progress.current_proxy}
+                </span>
               </div>
             )}
             {getCurrentStageDisplay(progress) && (
-              <div className="flex justify-center">
-                {getCurrentStageDisplay(progress)}
-              </div>
+              <div className="flex justify-center">{getCurrentStageDisplay(progress)}</div>
             )}
           </div>
         </Card>
@@ -279,15 +285,19 @@ export default function RealTimeProgressTable({
             <ClientIcon icon={CheckCircle} className="h-5 w-5 text-green-400" />
             测试完成
             {testMode !== "both" && (
-              <Badge variant="outline" className={`ml-2 text-xs ${
-                testMode === "speed_only" ? "border-blue-500 text-blue-400" : 
-                "border-green-500 text-green-400"
-              }`}>
+              <Badge
+                variant="outline"
+                className={`ml-2 text-xs ${
+                  testMode === "speed_only"
+                    ? "border-blue-500 text-blue-400"
+                    : "border-green-500 text-green-400"
+                }`}
+              >
                 {testMode === "speed_only" ? "速度测试" : "解锁检测"}
               </Badge>
             )}
           </h3>
-          
+
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 form-element">
             {getCompletionSummary(completeData, testMode).map((stat, index) => (
               <div key={index} className="text-center">
@@ -298,14 +308,16 @@ export default function RealTimeProgressTable({
           </div>
 
           {(() => {
-            const bestNode = getBestNodeInfo(completeData, testMode);
-            return bestNode && (
-              <div className="text-center text-sm">
-                <span className="text-lavender-400">最佳节点: </span>
-                <span className="text-lavender-50 font-medium">{bestNode.name}</span>
-                <span className="text-green-400 ml-2">({bestNode.metric})</span>
-              </div>
-            );
+            const bestNode = getBestNodeInfo(completeData, testMode)
+            return (
+              bestNode && (
+                <div className="text-center text-sm">
+                  <span className="text-lavender-400">最佳节点: </span>
+                  <span className="text-lavender-50 font-medium">{bestNode.name}</span>
+                  <span className="text-green-400 ml-2">({bestNode.metric})</span>
+                </div>
+              )
+            )
           })()}
         </Card>
       )}
@@ -317,10 +329,12 @@ export default function RealTimeProgressTable({
             <ClientIcon icon={XCircle} className="h-5 w-5 text-orange-400" />
             测试已取消
           </h3>
-          
+
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 form-element">
             <div className="text-center">
-              <div className="text-xl font-bold text-orange-400">{cancelledData.completed_tests}</div>
+              <div className="text-xl font-bold text-orange-400">
+                {cancelledData.completed_tests}
+              </div>
               <div className="text-xs text-lavender-400">已完成</div>
             </div>
             <div className="text-center">
@@ -328,7 +342,9 @@ export default function RealTimeProgressTable({
               <div className="text-xs text-lavender-400">总数</div>
             </div>
             <div className="text-center">
-              <div className="text-xl font-bold text-lavender-500">{cancelledData.partial_duration}</div>
+              <div className="text-xl font-bold text-lavender-500">
+                {cancelledData.partial_duration}
+              </div>
               <div className="text-xs text-lavender-400">用时</div>
             </div>
           </div>
@@ -341,9 +357,7 @@ export default function RealTimeProgressTable({
       )}
 
       {/* Results Tables */}
-      <div className="space-y-4">
-        {renderTablesByMode()}
-      </div>
+      <div className="space-y-4">{renderTablesByMode()}</div>
     </div>
   )
 }

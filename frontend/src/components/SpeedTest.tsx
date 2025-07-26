@@ -22,8 +22,8 @@ import TUNWarning from "./TUNWarning"
 import { useWebSocket } from "../hooks/useWebSocket"
 import type { TestProgressData } from "../hooks/useWebSocket"
 import { config } from "@/lib/env"
-import { useTestResultSaver } from '../hooks/useTestResultSaver'
-import TestHistoryModal from './TestHistoryModal'
+import { useTestResultSaver } from "../hooks/useTestResultSaver"
+import TestHistoryModal from "./TestHistoryModal"
 import {
   Table,
   TableBody,
@@ -73,11 +73,16 @@ interface TestConfig {
 }
 
 // 速度测试配置组件
-const SpeedTestConfig = ({ testConfig, setTestConfig, filterConfig, setFilterConfig }: { 
-  testConfig: TestConfig; 
-  setTestConfig: React.Dispatch<React.SetStateAction<TestConfig>>;
-  filterConfig: FilterConfig;
-  setFilterConfig: React.Dispatch<React.SetStateAction<FilterConfig>>;
+const SpeedTestConfig = ({
+  testConfig,
+  setTestConfig,
+  filterConfig,
+  setFilterConfig,
+}: {
+  testConfig: TestConfig
+  setTestConfig: React.Dispatch<React.SetStateAction<TestConfig>>
+  filterConfig: FilterConfig
+  setFilterConfig: React.Dispatch<React.SetStateAction<FilterConfig>>
 }) => (
   <div className="form-element">
     <h4 className="text-lg font-semibold text-lavender-50 flex items-center gap-2 mb-2">
@@ -86,65 +91,65 @@ const SpeedTestConfig = ({ testConfig, setTestConfig, filterConfig, setFilterCon
     </h4>
     <div className="space-y-2">
       <div>
-        <label className="form-element-label">
-          测试服务器
-        </label>
+        <label className="form-element-label">测试服务器</label>
         <Input
           value={testConfig.serverUrl}
-          onChange={(e) => setTestConfig(prev => ({ 
-            ...prev, 
-            serverUrl: e.target.value 
-          }))}
+          onChange={(e) =>
+            setTestConfig((prev) => ({
+              ...prev,
+              serverUrl: e.target.value,
+            }))
+          }
           className="input-outlined"
         />
       </div>
-      
+
       <div>
-        <label className="form-element-label">
-          测试包大小: {testConfig.downloadSize} MB
-        </label>
+        <label className="form-element-label">测试包大小: {testConfig.downloadSize} MB</label>
         <Slider
           value={[testConfig.downloadSize]}
-          onValueChange={(v) => setTestConfig(prev => ({ 
-            ...prev, 
-            downloadSize: v[0],
-            uploadSize: v[0] // 同时更新上传大小
-          }))}
+          onValueChange={(v) =>
+            setTestConfig((prev) => ({
+              ...prev,
+              downloadSize: v[0],
+              uploadSize: v[0], // 同时更新上传大小
+            }))
+          }
           max={100}
           min={10}
           step={10}
           className="slider-dark"
         />
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="form-element-label">
-            并发数: {testConfig.concurrent}
-          </label>
+          <label className="form-element-label">并发数: {testConfig.concurrent}</label>
           <Slider
             value={[testConfig.concurrent]}
-            onValueChange={(v) => setTestConfig(prev => ({ 
-              ...prev, 
-              concurrent: v[0] 
-            }))}
+            onValueChange={(v) =>
+              setTestConfig((prev) => ({
+                ...prev,
+                concurrent: v[0],
+              }))
+            }
             max={16}
             min={1}
             step={1}
             className="slider-dark"
           />
         </div>
-        
+
         <div>
-          <label className="form-element-label">
-            超时时间: {testConfig.timeout} 秒
-          </label>
+          <label className="form-element-label">超时时间: {testConfig.timeout} 秒</label>
           <Slider
             value={[testConfig.timeout]}
-            onValueChange={(v) => setTestConfig(prev => ({ 
-              ...prev, 
-              timeout: v[0] 
-            }))}
+            onValueChange={(v) =>
+              setTestConfig((prev) => ({
+                ...prev,
+                timeout: v[0],
+              }))
+            }
             max={30}
             min={5}
             step={5}
@@ -168,27 +173,31 @@ const SpeedTestConfig = ({ testConfig, setTestConfig, filterConfig, setFilterCon
             </label>
             <Slider
               value={[filterConfig.minDownloadSpeed]}
-              onValueChange={(v) => setFilterConfig(prev => ({ 
-                ...prev, 
-                minDownloadSpeed: v[0] 
-              }))}
+              onValueChange={(v) =>
+                setFilterConfig((prev) => ({
+                  ...prev,
+                  minDownloadSpeed: v[0],
+                }))
+              }
               max={100}
               min={0}
               step={1}
               className="slider-dark"
             />
           </div>
-          
+
           <div>
             <label className="form-element-label">
               最低上传速度: {filterConfig.minUploadSpeed} MB/s
             </label>
             <Slider
               value={[filterConfig.minUploadSpeed]}
-              onValueChange={(v) => setFilterConfig(prev => ({ 
-                ...prev, 
-                minUploadSpeed: v[0] 
-              }))}
+              onValueChange={(v) =>
+                setFilterConfig((prev) => ({
+                  ...prev,
+                  minUploadSpeed: v[0],
+                }))
+              }
               max={50}
               min={0}
               step={1}
@@ -196,17 +205,17 @@ const SpeedTestConfig = ({ testConfig, setTestConfig, filterConfig, setFilterCon
             />
           </div>
         </div>
-        
+
         <div>
-          <label className="form-element-label">
-            最大延迟: {filterConfig.maxLatency} ms
-          </label>
+          <label className="form-element-label">最大延迟: {filterConfig.maxLatency} ms</label>
           <Slider
             value={[filterConfig.maxLatency]}
-            onValueChange={(v) => setFilterConfig(prev => ({ 
-              ...prev, 
-              maxLatency: v[0] 
-            }))}
+            onValueChange={(v) =>
+              setFilterConfig((prev) => ({
+                ...prev,
+                maxLatency: v[0],
+              }))
+            }
             max={5000}
             min={100}
             step={100}
@@ -219,10 +228,14 @@ const SpeedTestConfig = ({ testConfig, setTestConfig, filterConfig, setFilterCon
 )
 
 // 解锁检测配置组件
-const UnlockTestConfig = ({ testConfig, setTestConfig, hasSpeedConfig }: { 
-  testConfig: TestConfig; 
-  setTestConfig: React.Dispatch<React.SetStateAction<TestConfig>>;
-  hasSpeedConfig: boolean;
+const UnlockTestConfig = ({
+  testConfig,
+  setTestConfig,
+  hasSpeedConfig,
+}: {
+  testConfig: TestConfig
+  setTestConfig: React.Dispatch<React.SetStateAction<TestConfig>>
+  hasSpeedConfig: boolean
 }) => {
   const [availablePlatforms, setAvailablePlatforms] = useState<string[]>([])
   const [platformsLoading, setPlatformsLoading] = useState(false)
@@ -235,7 +248,7 @@ const UnlockTestConfig = ({ testConfig, setTestConfig, hasSpeedConfig }: {
       try {
         const response = await fetch(`${config.apiUrl}/api/unlock/platforms`)
         const data = await response.json()
-        
+
         if (data.success && data.data && data.data.platforms) {
           platforms = data.data.platforms
             .map((platform: any) => platform.display_name || platform.name)
@@ -262,7 +275,7 @@ const UnlockTestConfig = ({ testConfig, setTestConfig, hasSpeedConfig }: {
         <ClientIcon icon={Globe} className="h-5 w-5 text-lavender-400" />
         流媒体解锁检测
       </h4>
-      
+
       <div className="space-y-2">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -271,27 +284,31 @@ const UnlockTestConfig = ({ testConfig, setTestConfig, hasSpeedConfig }: {
             </label>
             <Slider
               value={[testConfig.unlockConcurrent]}
-              onValueChange={(v) => setTestConfig(prev => ({ 
-                ...prev, 
-                unlockConcurrent: v[0] 
-              }))}
+              onValueChange={(v) =>
+                setTestConfig((prev) => ({
+                  ...prev,
+                  unlockConcurrent: v[0],
+                }))
+              }
               max={10}
               min={1}
               step={1}
               className="slider-dark"
             />
           </div>
-          
+
           <div>
             <label className="form-element-label">
               解锁检测超时: {testConfig.unlockTimeout} 秒
             </label>
             <Slider
               value={[testConfig.unlockTimeout]}
-              onValueChange={(v) => setTestConfig(prev => ({ 
-                ...prev, 
-                unlockTimeout: v[0] 
-              }))}
+              onValueChange={(v) =>
+                setTestConfig((prev) => ({
+                  ...prev,
+                  unlockTimeout: v[0],
+                }))
+              }
               max={30}
               min={5}
               step={5}
@@ -300,10 +317,11 @@ const UnlockTestConfig = ({ testConfig, setTestConfig, hasSpeedConfig }: {
           </div>
         </div>
       </div>
-      
+
       <div className="form-element">
         <label className="form-element-label">
-          检测平台 {platformsLoading && <span className="text-xs text-lavender-400">(加载中...)</span>}
+          检测平台{" "}
+          {platformsLoading && <span className="text-xs text-lavender-400">(加载中...)</span>}
         </label>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 component-gap">
           {availablePlatforms.map((platform) => (
@@ -311,11 +329,11 @@ const UnlockTestConfig = ({ testConfig, setTestConfig, hasSpeedConfig }: {
               <Checkbox
                 checked={testConfig.unlockPlatforms.includes(platform)}
                 onCheckedChange={(checked) => {
-                  setTestConfig(prev => ({
+                  setTestConfig((prev) => ({
                     ...prev,
                     unlockPlatforms: checked
                       ? [...prev.unlockPlatforms, platform]
-                      : prev.unlockPlatforms.filter(p => p !== platform)
+                      : prev.unlockPlatforms.filter((p) => p !== platform),
                   }))
                 }}
                 className="checkbox-dark"
@@ -325,9 +343,7 @@ const UnlockTestConfig = ({ testConfig, setTestConfig, hasSpeedConfig }: {
           ))}
         </div>
         {availablePlatforms.length === 0 && !platformsLoading && (
-          <div className="text-center text-lavender-400 py-4">
-            无可用的解锁检测平台
-          </div>
+          <div className="text-center text-lavender-400 py-4">无可用的解锁检测平台</div>
         )}
       </div>
     </div>
@@ -342,7 +358,7 @@ export default function SpeedTestPro() {
   const [testing, setTesting] = useState(false)
   const [taskId, setTaskId] = useState<string | null>(null)
   const [tunModeEnabled, setTunModeEnabled] = useState(false)
-  
+
   const [filterConfig, setFilterConfig] = useState<FilterConfig>({
     includeNodes: [],
     excludeNodes: [],
@@ -352,7 +368,7 @@ export default function SpeedTestPro() {
     maxLatency: 3000,
     stashCompatible: false,
   })
-  
+
   const [testConfig, setTestConfig] = useState<TestConfig>({
     configPaths: "",
     serverUrl: "https://speed.cloudflare.com",
@@ -367,15 +383,15 @@ export default function SpeedTestPro() {
     unlockTimeout: 10,
     unlockRetry: true,
   })
-  
+
   const [includeNodesInput, setIncludeNodesInput] = useState("")
   const [excludeNodesInput, setExcludeNodesInput] = useState("")
   const [availableProtocols, setAvailableProtocols] = useState<string[]>([])
-  
+
   // 新增：历史记录相关状态
   const [showHistory, setShowHistory] = useState(false)
   const { saveTestSession } = useTestResultSaver()
-  
+
   const wsUrl = `${config.wsUrl}/ws`
   const {
     isConnected,
@@ -388,65 +404,72 @@ export default function SpeedTestPro() {
     testCancelledData,
     testStartData,
     clearData,
-    setTestProgress
+    setTestProgress,
   } = useWebSocket(wsUrl)
-  
+
   useEffect(() => {
     const initializeConfig = async () => {
       // 首先尝试从localStorage加载配置
       const savedConfig = localStorage.getItem("clash-speedtest-config")
       let hasStoredUnlockPlatforms = false
-      
+
       if (savedConfig) {
         try {
           const parsed = JSON.parse(savedConfig)
           if (parsed.configUrl) setConfigUrl(parsed.configUrl)
           if (parsed.filterConfig) {
-            setFilterConfig(prev => ({
+            setFilterConfig((prev) => ({
               ...prev,
               ...parsed.filterConfig,
-              protocolFilter: prev.protocolFilter
+              protocolFilter: prev.protocolFilter,
             }))
-            handleIncludeNodesChange(parsed.filterConfig.includeNodes?.join(', ') || '')
-            handleExcludeNodesChange(parsed.filterConfig.excludeNodes?.join(', ') || '')
+            handleIncludeNodesChange(parsed.filterConfig.includeNodes?.join(", ") || "")
+            handleExcludeNodesChange(parsed.filterConfig.excludeNodes?.join(", ") || "")
           }
           if (parsed.testConfig) {
-            setTestConfig(prev => ({ ...prev, ...parsed.testConfig }))
+            setTestConfig((prev) => ({ ...prev, ...parsed.testConfig }))
             // 检查是否有保存的解锁平台配置
-            hasStoredUnlockPlatforms = parsed.testConfig.unlockPlatforms && 
-                                      parsed.testConfig.unlockPlatforms.length > 0
+            hasStoredUnlockPlatforms =
+              parsed.testConfig.unlockPlatforms && parsed.testConfig.unlockPlatforms.length > 0
           }
         } catch (error) {
           console.error("Failed to load saved config:", error)
         }
       }
-      
+
       // 只有在没有保存的解锁平台配置时，才初始化默认的解锁平台
       if (!hasStoredUnlockPlatforms) {
         try {
           const response = await fetch(`${config.apiUrl}/api/unlock/platforms`)
           const data = await response.json()
-          
+
           if (data.success && data.data && data.data.platforms) {
             // 选择前6个平台作为默认选中的平台（按首字母排序后选择）
             const sortedPlatforms = data.data.platforms
               .map((platform: any) => platform.display_name || platform.name)
               .sort((a: string, b: string) => a.localeCompare(b))
-            
+
             const defaultPlatforms = sortedPlatforms.slice(0, 6)
-            
-            setTestConfig(prev => ({
+
+            setTestConfig((prev) => ({
               ...prev,
-              unlockPlatforms: defaultPlatforms
+              unlockPlatforms: defaultPlatforms,
             }))
           }
         } catch (error) {
           console.error("Error initializing unlock platforms:", error)
           // 使用硬编码的默认值作为fallback
-          const fallbackPlatforms = ["Netflix", "YouTube", "Disney+", "ChatGPT", "Spotify", "Bilibili"]
-          setTestConfig(prev => ({
+          const fallbackPlatforms = [
+            "Netflix",
+            "YouTube",
+            "Disney+",
+            "ChatGPT",
+            "Spotify",
+            "Bilibili",
+          ]
+          setTestConfig((prev) => ({
             ...prev,
-            unlockPlatforms: fallbackPlatforms.sort((a, b) => a.localeCompare(b))
+            unlockPlatforms: fallbackPlatforms.sort((a, b) => a.localeCompare(b)),
           }))
         }
       }
@@ -454,21 +477,24 @@ export default function SpeedTestPro() {
 
     initializeConfig()
   }, [])
-  
+
   useEffect(() => {
     const { protocolFilter, ...filterConfigToSave } = filterConfig
-    localStorage.setItem("clash-speedtest-config", JSON.stringify({
-      configUrl,
-      filterConfig: filterConfigToSave,
-      testConfig
-    }))
+    localStorage.setItem(
+      "clash-speedtest-config",
+      JSON.stringify({
+        configUrl,
+        filterConfig: filterConfigToSave,
+        testConfig,
+      })
+    )
   }, [configUrl, filterConfig, testConfig])
-  
+
   useEffect(() => {
     connect()
     return () => disconnect()
   }, [connect, disconnect])
-  
+
   useEffect(() => {
     if (testCompleteData && testing) {
       setTesting(false)
@@ -478,13 +504,13 @@ export default function SpeedTestPro() {
       )
     }
   }, [testCompleteData, testing])
-  
+
   // 监听testMode变化，清理旧的测试数据
   useEffect(() => {
     // 只在测试模式改变时清理数据，不要在测试完成时清理
     clearData()
   }, [testConfig.testMode, clearData])
-  
+
   useEffect(() => {
     if (testCancelledData && testing) {
       setTesting(false)
@@ -494,36 +520,33 @@ export default function SpeedTestPro() {
       )
     }
   }, [testCancelledData, testing])
-  
+
   // 新增：自动保存测试完成结果
   useEffect(() => {
     if (testCompleteData && testStartData && testResults.length > 0) {
       // 根据testConfig.testMode确定测试类型
-      const testType: 'speed' | 'unlock' | 'both' = 
-        testConfig.testMode === 'speed_only' ? 'speed' :
-        testConfig.testMode === 'unlock_only' ? 'unlock' : 
-        'both'
-      
+      const testType: "speed" | "unlock" | "both" =
+        testConfig.testMode === "speed_only"
+          ? "speed"
+          : testConfig.testMode === "unlock_only"
+            ? "unlock"
+            : "both"
+
       // 异步保存，不阻塞UI
-      saveTestSession(
-        testStartData,
-        testResults,
-        testCompleteData,
-        testType
-      ).catch(console.error)
+      saveTestSession(testStartData, testResults, testCompleteData, testType).catch(console.error)
     }
   }, [testCompleteData, testStartData, testResults, saveTestSession, testConfig.testMode])
-  
+
   const fetchConfig = async () => {
     if (!configUrl.trim()) {
       toast.error("请输入配置文件路径或订阅链接")
       return
     }
-    
+
     setLoading(true)
     setNodes([])
     setFilteredNodes([])
-    
+
     try {
       const response = await fetch(`${config.apiUrl}/api/nodes`, {
         method: "POST",
@@ -533,33 +556,35 @@ export default function SpeedTestPro() {
           stashCompatible: filterConfig.stashCompatible,
         }),
       })
-      
+
       const data = await response.json()
-      
+
       if (data.success && data.nodes) {
         setNodes(data.nodes)
-        
+
         const protocols = [...new Set(data.nodes.map((n: NodeInfo) => n.type))]
         setAvailableProtocols(protocols as string[])
-        
+
         // 更新过滤配置
         const newFilterConfig = {
           ...filterConfig,
-          protocolFilter: protocols as string[]
+          protocolFilter: protocols as string[],
         }
         setFilterConfig(newFilterConfig)
-        
+
         // 使用新的过滤配置来应用过滤和计算统计
         const filtered = applyFiltersWithConfig(data.nodes, newFilterConfig)
         setFilteredNodes(filtered)
-        
+
         const filteredCount = filtered.length
-        const hasFilters = newFilterConfig.includeNodes.length > 0 || 
-                          newFilterConfig.excludeNodes.length > 0
-        
+        const hasFilters =
+          newFilterConfig.includeNodes.length > 0 || newFilterConfig.excludeNodes.length > 0
+
         if (hasFilters && filteredCount < data.nodes.length) {
           const filteredOutCount = data.nodes.length - filteredCount
-          toast.success(`成功加载 ${data.nodes.length} 个节点，已过滤 ${filteredOutCount} 个节点，符合条件 ${filteredCount} 个节点`)
+          toast.success(
+            `成功加载 ${data.nodes.length} 个节点，已过滤 ${filteredOutCount} 个节点，符合条件 ${filteredCount} 个节点`
+          )
         } else {
           toast.success(`成功加载 ${data.nodes.length} 个节点`)
         }
@@ -572,7 +597,7 @@ export default function SpeedTestPro() {
       setLoading(false)
     }
   }
-  
+
   const applyFilters = (nodesToFilter: NodeInfo[] = nodes) => {
     const filtered = applyFiltersWithConfig(nodesToFilter, filterConfig)
     setFilteredNodes(filtered)
@@ -580,79 +605,78 @@ export default function SpeedTestPro() {
 
   const applyFiltersWithConfig = (nodesToFilter: NodeInfo[], config: FilterConfig) => {
     let filtered = [...nodesToFilter]
-    
+
     if (config.includeNodes.length > 0) {
-      filtered = filtered.filter(node =>
-        config.includeNodes.some(include =>
+      filtered = filtered.filter((node) =>
+        config.includeNodes.some((include) =>
           node.name.toLowerCase().includes(include.toLowerCase())
         )
       )
     }
-    
+
     if (config.excludeNodes.length > 0) {
-      filtered = filtered.filter(node =>
-        !config.excludeNodes.some(exclude =>
-          node.name.toLowerCase().includes(exclude.toLowerCase())
-        )
+      filtered = filtered.filter(
+        (node) =>
+          !config.excludeNodes.some((exclude) =>
+            node.name.toLowerCase().includes(exclude.toLowerCase())
+          )
       )
     }
-    
-    filtered = filtered.filter(node =>
-      config.protocolFilter.includes(node.type)
-    )
-    
+
+    filtered = filtered.filter((node) => config.protocolFilter.includes(node.type))
+
     return filtered
   }
-  
+
   useEffect(() => {
     if (nodes.length > 0) {
       applyFilters()
     }
   }, [filterConfig, nodes])
-  
+
   const startTest = async () => {
     if (!isConnected) {
       toast.error("WebSocket未连接，正在尝试重新连接...")
       connect()
       return
     }
-    
+
     if (filteredNodes.length === 0) {
       toast.error("没有符合条件的节点可以测试")
       return
     }
-    
+
     // 检查TUN模式状态
     if (tunModeEnabled) {
       toast.warning("检测到 TUN 模式已启用", {
         description: "建议先关闭 TUN 模式以获得更准确的测试结果",
         duration: 5000,
       })
-      
+
       // 可以选择是否继续测试
       const confirmed = window.confirm(
         "检测到系统已启用 TUN 模式，这可能影响测试结果的准确性。\n\n是否仍要继续测试？"
       )
-      
+
       if (!confirmed) {
         return
       }
     }
-    
+
     setTesting(true)
     clearData()
-    
+
     const initialProgress: TestProgressData = {
       current_proxy: "",
       completed_count: 0,
       total_count: filteredNodes.length,
       progress_percent: 0,
       status: "starting",
-      current_stage: testConfig.testMode === "unlock_only" ? "unlock_test" : "speed_test"
+      current_stage: testConfig.testMode === "unlock_only" ? "unlock_test" : "speed_test",
     }
-    
+
     setTestProgress(initialProgress)
-    
+
     try {
       const getFilteredParams = () => {
         const baseParams = {
@@ -663,7 +687,7 @@ export default function SpeedTestPro() {
           ...filterConfig,
           filterRegex: ".+",
         }
-        
+
         switch (testConfig.testMode) {
           case "speed_only":
             return {
@@ -696,15 +720,15 @@ export default function SpeedTestPro() {
             }
         }
       }
-      
+
       const response = await fetch(`${config.apiUrl}/api/test/async`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(getFilteredParams()),
       })
-      
+
       const data = await response.json()
-      
+
       if (data.success && data.data && data.data.taskId) {
         setTaskId(data.data.taskId)
         toast.success(`测试任务已创建，任务ID: ${data.data.taskId}`)
@@ -717,41 +741,51 @@ export default function SpeedTestPro() {
       setTesting(false)
     }
   }
-  
+
   const stopTest = () => {
     if (isConnected && taskId) {
       sendMessage({
-        type: 'stop_test',
+        type: "stop_test",
         taskId: taskId,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       })
     }
     setTesting(false)
     toast.info("正在停止测试...")
   }
-  
+
   const handleIncludeNodesChange = (value: string) => {
     setIncludeNodesInput(value)
-    const nodes = value.split(/[,，]/).map(s => s.trim()).filter(s => s.length > 0)
-    setFilterConfig(prev => ({ ...prev, includeNodes: nodes }))
+    const nodes = value
+      .split(/[,，]/)
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0)
+    setFilterConfig((prev) => ({ ...prev, includeNodes: nodes }))
   }
-  
+
   const handleExcludeNodesChange = (value: string) => {
     setExcludeNodesInput(value)
-    const nodes = value.split(/[,，]/).map(s => s.trim()).filter(s => s.length > 0)
-    setFilterConfig(prev => ({ ...prev, excludeNodes: nodes }))
+    const nodes = value
+      .split(/[,，]/)
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0)
+    setFilterConfig((prev) => ({ ...prev, excludeNodes: nodes }))
   }
-  
+
   const isProtocolSelected = (protocol: string) => {
     return filterConfig.protocolFilter.includes(protocol)
   }
 
   // 导出功能
   const generateFileName = (format: string) => {
-    const testType = testConfig.testMode === 'both' ? '速度+解锁测试' : 
-                     testConfig.testMode === 'speed_only' ? '速度测试' : '解锁测试'
-    const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-')
-    const testId = taskId || 'unknown'
+    const testType =
+      testConfig.testMode === "both"
+        ? "速度+解锁测试"
+        : testConfig.testMode === "speed_only"
+          ? "速度测试"
+          : "解锁测试"
+    const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, "-")
+    const testId = taskId || "unknown"
     return `${testType}_${timestamp}_${testId}.${format}`
   }
 
@@ -762,11 +796,16 @@ export default function SpeedTestPro() {
     }
 
     let markdown = `# Clash SpeedTest 测试结果\n\n`
-    markdown += `**测试时间**: ${new Date().toLocaleString('zh-CN')}\n`
-    markdown += `**测试模式**: ${testConfig.testMode === 'both' ? '速度+解锁测试' : 
-                                testConfig.testMode === 'speed_only' ? '速度测试' : '解锁测试'}\n`
-    markdown += `**配置来源**: ${configUrl || testConfig.configPaths || 'N/A'}\n`
-    
+    markdown += `**测试时间**: ${new Date().toLocaleString("zh-CN")}\n`
+    markdown += `**测试模式**: ${
+      testConfig.testMode === "both"
+        ? "速度+解锁测试"
+        : testConfig.testMode === "speed_only"
+          ? "速度测试"
+          : "解锁测试"
+    }\n`
+    markdown += `**配置来源**: ${configUrl || testConfig.configPaths || "N/A"}\n`
+
     if (testCompleteData) {
       markdown += `**测试统计**: 总计 ${testCompleteData.total_tested} 个节点，成功 ${testCompleteData.successful_tests} 个，失败 ${testCompleteData.failed_tests} 个\n`
       markdown += `**测试耗时**: ${testCompleteData.total_duration}\n`
@@ -780,58 +819,59 @@ export default function SpeedTestPro() {
         markdown += `**平均上传速度**: ${testCompleteData.average_upload_mbps.toFixed(2)} Mbps\n`
       }
     }
-    
+
     markdown += `\n## 详细测试结果\n\n`
 
     // 根据测试模式生成不同的表格
-    if (testConfig.testMode === 'speed_only' || testConfig.testMode === 'both') {
+    if (testConfig.testMode === "speed_only" || testConfig.testMode === "both") {
       markdown += `| 节点名称 | 类型 | IP地址 | 延迟(ms) | 抖动(ms) | 丢包率(%) | 下载(Mbps) | 上传(Mbps) | 状态 |\n`
       markdown += `|----------|------|--------|----------|----------|-----------|------------|------------|------|\n`
-      
-      testResults.forEach(result => {
-        const ip = result.proxy_ip || 'N/A'
-        const latency = result.latency_ms > 0 ? result.latency_ms.toFixed(2) : 'N/A'
-        const jitter = result.jitter_ms > 0 ? result.jitter_ms.toFixed(2) : 'N/A'
-        const loss = result.packet_loss > 0 ? result.packet_loss.toFixed(2) : '0'
-        const download = result.download_speed_mbps > 0 ? result.download_speed_mbps.toFixed(2) : 'N/A'
-        const upload = result.upload_speed_mbps > 0 ? result.upload_speed_mbps.toFixed(2) : 'N/A'
-        
+
+      testResults.forEach((result) => {
+        const ip = result.proxy_ip || "N/A"
+        const latency = result.latency_ms > 0 ? result.latency_ms.toFixed(2) : "N/A"
+        const jitter = result.jitter_ms > 0 ? result.jitter_ms.toFixed(2) : "N/A"
+        const loss = result.packet_loss > 0 ? result.packet_loss.toFixed(2) : "0"
+        const download =
+          result.download_speed_mbps > 0 ? result.download_speed_mbps.toFixed(2) : "N/A"
+        const upload = result.upload_speed_mbps > 0 ? result.upload_speed_mbps.toFixed(2) : "N/A"
+
         markdown += `| ${result.proxy_name} | ${result.proxy_type} | ${ip} | ${latency} | ${jitter} | ${loss} | ${download} | ${upload} | ${result.status} |\n`
       })
     }
 
-    if (testConfig.testMode === 'unlock_only' || testConfig.testMode === 'both') {
-      if (testConfig.testMode === 'both') {
+    if (testConfig.testMode === "unlock_only" || testConfig.testMode === "both") {
+      if (testConfig.testMode === "both") {
         markdown += `\n## 解锁测试结果\n\n`
       }
-      
+
       markdown += `| 节点名称 | 类型 | IP地址 | 解锁平台 | 状态 |\n`
       markdown += `|----------|------|--------|----------|------|\n`
-      
-      testResults.forEach(result => {
+
+      testResults.forEach((result) => {
         if (result.unlock_results && result.unlock_results.length > 0) {
-          const ip = result.proxy_ip || 'N/A'
-          result.unlock_results.forEach(unlock => {
-            const status = unlock.supported ? `✅ ${unlock.region || '支持'}` : '❌ 不支持'
+          const ip = result.proxy_ip || "N/A"
+          result.unlock_results.forEach((unlock) => {
+            const status = unlock.supported ? `✅ ${unlock.region || "支持"}` : "❌ 不支持"
             markdown += `| ${result.proxy_name} | ${result.proxy_type} | ${ip} | ${unlock.platform} | ${status} |\n`
           })
         } else {
-          const ip = result.proxy_ip || 'N/A'
+          const ip = result.proxy_ip || "N/A"
           markdown += `| ${result.proxy_name} | ${result.proxy_type} | ${ip} | 无数据 | ❌ 测试失败 |\n`
         }
       })
     }
 
-    const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8' })
+    const blob = new Blob([markdown], { type: "text/markdown;charset=utf-8" })
     const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
+    const link = document.createElement("a")
     link.href = url
-    link.download = generateFileName('md')
+    link.download = generateFileName("md")
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
     URL.revokeObjectURL(url)
-    
+
     toast.success("Markdown 文件已导出")
   }
 
@@ -841,15 +881,20 @@ export default function SpeedTestPro() {
       return
     }
 
-    let csvContent = ''
-    
+    let csvContent = ""
+
     // 添加配置信息头部
     csvContent += `# Clash SpeedTest 测试结果\n`
-    csvContent += `# 测试时间: ${new Date().toLocaleString('zh-CN')}\n`
-    csvContent += `# 测试模式: ${testConfig.testMode === 'both' ? '速度+解锁测试' : 
-                                testConfig.testMode === 'speed_only' ? '速度测试' : '解锁测试'}\n`
-    csvContent += `# 配置来源: ${configUrl || testConfig.configPaths || 'N/A'}\n`
-    
+    csvContent += `# 测试时间: ${new Date().toLocaleString("zh-CN")}\n`
+    csvContent += `# 测试模式: ${
+      testConfig.testMode === "both"
+        ? "速度+解锁测试"
+        : testConfig.testMode === "speed_only"
+          ? "速度测试"
+          : "解锁测试"
+    }\n`
+    csvContent += `# 配置来源: ${configUrl || testConfig.configPaths || "N/A"}\n`
+
     if (testCompleteData) {
       csvContent += `# 测试统计: 总计 ${testCompleteData.total_tested} 个节点，成功 ${testCompleteData.successful_tests} 个，失败 ${testCompleteData.failed_tests} 个\n`
       csvContent += `# 测试耗时: ${testCompleteData.total_duration}\n`
@@ -864,78 +909,80 @@ export default function SpeedTestPro() {
       }
     }
     csvContent += `\n`
-    
+
     // 根据测试模式生成不同的CSV
-    if (testConfig.testMode === 'speed_only' || testConfig.testMode === 'both') {
-      csvContent += '节点名称,节点类型,IP地址,延迟(ms),抖动(ms),丢包率(%),下载速度(Mbps),上传速度(Mbps),状态\n'
-      
-      testResults.forEach(result => {
-        const ip = result.proxy_ip || 'N/A'
-        const latency = result.latency_ms > 0 ? result.latency_ms.toFixed(2) : 'N/A'
-        const jitter = result.jitter_ms > 0 ? result.jitter_ms.toFixed(2) : 'N/A'
-        const loss = result.packet_loss > 0 ? result.packet_loss.toFixed(2) : '0'
-        const download = result.download_speed_mbps > 0 ? result.download_speed_mbps.toFixed(2) : 'N/A'
-        const upload = result.upload_speed_mbps > 0 ? result.upload_speed_mbps.toFixed(2) : 'N/A'
-        
+    if (testConfig.testMode === "speed_only" || testConfig.testMode === "both") {
+      csvContent +=
+        "节点名称,节点类型,IP地址,延迟(ms),抖动(ms),丢包率(%),下载速度(Mbps),上传速度(Mbps),状态\n"
+
+      testResults.forEach((result) => {
+        const ip = result.proxy_ip || "N/A"
+        const latency = result.latency_ms > 0 ? result.latency_ms.toFixed(2) : "N/A"
+        const jitter = result.jitter_ms > 0 ? result.jitter_ms.toFixed(2) : "N/A"
+        const loss = result.packet_loss > 0 ? result.packet_loss.toFixed(2) : "0"
+        const download =
+          result.download_speed_mbps > 0 ? result.download_speed_mbps.toFixed(2) : "N/A"
+        const upload = result.upload_speed_mbps > 0 ? result.upload_speed_mbps.toFixed(2) : "N/A"
+
         csvContent += `"${result.proxy_name}","${result.proxy_type}","${ip}",${latency},${jitter},${loss},${download},${upload},"${result.status}"\n`
       })
     }
 
-    if (testConfig.testMode === 'unlock_only' || testConfig.testMode === 'both') {
-      if (testConfig.testMode === 'both') {
-        csvContent += '\n解锁测试结果\n'
+    if (testConfig.testMode === "unlock_only" || testConfig.testMode === "both") {
+      if (testConfig.testMode === "both") {
+        csvContent += "\n解锁测试结果\n"
       }
-      
-      csvContent += '节点名称,节点类型,IP地址,解锁平台,支持状态,区域\n'
-      
-      testResults.forEach(result => {
+
+      csvContent += "节点名称,节点类型,IP地址,解锁平台,支持状态,区域\n"
+
+      testResults.forEach((result) => {
         if (result.unlock_results && result.unlock_results.length > 0) {
-          const ip = result.proxy_ip || 'N/A'
-          result.unlock_results.forEach(unlock => {
-            const status = unlock.supported ? '支持' : '不支持'
-            const region = unlock.region || ''
+          const ip = result.proxy_ip || "N/A"
+          result.unlock_results.forEach((unlock) => {
+            const status = unlock.supported ? "支持" : "不支持"
+            const region = unlock.region || ""
             csvContent += `"${result.proxy_name}","${result.proxy_type}","${ip}","${unlock.platform}","${status}","${region}"\n`
           })
         } else {
-          const ip = result.proxy_ip || 'N/A'
+          const ip = result.proxy_ip || "N/A"
           csvContent += `"${result.proxy_name}","${result.proxy_type}","${ip}","无数据","测试失败",""\n`
         }
       })
     }
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' })
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8" })
     const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
+    const link = document.createElement("a")
     link.href = url
-    link.download = generateFileName('csv')
+    link.download = generateFileName("csv")
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
     URL.revokeObjectURL(url)
-    
+
     toast.success("CSV 文件已导出")
   }
 
   const handleProtocolFilterChange = (protocol: string, checked: boolean) => {
-    console.log(protocol, checked);
-    setFilterConfig(prev => {
+    console.log(protocol, checked)
+    setFilterConfig((prev) => {
       let newProtocolFilter: string[]
-      
+
       if (checked) {
         newProtocolFilter = [...prev.protocolFilter, protocol]
       } else {
-        newProtocolFilter = prev.protocolFilter.filter(p => p !== protocol)
+        newProtocolFilter = prev.protocolFilter.filter((p) => p !== protocol)
       }
-      
-      console.log('protocolFilter changed from', prev.protocolFilter, 'to', newProtocolFilter);
-      
+
+      console.log("protocolFilter changed from", prev.protocolFilter, "to", newProtocolFilter)
+
       return {
         ...prev,
-        protocolFilter: newProtocolFilter
+        protocolFilter: newProtocolFilter,
       }
     })
   }
-  
+
   return (
     <div className="min-h-screen bg-gradient-dark">
       <div className="max-w-7xl mx-auto p-6 space-y-6">
@@ -947,23 +994,17 @@ export default function SpeedTestPro() {
             </h1>
             <p className="text-lavender-400">专业的代理节点性能测试工具</p>
           </div>
-          
+
           {/* 新增：历史记录按钮 */}
-          <Button 
-            onClick={() => setShowHistory(true)}
-            className="btn-outlined"
-          >
+          <Button onClick={() => setShowHistory(true)} className="btn-outlined">
             <ClientIcon icon={History} className="h-4 w-4 mr-2" />
             历史记录
           </Button>
         </div>
-        
+
         {/* TUN 模式检测警告 */}
-        <TUNWarning 
-          onTUNStatusChange={setTunModeEnabled}
-          showDetails={false}
-        />
-        
+        <TUNWarning onTUNStatusChange={setTunModeEnabled} showDetails={false} />
+
         {/* 配置获取 */}
         <Card className="card-elevated">
           <div className="flex items-center gap-2 form-element">
@@ -983,7 +1024,7 @@ export default function SpeedTestPro() {
               )}
             </div>
           </div>
-          
+
           <div className="flex component-gap">
             <Input
               placeholder="输入配置文件路径或订阅链接..."
@@ -1010,19 +1051,13 @@ export default function SpeedTestPro() {
               )}
             </Button>
           </div>
-          
+
           {nodes.length > 0 && (
             <div className="flex items-center component-gap">
-              <span className="badge-standard">
-                总节点数: {nodes.length}
-              </span>
-              <span className="badge-standard">
-                符合条件: {filteredNodes.length}
-              </span>
+              <span className="badge-standard">总节点数: {nodes.length}</span>
+              <span className="badge-standard">符合条件: {filteredNodes.length}</span>
               {testing && (
-                <span className="badge-standard bg-lavender-600 text-lavender-50">
-                  测试中...
-                </span>
+                <span className="badge-standard bg-lavender-600 text-lavender-50">测试中...</span>
               )}
             </div>
           )}
@@ -1037,13 +1072,11 @@ export default function SpeedTestPro() {
                 <ClientIcon icon={Filter} className="h-4 w-4 text-lavender-400" />
                 过滤条件
               </h4>
-            
+
               <div className="space-y-2">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="form-element-label">
-                      包含节点 (逗号分隔)
-                    </label>
+                    <label className="form-element-label">包含节点 (逗号分隔)</label>
                     <Input
                       placeholder="例如: 香港, HK, 新加坡..."
                       value={includeNodesInput}
@@ -1051,11 +1084,9 @@ export default function SpeedTestPro() {
                       className="input-outlined"
                     />
                   </div>
-                  
+
                   <div>
-                    <label className="form-element-label">
-                      排除节点 (逗号分隔)
-                    </label>
+                    <label className="form-element-label">排除节点 (逗号分隔)</label>
                     <Input
                       placeholder="例如: 过期, 测试, 备用..."
                       value={excludeNodesInput}
@@ -1064,26 +1095,24 @@ export default function SpeedTestPro() {
                     />
                   </div>
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {availableProtocols.length > 0 && (
                     <div>
-                      <label className="form-element-label">
-                        协议过滤
-                      </label>
+                      <label className="form-element-label">协议过滤</label>
                       <div className="grid grid-cols-1 sm:grid-cols-2 component-gap">
                         {availableProtocols.map((protocol) => (
                           <div key={protocol} className="flex items-center gap-2 min-w-0">
                             <Checkbox
                               id={`protocol-${protocol}`}
                               checked={isProtocolSelected(protocol)}
-                              onCheckedChange={(checked: boolean) => 
+                              onCheckedChange={(checked: boolean) =>
                                 handleProtocolFilterChange(protocol, checked)
                               }
                               className="checkbox-dark"
                             />
-                            <label 
-                              htmlFor={`protocol-${protocol}`} 
+                            <label
+                              htmlFor={`protocol-${protocol}`}
                               className="text-sm text-lavender-100 cursor-pointer truncate"
                             >
                               {protocol}
@@ -1093,19 +1122,19 @@ export default function SpeedTestPro() {
                       </div>
                     </div>
                   )}
-                  
+
                   <div>
-                    <label className="form-element-label">
-                      其他选项
-                    </label>
+                    <label className="form-element-label">其他选项</label>
                     <div className="flex items-center gap-2">
                       <Switch
                         id="stashCompatible"
                         checked={filterConfig.stashCompatible}
-                        onCheckedChange={(checked) => setFilterConfig(prev => ({ 
-                          ...prev, 
-                          stashCompatible: checked 
-                        }))}
+                        onCheckedChange={(checked) =>
+                          setFilterConfig((prev) => ({
+                            ...prev,
+                            stashCompatible: checked,
+                          }))
+                        }
                         className="switch-dark"
                       />
                       <label htmlFor="stashCompatible" className="text-lavender-100">
@@ -1121,7 +1150,7 @@ export default function SpeedTestPro() {
               <div className="flex items-center justify-between form-element">
                 <h2 className="text-lg font-semibold text-lavender-50 flex items-center gap-2">
                   <ClientIcon icon={ServerCog} className="h-5 w-5 text-lavender-400" />
-                  节点列表 {testing ? '(测试中)' : '(预览)'}
+                  节点列表 {testing ? "(测试中)" : "(预览)"}
                 </h2>
                 <Button
                   onClick={() => applyFilters()}
@@ -1134,10 +1163,12 @@ export default function SpeedTestPro() {
                   刷新过滤
                 </Button>
               </div>
-              
+
               <div className="table-container scrollbar-modern">
                 <Table className="table-modern">
-                  <TableHeader style={{position: 'sticky', top: 0, zIndex: 10, backdropFilter: 'blur(8px)'}}>
+                  <TableHeader
+                    style={{ position: "sticky", top: 0, zIndex: 10, backdropFilter: "blur(8px)" }}
+                  >
                     <TableRow>
                       <TableHead>名称</TableHead>
                       <TableHead>协议</TableHead>
@@ -1162,9 +1193,7 @@ export default function SpeedTestPro() {
                           <TableCell className="text-lavender-300 font-mono text-sm">
                             {node.server}
                           </TableCell>
-                          <TableCell className="text-lavender-300">
-                            {node.port}
-                          </TableCell>
+                          <TableCell className="text-lavender-300">{node.port}</TableCell>
                         </TableRow>
                       ))
                     ) : (
@@ -1190,7 +1219,9 @@ export default function SpeedTestPro() {
                 testMode={testConfig.testMode}
                 onExportMarkdown={exportToMarkdown}
                 onExportCSV={exportToCSV}
-                showExportButtons={Boolean((testCompleteData || testCancelledData) && testResults.length > 0)}
+                showExportButtons={Boolean(
+                  (testCompleteData || testCancelledData) && testResults.length > 0
+                )}
               />
             )}
           </div>
@@ -1203,18 +1234,18 @@ export default function SpeedTestPro() {
                 <ClientIcon icon={Filter} className="h-5 w-5 text-lavender-400" />
                 <h2 className="text-lg font-semibold text-lavender-50">测试配置</h2>
               </div>
-              
+
               {/* 测试模式选择器 */}
               <div className="space-y-2">
-                <label className="form-element-label">
-                  测试模式
-                </label>
+                <label className="form-element-label">测试模式</label>
                 <Select
                   value={testConfig.testMode}
-                  onValueChange={(value) => setTestConfig(prev => ({ 
-                    ...prev, 
-                    testMode: value 
-                  }))}
+                  onValueChange={(value) =>
+                    setTestConfig((prev) => ({
+                      ...prev,
+                      testMode: value,
+                    }))
+                  }
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue />
@@ -1261,18 +1292,18 @@ export default function SpeedTestPro() {
               <Card className="card-elevated mt-4">
                 {/* 速度测试配置 - 条件显示 */}
                 {(testConfig.testMode === "both" || testConfig.testMode === "speed_only") && (
-                  <SpeedTestConfig 
-                    testConfig={testConfig} 
+                  <SpeedTestConfig
+                    testConfig={testConfig}
                     setTestConfig={setTestConfig}
                     filterConfig={filterConfig}
                     setFilterConfig={setFilterConfig}
                   />
                 )}
-                
+
                 {/* 解锁检测配置 - 条件显示 */}
                 {(testConfig.testMode === "both" || testConfig.testMode === "unlock_only") && (
-                  <UnlockTestConfig 
-                    testConfig={testConfig} 
+                  <UnlockTestConfig
+                    testConfig={testConfig}
                     setTestConfig={setTestConfig}
                     hasSpeedConfig={testConfig.testMode === "both"}
                   />
@@ -1282,11 +1313,9 @@ export default function SpeedTestPro() {
           </div>
         </div>
       </div>
-      
+
       {/* 新增：历史记录模态框 */}
-      {showHistory && (
-        <TestHistoryModal onClose={() => setShowHistory(false)} />
-      )}
+      {showHistory && <TestHistoryModal onClose={() => setShowHistory(false)} />}
     </div>
   )
 }

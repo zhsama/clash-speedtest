@@ -1268,7 +1268,7 @@ export default function SpeedTestPro() {
                 onClick={testing ? stopTest : startTest}
                 disabled={!isConnected || nodes.length === 0 || loading}
                 size="lg"
-                className={`w-full ${testing ? "bg-destructive hover:bg-destructive/90 text-destructive-foreground" : "btn-filled"}`}
+                className={`w-full ${testing ? "bg-red-500 hover:bg-red-600 text-white font-medium transition-colors duration-200" : "btn-filled"}`}
               >
                 {testing ? (
                   <>

@@ -10,7 +10,7 @@
     /* ========================================================================
        Material 3 色彩系统 - 薰衣草紫主题
        ======================================================================== */
-    
+
     /* Primary - 薰衣草紫主色调 */
     --md-primary-10: 280 35% 8%;
     --md-primary-20: 280 35% 16%;
@@ -23,7 +23,7 @@
     --md-primary-90: 280 20% 80%;
     --md-primary-95: 280 25% 90%;
     --md-primary-99: 280 30% 98%;
-    
+
     /* Secondary - 青绿辅助色 */
     --md-secondary-10: 160 35% 8%;
     --md-secondary-20: 160 35% 16%;
@@ -34,14 +34,14 @@
     --md-secondary-70: 160 18% 56%;
     --md-secondary-80: 160 18% 64%;
     --md-secondary-90: 160 20% 80%;
-    
+
     /* Tertiary - 暖紫强调色 */
     --md-tertiary-10: 320 35% 8%;
     --md-tertiary-20: 320 35% 16%;
     --md-tertiary-30: 320 30% 24%;
     --md-tertiary-40: 320 25% 32%;
     --md-tertiary-80: 320 18% 64%;
-    
+
     /* Neutral - 现代灰色系 */
     --md-neutral-4: 280 5% 4%;
     --md-neutral-6: 280 5% 6%;
@@ -55,13 +55,13 @@
     --md-neutral-94: 280 5% 94%;
     --md-neutral-96: 280 5% 96%;
     --md-neutral-98: 280 5% 98%;
-    
+
     /* Neutral Variant - 色调灰色系 */
     --md-neutral-variant-30: 280 8% 30%;
     --md-neutral-variant-50: 280 8% 50%;
     --md-neutral-variant-80: 280 8% 80%;
     --md-neutral-variant-90: 280 8% 90%;
-    
+
     /* 语义化功能颜色 */
     --md-success-40: 120 60% 40%;
     --md-success-80: 120 60% 80%;
@@ -71,88 +71,98 @@
     --md-error-80: 0 68% 75%;
     --md-info-40: 210 100% 50%;
     --md-info-80: 210 100% 75%;
-    
+
     /* ========================================================================
        Material 3 字体系统
        ======================================================================== */
-    
+
     /* Display */
-    --md-display-large-font: 400 3.563rem/4rem "Inter", "Roboto", system-ui, sans-serif;
-    --md-display-medium-font: 400 2.813rem/3.25rem "Inter", "Roboto", system-ui, sans-serif;
-    --md-display-small-font: 400 2.25rem/2.75rem "Inter", "Roboto", system-ui, sans-serif;
-    
+    --md-display-large-font: 400 3.563rem/4rem "Inter", "Roboto", system-ui,
+      sans-serif;
+    --md-display-medium-font: 400 2.813rem/3.25rem "Inter", "Roboto", system-ui,
+      sans-serif;
+    --md-display-small-font: 400 2.25rem/2.75rem "Inter", "Roboto", system-ui,
+      sans-serif;
+
     /* Headline */
-    --md-headline-large-font: 400 2rem/2.5rem "Inter", "Roboto", system-ui, sans-serif;
-    --md-headline-medium-font: 400 1.75rem/2.25rem "Inter", "Roboto", system-ui, sans-serif;
-    --md-headline-small-font: 400 1.5rem/2rem "Inter", "Roboto", system-ui, sans-serif;
-    
+    --md-headline-large-font: 400 2rem/2.5rem "Inter", "Roboto", system-ui,
+      sans-serif;
+    --md-headline-medium-font: 400 1.75rem/2.25rem "Inter", "Roboto", system-ui,
+      sans-serif;
+    --md-headline-small-font: 400 1.5rem/2rem "Inter", "Roboto", system-ui,
+      sans-serif;
+
     /* Title */
-    --md-title-large-font: 500 1.375rem/1.75rem "Inter", "Roboto", system-ui, sans-serif;
-    --md-title-medium-font: 500 1rem/1.5rem "Inter", "Roboto", system-ui, sans-serif;
-    --md-title-small-font: 500 0.875rem/1.25rem "Inter", "Roboto", system-ui, sans-serif;
-    
+    --md-title-large-font: 500 1.375rem/1.75rem "Inter", "Roboto", system-ui,
+      sans-serif;
+    --md-title-medium-font: 500 1rem/1.5rem "Inter", "Roboto", system-ui,
+      sans-serif;
+    --md-title-small-font: 500 0.875rem/1.25rem "Inter", "Roboto", system-ui,
+      sans-serif;
+
     /* Body */
-    --md-body-large-font: 400 1rem/1.5rem "Inter", "Roboto", system-ui, sans-serif;
-    --md-body-medium-font: 400 0.875rem/1.25rem "Inter", "Roboto", system-ui, sans-serif;
-    --md-body-small-font: 400 0.75rem/1rem "Inter", "Roboto", system-ui, sans-serif;
-    
+    --md-body-large-font: 400 1rem/1.5rem "Inter", "Roboto", system-ui,
+      sans-serif;
+    --md-body-medium-font: 400 0.875rem/1.25rem "Inter", "Roboto", system-ui,
+      sans-serif;
+    --md-body-small-font: 400 0.75rem/1rem "Inter", "Roboto", system-ui,
+      sans-serif;
+
     /* Label */
-    --md-label-large-font: 500 0.875rem/1.25rem "Inter", "Roboto", system-ui, sans-serif;
-    --md-label-medium-font: 500 0.75rem/1rem "Inter", "Roboto", system-ui, sans-serif;
-    --md-label-small-font: 500 0.6875rem/1rem "Inter", "Roboto", system-ui, sans-serif;
-    
+    --md-label-large-font: 500 0.875rem/1.25rem "Inter", "Roboto", system-ui,
+      sans-serif;
+    --md-label-medium-font: 500 0.75rem/1rem "Inter", "Roboto", system-ui,
+      sans-serif;
+    --md-label-small-font: 500 0.6875rem/1rem "Inter", "Roboto", system-ui,
+      sans-serif;
+
     /* ========================================================================
        Material 3 间距系统
        ======================================================================== */
-    
+
     --md-space-0: 0;
-    --md-space-1: 0.25rem;   /* 4px */
-    --md-space-2: 0.5rem;    /* 8px */
-    --md-space-3: 0.75rem;   /* 12px */
-    --md-space-4: 1rem;      /* 16px */
-    --md-space-5: 1.25rem;   /* 20px */
-    --md-space-6: 1.5rem;    /* 24px */
-    --md-space-8: 2rem;      /* 32px */
-    --md-space-10: 2.5rem;   /* 40px */
-    --md-space-12: 3rem;     /* 48px */
-    
+    --md-space-1: 0.25rem; /* 4px */
+    --md-space-2: 0.5rem; /* 8px */
+    --md-space-3: 0.75rem; /* 12px */
+    --md-space-4: 1rem; /* 16px */
+    --md-space-5: 1.25rem; /* 20px */
+    --md-space-6: 1.5rem; /* 24px */
+    --md-space-8: 2rem; /* 32px */
+    --md-space-10: 2.5rem; /* 40px */
+    --md-space-12: 3rem; /* 48px */
+
     /* ========================================================================
        Material 3 圆角系统
        ======================================================================== */
-    
+
     --md-corner-none: 0;
-    --md-corner-xs: 0.25rem;   /* 4px */
-    --md-corner-sm: 0.5rem;    /* 8px */
-    --md-corner-md: 0.75rem;   /* 12px */
-    --md-corner-lg: 1rem;      /* 16px */
-    --md-corner-xl: 1.75rem;   /* 28px */
+    --md-corner-xs: 0.25rem; /* 4px */
+    --md-corner-sm: 0.5rem; /* 8px */
+    --md-corner-md: 0.75rem; /* 12px */
+    --md-corner-lg: 1rem; /* 16px */
+    --md-corner-xl: 1.75rem; /* 28px */
     --md-corner-full: 9999px;
-    
+
     /* ========================================================================
        Material 3 阴影系统
        ======================================================================== */
-    
+
     --md-elevation-0: none;
-    --md-elevation-1: 
-      0px 1px 2px 0px rgba(0, 0, 0, 0.3),
+    --md-elevation-1: 0px 1px 2px 0px rgba(0, 0, 0, 0.3),
       0px 1px 3px 1px rgba(0, 0, 0, 0.15);
-    --md-elevation-2: 
-      0px 1px 2px 0px rgba(0, 0, 0, 0.3),
+    --md-elevation-2: 0px 1px 2px 0px rgba(0, 0, 0, 0.3),
       0px 2px 6px 2px rgba(0, 0, 0, 0.15);
-    --md-elevation-3: 
-      0px 1px 3px 0px rgba(0, 0, 0, 0.3),
+    --md-elevation-3: 0px 1px 3px 0px rgba(0, 0, 0, 0.3),
       0px 4px 8px 3px rgba(0, 0, 0, 0.15);
-    --md-elevation-4: 
-      0px 2px 3px 0px rgba(0, 0, 0, 0.3),
+    --md-elevation-4: 0px 2px 3px 0px rgba(0, 0, 0, 0.3),
       0px 6px 10px 4px rgba(0, 0, 0, 0.15);
-    --md-elevation-5: 
-      0px 4px 4px 0px rgba(0, 0, 0, 0.3),
+    --md-elevation-5: 0px 4px 4px 0px rgba(0, 0, 0, 0.3),
       0px 8px 12px 6px rgba(0, 0, 0, 0.15);
-    
+
     /* ========================================================================
        Material 3 动效系统
        ======================================================================== */
-    
+
     --md-motion-duration-short1: 50ms;
     --md-motion-duration-short2: 100ms;
     --md-motion-duration-short3: 150ms;
@@ -165,17 +175,17 @@
     --md-motion-duration-long2: 500ms;
     --md-motion-duration-long3: 550ms;
     --md-motion-duration-long4: 600ms;
-    
+
     --md-motion-easing-linear: cubic-bezier(0, 0, 1, 1);
     --md-motion-easing-standard: cubic-bezier(0.2, 0, 0, 1);
     --md-motion-easing-emphasized: cubic-bezier(0.2, 0, 0, 1);
     --md-motion-easing-decelerated: cubic-bezier(0, 0, 0, 1);
     --md-motion-easing-accelerated: cubic-bezier(0.3, 0, 1, 1);
-    
+
     /* ========================================================================
        亮色主题 Token 映射
        ======================================================================== */
-    
+
     --background: var(--md-neutral-98);
     --foreground: var(--md-neutral-10);
     --card: var(--md-neutral-98);
@@ -207,7 +217,7 @@
     /* ========================================================================
        暗色主题 Token 映射
        ======================================================================== */
-    
+
     --background: var(--md-neutral-6);
     --foreground: var(--md-neutral-90);
     --card: var(--md-neutral-10);
@@ -266,31 +276,53 @@
   }
 
   /* 标题层级 */
-  h1 { font: var(--md-headline-large-font); }
-  h2 { font: var(--md-headline-medium-font); }
-  h3 { font: var(--md-headline-small-font); }
-  h4 { font: var(--md-title-large-font); }
-  h5 { font: var(--md-title-medium-font); }
-  h6 { font: var(--md-title-small-font); }
+  h1 {
+    font: var(--md-headline-large-font);
+  }
+  h2 {
+    font: var(--md-headline-medium-font);
+  }
+  h3 {
+    font: var(--md-headline-small-font);
+  }
+  h4 {
+    font: var(--md-title-large-font);
+  }
+  h5 {
+    font: var(--md-title-medium-font);
+  }
+  h6 {
+    font: var(--md-title-small-font);
+  }
 
   /* 文本样式 */
-  p { font: var(--md-body-large-font); margin-bottom: var(--md-space-4); }
-  small { font: var(--md-body-small-font); }
+  p {
+    font: var(--md-body-large-font);
+    margin-bottom: var(--md-space-4);
+  }
+  small {
+    font: var(--md-body-small-font);
+  }
 
   /* 链接样式 */
   a {
     color: hsl(var(--primary));
     text-decoration: none;
-    transition: color var(--md-motion-duration-short2) var(--md-motion-easing-standard);
+    transition: color var(--md-motion-duration-short2)
+      var(--md-motion-easing-standard);
   }
-  
+
   a:hover {
     color: hsl(var(--primary) / 0.8);
     text-decoration: underline;
   }
 
   /* 表单元素重置 */
-  button, input, optgroup, select, textarea {
+  button,
+  input,
+  optgroup,
+  select,
+  textarea {
     font: inherit;
     color: inherit;
   }
@@ -316,24 +348,24 @@
   /* ========================================================================
      Surface 层级系统
      ======================================================================== */
-  
+
   .surface-container-lowest {
     background-color: hsl(var(--background));
   }
-  
+
   .surface-container-low {
     background-color: hsl(var(--card));
   }
-  
+
   .surface-container {
     background-color: hsl(var(--muted));
   }
-  
+
   .surface-container-high {
     background-color: hsl(var(--card));
     box-shadow: var(--md-elevation-1);
   }
-  
+
   .surface-container-highest {
     background-color: hsl(var(--card));
     box-shadow: var(--md-elevation-2);
@@ -342,7 +374,7 @@
   /* ========================================================================
      按钮组件系统
      ======================================================================== */
-  
+
   /* Filled Button - 主要操作 */
   .btn-filled {
     @apply inline-flex items-center justify-center gap-2;
@@ -353,21 +385,22 @@
     padding: var(--md-space-2) var(--md-space-6);
     font: var(--md-label-large-font);
     cursor: pointer;
-    transition: all var(--md-motion-duration-short2) var(--md-motion-easing-standard);
+    transition: all var(--md-motion-duration-short2)
+      var(--md-motion-easing-standard);
     position: relative;
     overflow: hidden;
   }
-  
+
   .btn-filled:hover {
     background-color: hsl(var(--primary) / 0.92);
     box-shadow: var(--md-elevation-1);
   }
-  
+
   .btn-filled:active {
     background-color: hsl(var(--primary) / 0.88);
     box-shadow: var(--md-elevation-0);
   }
-  
+
   .btn-filled:disabled {
     background-color: hsl(var(--foreground) / 0.12);
     color: hsl(var(--foreground) / 0.38);
@@ -385,18 +418,19 @@
     padding: var(--md-space-2) var(--md-space-6);
     font: var(--md-label-large-font);
     cursor: pointer;
-    transition: all var(--md-motion-duration-short2) var(--md-motion-easing-standard);
+    transition: all var(--md-motion-duration-short2)
+      var(--md-motion-easing-standard);
   }
-  
+
   .btn-outlined:hover {
     background-color: hsl(var(--primary) / 0.08);
     border-color: hsl(var(--primary));
   }
-  
+
   .btn-outlined:active {
     background-color: hsl(var(--primary) / 0.12);
   }
-  
+
   .btn-outlined:disabled {
     color: hsl(var(--foreground) / 0.38);
     border-color: hsl(var(--foreground) / 0.12);
@@ -413,17 +447,18 @@
     padding: var(--md-space-2) var(--md-space-3);
     font: var(--md-label-large-font);
     cursor: pointer;
-    transition: all var(--md-motion-duration-short2) var(--md-motion-easing-standard);
+    transition: all var(--md-motion-duration-short2)
+      var(--md-motion-easing-standard);
   }
-  
+
   .btn-text:hover {
     background-color: hsl(var(--primary) / 0.08);
   }
-  
+
   .btn-text:active {
     background-color: hsl(var(--primary) / 0.12);
   }
-  
+
   .btn-text:disabled {
     color: hsl(var(--foreground) / 0.38);
     cursor: not-allowed;
@@ -432,16 +467,17 @@
   /* ========================================================================
      卡片组件系统
      ======================================================================== */
-  
+
   .card-elevated {
     background-color: hsl(var(--card));
     color: hsl(var(--card-foreground));
     border-radius: var(--md-corner-md);
     padding: var(--md-space-6);
     box-shadow: var(--md-elevation-1);
-    transition: box-shadow var(--md-motion-duration-short2) var(--md-motion-easing-standard);
+    transition: box-shadow var(--md-motion-duration-short2)
+      var(--md-motion-easing-standard);
   }
-  
+
   .card-elevated:hover {
     box-shadow: var(--md-elevation-2);
   }
@@ -464,7 +500,7 @@
   /* ========================================================================
      输入组件系统
      ======================================================================== */
-  
+
   .input-filled {
     background-color: hsl(var(--input));
     color: hsl(var(--foreground));
@@ -473,14 +509,15 @@
     border-radius: var(--md-corner-xs) var(--md-corner-xs) 0 0;
     padding: var(--md-space-4);
     font: var(--md-body-large-font);
-    transition: all var(--md-motion-duration-short2) var(--md-motion-easing-standard);
+    transition: all var(--md-motion-duration-short2)
+      var(--md-motion-easing-standard);
   }
-  
+
   .input-filled:focus {
     border-bottom-color: hsl(var(--primary));
     outline: none;
   }
-  
+
   .input-filled::placeholder {
     color: hsl(var(--muted-foreground));
   }
@@ -492,15 +529,16 @@
     border-radius: var(--md-corner-xs);
     padding: var(--md-space-4);
     font: var(--md-body-large-font);
-    transition: all var(--md-motion-duration-short2) var(--md-motion-easing-standard);
+    transition: all var(--md-motion-duration-short2)
+      var(--md-motion-easing-standard);
   }
-  
+
   .input-outlined:focus {
     border-color: hsl(var(--primary));
     border-width: 2px;
     outline: none;
   }
-  
+
   .input-outlined::placeholder {
     color: hsl(var(--muted-foreground));
   }
@@ -508,7 +546,7 @@
   /* ========================================================================
      表格组件系统
      ======================================================================== */
-  
+
   .table-container {
     background-color: hsl(var(--card));
     border: 1px solid hsl(var(--border));
@@ -554,7 +592,7 @@
   /* ========================================================================
      徽章和标签系统
      ======================================================================== */
-  
+
   .badge-filled {
     @apply inline-flex items-center gap-1;
     background-color: hsl(var(--primary));
@@ -577,7 +615,7 @@
   /* ========================================================================
      状态指示器
      ======================================================================== */
-  
+
   .status-indicator {
     @apply inline-flex items-center gap-2;
   }
@@ -589,15 +627,23 @@
     background-color: currentColor;
   }
 
-  .status-success { color: hsl(var(--success)); }
-  .status-warning { color: hsl(var(--warning)); }
-  .status-error { color: hsl(var(--destructive)); }
-  .status-info { color: hsl(var(--info)); }
+  .status-success {
+    color: hsl(var(--success));
+  }
+  .status-warning {
+    color: hsl(var(--warning));
+  }
+  .status-error {
+    color: hsl(var(--destructive));
+  }
+  .status-info {
+    color: hsl(var(--info));
+  }
 
   /* ========================================================================
      进度指示器
      ======================================================================== */
-  
+
   .progress-linear {
     width: 100%;
     height: 4px;
@@ -610,27 +656,44 @@
     height: 100%;
     background-color: hsl(var(--primary));
     border-radius: var(--md-corner-sm);
-    transition: width var(--md-motion-duration-medium2) var(--md-motion-easing-emphasized);
+    transition: width var(--md-motion-duration-medium2)
+      var(--md-motion-easing-emphasized);
   }
 
   /* ========================================================================
      速度测试专用样式
      ======================================================================== */
-  
+
   /* 速度等级颜色编码 */
-  .speed-excellent { color: hsl(var(--success)); }
-  .speed-good { color: hsl(120 50% 60%); }
-  .speed-average { color: hsl(var(--warning)); }
-  .speed-poor { color: hsl(30 100% 60%); }
-  .speed-bad { color: hsl(var(--destructive)); }
+  .speed-excellent {
+    color: hsl(var(--success));
+  }
+  .speed-good {
+    color: hsl(120 50% 60%);
+  }
+  .speed-average {
+    color: hsl(var(--warning));
+  }
+  .speed-poor {
+    color: hsl(30 100% 60%);
+  }
+  .speed-bad {
+    color: hsl(var(--destructive));
+  }
 
   /* 延迟等级颜色编码 */
-  .latency-low { color: hsl(var(--success)); }
-  .latency-medium { color: hsl(var(--warning)); }
-  .latency-high { color: hsl(var(--destructive)); }
+  .latency-low {
+    color: hsl(var(--success));
+  }
+  .latency-medium {
+    color: hsl(var(--warning));
+  }
+  .latency-high {
+    color: hsl(var(--destructive));
+  }
 
   /* 协议类型徽章 */
-  .protocol-vmess { 
+  .protocol-vmess {
     @apply inline-flex items-center gap-1;
     background-color: hsl(var(--md-primary-40));
     color: hsl(var(--primary-foreground));
@@ -638,7 +701,7 @@
     padding: var(--md-space-1) var(--md-space-2);
     font: var(--md-label-small-font);
   }
-  .protocol-vless { 
+  .protocol-vless {
     @apply inline-flex items-center gap-1;
     background-color: hsl(var(--md-secondary-40));
     color: hsl(var(--primary-foreground));
@@ -646,7 +709,7 @@
     padding: var(--md-space-1) var(--md-space-2);
     font: var(--md-label-small-font);
   }
-  .protocol-trojan { 
+  .protocol-trojan {
     @apply inline-flex items-center gap-1;
     background-color: hsl(var(--md-tertiary-40));
     color: hsl(var(--primary-foreground));
@@ -654,7 +717,7 @@
     padding: var(--md-space-1) var(--md-space-2);
     font: var(--md-label-small-font);
   }
-  .protocol-ss { 
+  .protocol-ss {
     @apply inline-flex items-center gap-1;
     background-color: hsl(var(--info));
     color: hsl(var(--info-foreground));
@@ -662,7 +725,7 @@
     padding: var(--md-space-1) var(--md-space-2);
     font: var(--md-label-small-font);
   }
-  .protocol-ssr { 
+  .protocol-ssr {
     @apply inline-flex items-center gap-1;
     background-color: hsl(var(--warning));
     color: hsl(var(--warning-foreground));
@@ -674,13 +737,15 @@
   /* ========================================================================
      动效辅助类
      ======================================================================== */
-  
+
   .animate-fade-in {
-    animation: fadeIn var(--md-motion-duration-medium2) var(--md-motion-easing-standard);
+    animation: fadeIn var(--md-motion-duration-medium2)
+      var(--md-motion-easing-standard);
   }
 
   .animate-slide-up {
-    animation: slideUp var(--md-motion-duration-medium3) var(--md-motion-easing-emphasized);
+    animation: slideUp var(--md-motion-duration-medium3)
+      var(--md-motion-easing-emphasized);
   }
 
   .animate-pulse-gentle {
@@ -690,7 +755,7 @@
   /* ========================================================================
      滚动条样式
      ======================================================================== */
-  
+
   .scrollbar-modern {
     scrollbar-width: thin;
     scrollbar-color: hsl(var(--primary) / 0.3) transparent;
@@ -709,7 +774,8 @@
   .scrollbar-modern::-webkit-scrollbar-thumb {
     background-color: hsl(var(--primary) / 0.3);
     border-radius: var(--md-corner-xs);
-    transition: background-color var(--md-motion-duration-short2) var(--md-motion-easing-standard);
+    transition: background-color var(--md-motion-duration-short2)
+      var(--md-motion-easing-standard);
   }
 
   .scrollbar-modern::-webkit-scrollbar-thumb:hover {
@@ -722,24 +788,33 @@
    ============================================================================ */
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideUp {
-  from { 
-    opacity: 0; 
-    transform: translateY(16px); 
+  from {
+    opacity: 0;
+    transform: translateY(16px);
   }
-  to { 
-    opacity: 1; 
-    transform: translateY(0); 
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
 @keyframes pulseGentle {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
 }
 
 /* ============================================================================
@@ -752,13 +827,13 @@
     --md-space-6: 1rem;
     --md-space-8: 1.5rem;
   }
-  
+
   .card-elevated,
   .card-filled,
   .card-outlined {
     padding: var(--md-space-4);
   }
-  
+
   .btn-filled,
   .btn-outlined {
     padding: var(--md-space-2) var(--md-space-4);
@@ -770,7 +845,7 @@
   .table-container {
     overflow-x: auto;
   }
-  
+
   .table-modern {
     min-width: 600px;
   }
@@ -786,7 +861,7 @@
     color: black !important;
     box-shadow: none !important;
   }
-  
+
   .btn-filled,
   .btn-outlined,
   .btn-text {
@@ -803,7 +878,7 @@
     --md-primary-40: 280 50% 25%;
     --md-primary-80: 280 50% 85%;
   }
-  
+
   .dark {
     --md-primary-40: 280 50% 25%;
     --md-primary-80: 280 50% 85%;
@@ -823,4 +898,75 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* ============================================================================
+   Slider 组件专用样式
+   ============================================================================ */
+
+/* 确保 Slider Range 正确显示 */
+.slider-dark [data-slot="slider-range"] {
+  background: linear-gradient(
+    to right,
+    hsl(var(--md-primary-60)),
+    hsl(var(--md-primary-70))
+  ) !important;
+  border-radius: var(--md-corner-full);
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  transition: all var(--md-motion-duration-short2)
+    var(--md-motion-easing-standard);
+}
+
+/* Slider Track 样式 */
+.slider-dark [data-slot="slider-track"] {
+  background-color: hsl(var(--md-primary-30)) !important;
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--md-corner-full);
+}
+
+/* Slider Thumb 样式 */
+.slider-dark [data-slot="slider-thumb"] {
+  background-color: hsl(var(--md-primary-60)) !important;
+  border: 2px solid hsl(var(--md-primary-95)) !important;
+  box-shadow: var(--md-elevation-2);
+  z-index: 20;
+  position: relative;
+}
+
+.slider-dark [data-slot="slider-thumb"]:hover {
+  background-color: hsl(var(--md-primary-70)) !important;
+  transform: scale(1.1);
+  box-shadow: var(--md-elevation-3);
+}
+
+/* ============================================================================
+   自定义滚动条样式
+   ============================================================================ */
+
+/* Thin scrollbar for dialogs and scrollable areas */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--primary) / 0.3) transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: hsl(var(--primary) / 0.3);
+  border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background-color: hsl(var(--primary) / 0.5);
 }

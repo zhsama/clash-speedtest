@@ -3,20 +3,19 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Slider } from "@/components/ui/slider"
 import { toast } from "sonner"
 import {
-  Play,
-  Download,
-  Filter,
-  Globe,
-  ServerCog,
-  RefreshCw,
-  Loader2,
-  History,
-} from "lucide-react"
+  FaPlay as Play,
+  FaDownload as Download,
+  FaFilter as Filter,
+  FaGlobe as Globe,
+  FaServer as ServerCog,
+  FaSync as RefreshCw,
+  FaSpinner as Loader2,
+  FaHistory as History,
+} from "react-icons/fa"
 import ClientIcon from "./ClientIcon"
 import RealTimeProgressTable from "./RealTimeProgressTable"
 import TUNWarning from "./TUNWarning"
@@ -33,6 +32,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 interface NodeInfo {
   name: string
@@ -1203,18 +1209,22 @@ export default function SpeedTestPro() {
                 <label className="form-element-label">
                   测试模式
                 </label>
-                <select
+                <Select
                   value={testConfig.testMode}
-                  onChange={(e) => setTestConfig(prev => ({ 
+                  onValueChange={(value) => setTestConfig(prev => ({ 
                     ...prev, 
-                    testMode: e.target.value 
+                    testMode: value 
                   }))}
-                  className="test-mode-selector w-full"
                 >
-                  <option value="both">全面测试（测速+解锁）</option>
-                  <option value="speed_only">仅测速</option>
-                  <option value="unlock_only">仅解锁检测</option>
-                </select>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="both">全面测试（测速+解锁）</SelectItem>
+                    <SelectItem value="speed_only">仅测速</SelectItem>
+                    <SelectItem value="unlock_only">仅解锁检测</SelectItem>
+                  </SelectContent>
+                </Select>
                 <p className="text-sm text-lavender-400 mt-2">
                   {testConfig.testMode === "both" && "同时进行速度测试和流媒体解锁检测"}
                   {testConfig.testMode === "speed_only" && "只进行网络速度测试，跳过解锁检测"}

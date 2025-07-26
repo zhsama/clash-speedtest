@@ -10,16 +10,16 @@ import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { 
-  Activity, 
-  Download, 
-  Upload, 
-  CheckCircle,
-  XCircle,
-  Loader2,
-  Globe,
-  FileText,
-  TableIcon,
-} from "lucide-react"
+  FaChartLine as Activity, 
+  FaDownload as Download, 
+  FaUpload as Upload, 
+  FaCheckCircle as CheckCircle,
+  FaTimesCircle as XCircle,
+  FaSpinner as Loader2,
+  FaGlobe as Globe,
+  FaFile as FileText,
+  FaTable as TableIcon,
+} from "react-icons/fa"
 import ClientIcon from "./ClientIcon"
 import type { TestResultData } from "../hooks/useWebSocket"
 

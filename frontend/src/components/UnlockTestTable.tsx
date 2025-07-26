@@ -10,16 +10,16 @@ import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { 
-  CheckCircle,
-  XCircle,
-  Loader2,
-  Globe,
-  Shield,
-  Lock,
-  Unlock,
-  FileText,
-  TableIcon,
-} from "lucide-react"
+  FaCheckCircle as CheckCircle,
+  FaTimesCircle as XCircle,
+  FaSpinner as Loader2,
+  FaGlobe as Globe,
+  FaShieldAlt as Shield,
+  FaLock as Lock,
+  FaUnlock as Unlock,
+  FaFile as FileText,
+  FaTable as TableIcon,
+} from "react-icons/fa"
 import ClientIcon from "./ClientIcon"
 import type { TestResultData, UnlockResult } from "../hooks/useWebSocket"
 

@@ -2,13 +2,13 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { 
-  AlertTriangle, 
-  RefreshCw, 
-  Network, 
-  CheckCircle,
-  Info,
-  Loader2
-} from "lucide-react"
+  FaExclamationTriangle as AlertTriangle, 
+  FaSync as RefreshCw, 
+  FaNetworkWired as Network, 
+  FaCheckCircle as CheckCircle,
+  FaInfoCircle as Info,
+  FaSpinner as Loader2
+} from "react-icons/fa"
 import ClientIcon from "./ClientIcon"
 import { config } from "@/lib/env"
 import { toast } from "sonner"

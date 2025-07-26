@@ -152,24 +152,26 @@ export function useTestResultSaver(options: UseTestResultSaverOptions = {}) {
   // 获取会话摘要列表
   const getSessionSummaries = useCallback(() => {
     const data = getStoredSessions();
-    return data.sessions.map(session => ({
-      id: session.id,
-      savedAt: session.savedAt,
-      configPaths: session.startData.config.config_paths,
-      totalProxies: session.startData.total_proxies,
-      successfulTests: session.completeData.successful_tests,
-      failedTests: session.completeData.failed_tests,
-      averageDownloadMbps: session.completeData.average_download_mbps,
-      averageLatency: session.completeData.average_latency,
-      bestProxy: session.completeData.best_proxy,
-      bestDownloadSpeedMbps: session.completeData.best_download_speed_mbps,
-      duration: session.meta.duration,
-      testType: session.meta.testType,
-      notes: session.meta.userNotes,
-      tags: session.meta.tags,
-      // 额外的统计信息
-      unlockStats: session.completeData.unlock_stats
-    }));
+    return data.sessions
+      .map(session => ({
+        id: session.id,
+        savedAt: session.savedAt,
+        configPaths: session.startData.config.config_paths,
+        totalProxies: session.startData.total_proxies,
+        successfulTests: session.completeData.successful_tests,
+        failedTests: session.completeData.failed_tests,
+        averageDownloadMbps: session.completeData.average_download_mbps,
+        averageLatency: session.completeData.average_latency,
+        bestProxy: session.completeData.best_proxy,
+        bestDownloadSpeedMbps: session.completeData.best_download_speed_mbps,
+        duration: session.meta.duration,
+        testType: session.meta.testType,
+        notes: session.meta.userNotes,
+        tags: session.meta.tags,
+        // 额外的统计信息
+        unlockStats: session.completeData.unlock_stats
+      }))
+      .sort((a, b) => b.savedAt - a.savedAt); // 按时间倒序排序，最新的在前
   }, [getStoredSessions]);
   
   // 获取完整会话数据

@@ -2,15 +2,15 @@ import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { 
-  TrendingUp,
-  CheckCircle,
-  XCircle,
-  Zap,
-  Download,
-  Shield,
-  FileText,
-  TableIcon,
-} from "lucide-react"
+  FaChartLine as TrendingUp,
+  FaCheckCircle as CheckCircle,
+  FaTimesCircle as XCircle,
+  FaBolt as Zap,
+  FaDownload as Download,
+  FaShieldAlt as Shield,
+  FaFile as FileText,
+  FaTable as TableIcon,
+} from "react-icons/fa"
 import ClientIcon from "./ClientIcon"
 import SpeedTestTable from "./SpeedTestTable"
 import UnlockTestTable from "./UnlockTestTable"

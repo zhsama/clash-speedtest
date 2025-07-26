@@ -2,19 +2,20 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useTestResultSaver } from '../hooks/useTestResultSaver';
 import { 
-  Download, 
-  Trash2, 
-  Calendar, 
-  Globe, 
-  Zap, 
-  Wifi, 
-  Trophy,
-  FileText,
-  BarChart3
-} from 'lucide-react';
+  FaDownload as Download, 
+  FaTrash as Trash2, 
+  FaCalendar as Calendar, 
+  FaGlobe as Globe, 
+  FaBolt as Zap, 
+  FaWifi as Wifi, 
+  FaTrophy as Trophy,
+  FaFile as FileText,
+  FaChartBar as BarChart3
+} from 'react-icons/fa';
 import { toast } from 'sonner';
 import ClientIcon from './ClientIcon';
 
@@ -149,8 +150,8 @@ export default function TestHistoryModal({ onClose }: TestHistoryModalProps) {
   
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden">
-        <DialogHeader>
+      <DialogContent className="max-w-6xl max-h-[90vh] flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <ClientIcon icon={Calendar} className="h-5 w-5 text-primary" />
             测试历史记录
@@ -162,17 +163,18 @@ export default function TestHistoryModal({ onClose }: TestHistoryModalProps) {
           </DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-4 overflow-y-auto">
-          {/* 统计信息和操作栏 */}
-          <div className="flex justify-between items-center p-4 bg-card rounded-md-md">
-            <div className="flex items-center gap-6 text-sm">
-              <div className="flex items-center gap-2">
-                <ClientIcon icon={BarChart3} className="h-4 w-4 text-primary" />
-                <span className="text-muted-foreground">存储使用:</span>
-                <span className="font-medium">
-                  {storageStats?.sizeMB || 0} MB
-                </span>
-              </div>
+        <div className="flex-1 overflow-y-auto space-y-4 pr-2 min-h-0 scrollbar-thin">
+          {/* 统计信息和操作栏 - 固定在顶部 */}
+          <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 pb-4">
+            <div className="flex justify-between items-center p-4 bg-card rounded-md">
+              <div className="flex items-center gap-6 text-sm">
+                <div className="flex items-center gap-2">
+                  <ClientIcon icon={BarChart3} className="h-4 w-4 text-primary" />
+                  <span className="text-muted-foreground">存储使用:</span>
+                  <span className="font-medium">
+                    {storageStats?.sizeMB || 0} MB
+                  </span>
+                </div>
               
               {selectedSessions.length > 0 && (
                 <div className="flex items-center gap-2">
@@ -225,6 +227,7 @@ export default function TestHistoryModal({ onClose }: TestHistoryModalProps) {
               </Button>
             </div>
           </div>
+          </div>
           
           {/* 会话列表 */}
           {sessions.length === 0 ? (
@@ -239,11 +242,10 @@ export default function TestHistoryModal({ onClose }: TestHistoryModalProps) {
             <>
               {/* 全选控制 */}
               <div className="flex items-center gap-2 px-2">
-                <input
-                  type="checkbox"
+                <Checkbox
                   checked={selectedSessions.length === sessions.length && sessions.length > 0}
-                  onChange={handleSelectAll}
-                  className="rounded"
+                  onCheckedChange={handleSelectAll}
+                  className="checkbox-dark"
                 />
                 <span className="text-sm text-muted-foreground">
                   全选 ({sessions.length} 项)
@@ -265,11 +267,10 @@ export default function TestHistoryModal({ onClose }: TestHistoryModalProps) {
                     >
                       <div className="flex items-start gap-3">
                         {/* 选择框 */}
-                        <input
-                          type="checkbox"
+                        <Checkbox
                           checked={isSelected}
-                          onChange={() => handleSelectSession(session.id)}
-                          className="mt-1 rounded"
+                          onCheckedChange={() => handleSelectSession(session.id)}
+                          className="mt-1 checkbox-dark"
                         />
                         
                         {/* 主要内容 */}

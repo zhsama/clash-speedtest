@@ -16,7 +16,7 @@ import { toast } from "sonner"
 interface TUNInterface {
   name: string
   type: string
-  ip_addresses: string[]
+  ip_addresses?: string[]
   is_up: boolean
   mtu: number
   is_default: boolean
@@ -38,20 +38,20 @@ interface RouteInfo {
 }
 
 interface SystemInfo {
-  os: string
-  architecture: string
-  hostname: string
+  os?: string
+  architecture?: string
+  hostname?: string
 }
 
 interface TUNStatus {
   enabled: boolean
-  interfaces: TUNInterface[]
+  interfaces?: TUNInterface[]
   active_interface?: TUNInterface
-  proxy_processes: ProxyProcess[]
+  proxy_processes?: ProxyProcess[]
   default_route?: RouteInfo
-  detection_time: string
-  system_info: SystemInfo
-  additional_details: Record<string, any>
+  detection_time?: string
+  system_info?: SystemInfo
+  additional_details?: Record<string, any>
 }
 
 interface TUNCheckResponse {
@@ -80,13 +80,13 @@ export default function TUNWarning({ onTUNStatusChange, showDetails = false }: T
 
       if (data.success) {
         setTunStatus(data.tun_status)
-        setWarning(data.warning)
+        setWarning(data.warning || "")
         setLastChecked(new Date())
 
         // 通知父组件TUN状态变化
-        onTUNStatusChange?.(data.tun_status.enabled)
+        onTUNStatusChange?.(data.tun_status?.enabled ?? false)
 
-        if (data.tun_status.enabled) {
+        if (data.tun_status?.enabled) {
           toast.warning("检测到 TUN 模式", {
             description: "建议关闭 TUN 模式以获得更准确的测试结果",
           })
@@ -147,7 +147,7 @@ export default function TUNWarning({ onTUNStatusChange, showDetails = false }: T
   return (
     <div className="form-element">
       {/* 主要警告信息 */}
-      {tunStatus.enabled ? (
+      {tunStatus?.enabled ? (
         <Card className="card-elevated border-yellow-500 bg-yellow-500/10">
           <div className="flex items-start gap-2">
             <ClientIcon icon={AlertTriangle} className="h-5 w-5 text-yellow-500 mt-0.5" />
@@ -214,7 +214,7 @@ export default function TUNWarning({ onTUNStatusChange, showDetails = false }: T
       </div>
 
       {/* 详细信息 */}
-      {showDetailedInfo && (
+      {showDetailedInfo && tunStatus && (
         <Card className="card-elevated">
           <h4 className="text-lg font-semibold text-lavender-50 flex items-center gap-2 mb-2">
             <ClientIcon icon={Network} className="h-4 w-4 text-lavender-400" />
@@ -227,27 +227,27 @@ export default function TUNWarning({ onTUNStatusChange, showDetails = false }: T
             <div className="grid grid-cols-2 component-gap text-sm">
               <div>
                 <span className="text-lavender-400">操作系统:</span>
-                <span className="text-lavender-100 ml-2">{tunStatus.system_info.os}</span>
+                <span className="text-lavender-100 ml-2">{tunStatus.system_info?.os || "未知"}</span>
               </div>
               <div>
                 <span className="text-lavender-400">架构:</span>
-                <span className="text-lavender-100 ml-2">{tunStatus.system_info.architecture}</span>
+                <span className="text-lavender-100 ml-2">{tunStatus.system_info?.architecture || "未知"}</span>
               </div>
               <div>
                 <span className="text-lavender-400">主机名:</span>
-                <span className="text-lavender-100 ml-2">{tunStatus.system_info.hostname}</span>
+                <span className="text-lavender-100 ml-2">{tunStatus.system_info?.hostname || "未知"}</span>
               </div>
               <div>
                 <span className="text-lavender-400">检测时间:</span>
                 <span className="text-lavender-100 ml-2">
-                  {formatTime(tunStatus.detection_time)}
+                  {tunStatus.detection_time ? formatTime(tunStatus.detection_time) : "未知"}
                 </span>
               </div>
             </div>
           </div>
 
           {/* TUN 接口信息 */}
-          {tunStatus.interfaces.length > 0 && (
+          {tunStatus.interfaces && tunStatus.interfaces.length > 0 && (
             <div className="form-element">
               <div className="form-element-label">TUN 接口</div>
               <div className="space-y-2">
@@ -280,7 +280,7 @@ export default function TUNWarning({ onTUNStatusChange, showDetails = false }: T
                     <div className="text-xs text-lavender-400 space-y-1">
                       <div>类型: {iface.type}</div>
                       <div>MTU: {iface.mtu}</div>
-                      {iface.ip_addresses.length > 0 && (
+                      {iface.ip_addresses && iface.ip_addresses.length > 0 && (
                         <div>IP: {iface.ip_addresses.join(", ")}</div>
                       )}
                     </div>
@@ -291,7 +291,7 @@ export default function TUNWarning({ onTUNStatusChange, showDetails = false }: T
           )}
 
           {/* 代理进程信息 */}
-          {tunStatus.proxy_processes.length > 0 && (
+          {tunStatus.proxy_processes && tunStatus.proxy_processes.length > 0 && (
             <div className="form-element">
               <div className="form-element-label">检测到的代理进程</div>
               <div className="space-y-2">

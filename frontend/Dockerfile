@@ -1,6 +1,3 @@
-# syntax=docker/dockerfile:1.4
-# 根目录构建优化的前端 Dockerfile
-
 ARG NODE_VERSION=22
 ARG NGINX_VERSION=1.25-alpine-slim
 

@@ -1,120 +1,108 @@
 @import "tailwindcss";
 
 /* ============================================================================
-   Clash SpeedTest - Material 3 Design System
-   基于Material Design 3.0标准的前端样式系统
+   Clash SpeedTest - DaisyUI Coffee Theme Design System
+   基于DaisyUI Coffee主题的现代暗色风格前端样式系统
    ============================================================================ */
 
 @layer base {
   :root {
     /* ========================================================================
-       Material 3 色彩系统 - 薰衣草紫主题
+       DaisyUI Coffee Theme 色彩系统 - 暖色调咖啡主题
+       基于DaisyUI Coffee主题的OKLCH颜色值
        ======================================================================== */
 
-    /* Primary - 薰衣草紫主色调 */
-    --md-primary-10: 280 35% 8%;
-    --md-primary-20: 280 35% 16%;
-    --md-primary-30: 280 30% 24%;
-    --md-primary-40: 280 25% 32%;
-    --md-primary-50: 280 20% 40%;
-    --md-primary-60: 280 18% 48%;
-    --md-primary-70: 280 18% 56%;
-    --md-primary-80: 280 18% 64%;
-    --md-primary-90: 280 20% 80%;
-    --md-primary-95: 280 25% 90%;
-    --md-primary-99: 280 30% 98%;
+    /* Coffee Theme Base Colors - 咖啡色基础色调 */
+    --md-primary-10: 62.756 12.3% 14.399%; /* oklch(14.399% .024 62.756) */
+    --md-primary-20: 62.756 12.3% 24%;
+    --md-primary-30: 62.756 12.3% 34%;
+    --md-primary-40: 62.756 12.3% 44%;
+    --md-primary-50: 62.756 12.3% 54%;
+    --md-primary-60: 62.756 12.3% 64%;
+    --md-primary-70: 62.756 12.3% 71.996%; /* oklch(71.996% .123 62.756) */
+    --md-primary-80: 62.756 12.3% 74%;
+    --md-primary-90: 62.756 12.3% 84%;
+    --md-primary-95: 62.756 12.3% 90%;
+    --md-primary-99: 62.756 12.3% 95%;
 
-    /* Secondary - 青绿辅助色 */
-    --md-secondary-10: 160 35% 8%;
-    --md-secondary-20: 160 35% 16%;
-    --md-secondary-30: 160 30% 24%;
-    --md-secondary-40: 160 25% 32%;
-    --md-secondary-50: 160 20% 40%;
-    --md-secondary-60: 160 18% 48%;
-    --md-secondary-70: 160 18% 56%;
-    --md-secondary-80: 160 18% 64%;
-    --md-secondary-90: 160 20% 80%;
+    /* Secondary Colors - 蓝灰色辅助色 */
+    --md-secondary-10: 199.194 2.9% 14%;
+    --md-secondary-20: 199.194 2.9% 24%;
+    --md-secondary-30: 199.194 2.9% 34.465%; /* oklch(34.465% .029 199.194) */
+    --md-secondary-40: 199.194 2.9% 44%;
+    --md-secondary-50: 199.194 2.9% 54%;
+    --md-secondary-60: 199.194 2.9% 64%;
+    --md-secondary-70: 199.194 2.9% 74%;
+    --md-secondary-80: 199.194 2.9% 80%;
+    --md-secondary-90: 199.194 2.9% 86.893%; /* oklch(86.893% .005 199.194) */
 
-    /* Tertiary - 暖紫强调色 */
-    --md-tertiary-10: 320 35% 8%;
-    --md-tertiary-20: 320 35% 16%;
-    --md-tertiary-30: 320 30% 24%;
-    --md-tertiary-40: 320 25% 32%;
-    --md-tertiary-80: 320 18% 64%;
+    /* Accent Colors - 深蓝色强调色 */
+    --md-accent-10: 224.389 7.4% 20%;
+    --md-accent-20: 224.389 7.4% 30%;
+    --md-accent-30: 224.389 7.4% 42.621%; /* oklch(42.621% .074 224.389) */
+    --md-accent-40: 224.389 7.4% 52%;
+    --md-accent-80: 224.389 7.4% 72%;
+    --md-accent-90: 224.389 7.4% 82%;
+    --md-accent-99: 224.389 7.4% 88.524%; /* oklch(88.524% .014 224.389) */
 
-    /* Neutral - 现代灰色系 */
-    --md-neutral-4: 280 5% 4%;
-    --md-neutral-6: 280 5% 6%;
-    --md-neutral-10: 280 5% 10%;
-    --md-neutral-12: 280 5% 12%;
-    --md-neutral-17: 280 5% 17%;
-    --md-neutral-22: 280 5% 22%;
-    --md-neutral-24: 280 5% 24%;
-    --md-neutral-87: 280 5% 87%;
-    --md-neutral-90: 280 5% 90%;
-    --md-neutral-94: 280 5% 94%;
-    --md-neutral-96: 280 5% 96%;
-    --md-neutral-98: 280 5% 98%;
+    /* Coffee Theme Neutral Colors - 咖啡色中性色调 */
+    --md-neutral-4: 329.708 2.3% 12%;
+    --md-neutral-6: 329.708 2.3% 14%;
+    --md-neutral-10: 329.708 1.5% 16.51%; /* oklch(16.51% .015 326.261) */
+    --md-neutral-12: 329.708 1.9% 16%;
+    --md-neutral-17: 329.708 1.9% 18%;
+    --md-neutral-22: 329.708 2.1% 21%;
+    --md-neutral-24: 329.708 2.3% 24%; /* oklch(24% .023 329.708) */
+    --md-neutral-87: 79.129 9.2% 70%;
+    --md-neutral-90: 79.129 9.2% 72.354%; /* oklch(72.354% .092 79.129) */
+    --md-neutral-94: 79.129 9.2% 76%;
+    --md-neutral-96: 79.129 9.2% 80%;
+    --md-neutral-98: 79.129 9.2% 83.302%; /* oklch(83.302% .003 326.261) */
 
-    /* Neutral Variant - 色调灰色系 */
-    --md-neutral-variant-30: 280 8% 30%;
-    --md-neutral-variant-50: 280 8% 50%;
-    --md-neutral-variant-80: 280 8% 80%;
-    --md-neutral-variant-90: 280 8% 90%;
+    /* Coffee Theme Neutral Variant Colors */
+    --md-neutral-variant-30: 326.261 1.5% 30%;
+    --md-neutral-variant-50: 326.261 1.5% 50%;
+    --md-neutral-variant-80: 326.261 1.5% 70%;
+    --md-neutral-variant-90: 326.261 1.5% 80%;
 
-    /* 语义化功能颜色 */
-    --md-success-40: 120 60% 40%;
-    --md-success-80: 120 60% 80%;
-    --md-warning-40: 45 100% 50%;
-    --md-warning-80: 45 100% 75%;
-    --md-error-40: 0 68% 50%;
-    --md-error-80: 0 68% 75%;
-    --md-info-40: 210 100% 50%;
-    --md-info-80: 210 100% 75%;
+    /* Coffee Theme Functional Colors - 功能性颜色 */
+    --md-success-40: 163.223 17.7% 45%; /* 保持绿色系统 */
+    --md-success-80: 163.223 17.7% 75%;
+    --md-warning-40: 84.429 18.9% 50%; /* 咖啡主题橙色警告 */
+    --md-warning-80: 84.429 18.9% 75%;
+    --md-error-40: 13.428 19.4% 45%; /* 咖啡主题红色错误 */
+    --md-error-80: 13.428 19.4% 70%;
+    --md-info-40: 232.661 16% 45%; /* 咖啡主题蓝色信息 */
+    --md-info-80: 232.661 16% 75%;
 
     /* ========================================================================
        Material 3 字体系统
        ======================================================================== */
 
     /* Display */
-    --md-display-large-font: 400 3.563rem/4rem "Inter", "Roboto", system-ui,
-      sans-serif;
-    --md-display-medium-font: 400 2.813rem/3.25rem "Inter", "Roboto", system-ui,
-      sans-serif;
-    --md-display-small-font: 400 2.25rem/2.75rem "Inter", "Roboto", system-ui,
-      sans-serif;
+    --md-display-large-font: 400 3.563rem / 4rem "Inter", "Roboto", system-ui, sans-serif;
+    --md-display-medium-font: 400 2.813rem / 3.25rem "Inter", "Roboto", system-ui, sans-serif;
+    --md-display-small-font: 400 2.25rem / 2.75rem "Inter", "Roboto", system-ui, sans-serif;
 
     /* Headline */
-    --md-headline-large-font: 400 2rem/2.5rem "Inter", "Roboto", system-ui,
-      sans-serif;
-    --md-headline-medium-font: 400 1.75rem/2.25rem "Inter", "Roboto", system-ui,
-      sans-serif;
-    --md-headline-small-font: 400 1.5rem/2rem "Inter", "Roboto", system-ui,
-      sans-serif;
+    --md-headline-large-font: 400 2rem / 2.5rem "Inter", "Roboto", system-ui, sans-serif;
+    --md-headline-medium-font: 400 1.75rem / 2.25rem "Inter", "Roboto", system-ui, sans-serif;
+    --md-headline-small-font: 400 1.5rem / 2rem "Inter", "Roboto", system-ui, sans-serif;
 
     /* Title */
-    --md-title-large-font: 500 1.375rem/1.75rem "Inter", "Roboto", system-ui,
-      sans-serif;
-    --md-title-medium-font: 500 1rem/1.5rem "Inter", "Roboto", system-ui,
-      sans-serif;
-    --md-title-small-font: 500 0.875rem/1.25rem "Inter", "Roboto", system-ui,
-      sans-serif;
+    --md-title-large-font: 500 1.375rem / 1.75rem "Inter", "Roboto", system-ui, sans-serif;
+    --md-title-medium-font: 500 1rem / 1.5rem "Inter", "Roboto", system-ui, sans-serif;
+    --md-title-small-font: 500 0.875rem / 1.25rem "Inter", "Roboto", system-ui, sans-serif;
 
     /* Body */
-    --md-body-large-font: 400 1rem/1.5rem "Inter", "Roboto", system-ui,
-      sans-serif;
-    --md-body-medium-font: 400 0.875rem/1.25rem "Inter", "Roboto", system-ui,
-      sans-serif;
-    --md-body-small-font: 400 0.75rem/1rem "Inter", "Roboto", system-ui,
-      sans-serif;
+    --md-body-large-font: 400 1rem / 1.5rem "Inter", "Roboto", system-ui, sans-serif;
+    --md-body-medium-font: 400 0.875rem / 1.25rem "Inter", "Roboto", system-ui, sans-serif;
+    --md-body-small-font: 400 0.75rem / 1rem "Inter", "Roboto", system-ui, sans-serif;
 
     /* Label */
-    --md-label-large-font: 500 0.875rem/1.25rem "Inter", "Roboto", system-ui,
-      sans-serif;
-    --md-label-medium-font: 500 0.75rem/1rem "Inter", "Roboto", system-ui,
-      sans-serif;
-    --md-label-small-font: 500 0.6875rem/1rem "Inter", "Roboto", system-ui,
-      sans-serif;
+    --md-label-large-font: 500 0.875rem / 1.25rem "Inter", "Roboto", system-ui, sans-serif;
+    --md-label-medium-font: 500 0.75rem / 1rem "Inter", "Roboto", system-ui, sans-serif;
+    --md-label-small-font: 500 0.6875rem / 1rem "Inter", "Roboto", system-ui, sans-serif;
 
     /* ========================================================================
        Material 3 间距系统
@@ -148,16 +136,11 @@
        ======================================================================== */
 
     --md-elevation-0: none;
-    --md-elevation-1: 0px 1px 2px 0px rgba(0, 0, 0, 0.3),
-      0px 1px 3px 1px rgba(0, 0, 0, 0.15);
-    --md-elevation-2: 0px 1px 2px 0px rgba(0, 0, 0, 0.3),
-      0px 2px 6px 2px rgba(0, 0, 0, 0.15);
-    --md-elevation-3: 0px 1px 3px 0px rgba(0, 0, 0, 0.3),
-      0px 4px 8px 3px rgba(0, 0, 0, 0.15);
-    --md-elevation-4: 0px 2px 3px 0px rgba(0, 0, 0, 0.3),
-      0px 6px 10px 4px rgba(0, 0, 0, 0.15);
-    --md-elevation-5: 0px 4px 4px 0px rgba(0, 0, 0, 0.3),
-      0px 8px 12px 6px rgba(0, 0, 0, 0.15);
+    --md-elevation-1: 0px 1px 2px 0px rgba(0, 0, 0, 0.3), 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
+    --md-elevation-2: 0px 1px 2px 0px rgba(0, 0, 0, 0.3), 0px 2px 6px 2px rgba(0, 0, 0, 0.15);
+    --md-elevation-3: 0px 1px 3px 0px rgba(0, 0, 0, 0.3), 0px 4px 8px 3px rgba(0, 0, 0, 0.15);
+    --md-elevation-4: 0px 2px 3px 0px rgba(0, 0, 0, 0.3), 0px 6px 10px 4px rgba(0, 0, 0, 0.15);
+    --md-elevation-5: 0px 4px 4px 0px rgba(0, 0, 0, 0.3), 0px 8px 12px 6px rgba(0, 0, 0, 0.15);
 
     /* ========================================================================
        Material 3 动效系统
@@ -183,6 +166,40 @@
     --md-motion-easing-accelerated: cubic-bezier(0.3, 0, 1, 1);
 
     /* ========================================================================
+       Coffee Theme Token 映射 - 暗色主题
+       基于DaisyUI Coffee主题的颜色系统
+       ======================================================================== */
+
+    --background: var(--md-neutral-24); /* 24% 咖啡色背景 */
+    --foreground: var(--md-neutral-90); /* 72.354% 温暖前景色 */
+    --card: var(--md-neutral-22); /* 21% 咖啡卡片背景 */
+    --card-foreground: var(--md-neutral-90);
+    --popover: var(--md-neutral-12); /* 16% 弹出层背景 */
+    --popover-foreground: var(--md-neutral-90);
+    --primary: var(--md-primary-70); /* 71.996% 咖啡主色 */
+    --primary-foreground: var(--md-primary-10); /* 14.399% 深色前景 */
+    --secondary: var(--md-secondary-30); /* 34.465% 蓝灰辅助色 */
+    --secondary-foreground: var(--md-secondary-90); /* 86.893% 亮色前景 */
+    --muted: var(--md-neutral-22);
+    --muted-foreground: var(--md-neutral-variant-80);
+    --accent: var(--md-accent-30); /* 42.621% 深蓝强调色 */
+    --accent-foreground: var(--md-accent-99); /* 88.524% 亮色前景 */
+    --destructive: var(--md-error-40);
+    --destructive-foreground: var(--md-error-80);
+    --border: var(--md-neutral-variant-30);
+    --input: var(--md-neutral-24);
+    --ring: var(--md-primary-70);
+    --success: var(--md-success-40);
+    --success-foreground: var(--md-success-80);
+    --warning: var(--md-warning-40);
+    --warning-foreground: var(--md-warning-80);
+    --info: var(--md-info-40);
+    --info-foreground: var(--md-info-80);
+  }
+
+  /* 可选亮色主题（如果需要） */
+  .light {
+    /* ========================================================================
        亮色主题 Token 映射
        ======================================================================== */
 
@@ -198,7 +215,7 @@
     --secondary-foreground: var(--md-neutral-98);
     --muted: var(--md-neutral-variant-90);
     --muted-foreground: var(--md-neutral-variant-30);
-    --accent: var(--md-tertiary-40);
+    --accent: var(--md-accent-40);
     --accent-foreground: var(--md-neutral-98);
     --destructive: var(--md-error-40);
     --destructive-foreground: var(--md-neutral-98);
@@ -211,38 +228,6 @@
     --warning-foreground: var(--md-neutral-10);
     --info: var(--md-info-40);
     --info-foreground: var(--md-neutral-98);
-  }
-
-  .dark {
-    /* ========================================================================
-       暗色主题 Token 映射
-       ======================================================================== */
-
-    --background: var(--md-neutral-6);
-    --foreground: var(--md-neutral-90);
-    --card: var(--md-neutral-10);
-    --card-foreground: var(--md-neutral-90);
-    --popover: var(--md-neutral-12);
-    --popover-foreground: var(--md-neutral-90);
-    --primary: var(--md-primary-80);
-    --primary-foreground: var(--md-primary-20);
-    --secondary: var(--md-secondary-80);
-    --secondary-foreground: var(--md-secondary-20);
-    --muted: var(--md-neutral-22);
-    --muted-foreground: var(--md-neutral-variant-80);
-    --accent: var(--md-tertiary-80);
-    --accent-foreground: var(--md-tertiary-20);
-    --destructive: var(--md-error-80);
-    --destructive-foreground: var(--md-error-20);
-    --border: var(--md-neutral-variant-30);
-    --input: var(--md-neutral-24);
-    --ring: var(--md-primary-80);
-    --success: var(--md-success-80);
-    --success-foreground: var(--md-success-20);
-    --warning: var(--md-warning-80);
-    --warning-foreground: var(--md-warning-20);
-    --info: var(--md-info-80);
-    --info-foreground: var(--md-info-20);
   }
 }
 
@@ -259,16 +244,18 @@
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
     font: var(--md-body-large-font);
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-feature-settings:
+      "rlig" 1,
+      "calt" 1;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* 暗色主题专用背景 */
-  .dark body {
+  /* Coffee 主题专用背景渐变 */
+  body {
     background: radial-gradient(
       ellipse 80% 50% at 50% -20%,
-      hsl(var(--md-primary-20)) 0%,
+      hsl(var(--md-primary-10)) 0%,
       hsl(var(--md-neutral-4)) 50%,
       hsl(var(--md-neutral-6)) 100%
     );
@@ -308,8 +295,7 @@
   a {
     color: hsl(var(--primary));
     text-decoration: none;
-    transition: color var(--md-motion-duration-short2)
-      var(--md-motion-easing-standard);
+    transition: color var(--md-motion-duration-short2) var(--md-motion-easing-standard);
   }
 
   a:hover {
@@ -385,8 +371,7 @@
     padding: var(--md-space-2) var(--md-space-6);
     font: var(--md-label-large-font);
     cursor: pointer;
-    transition: all var(--md-motion-duration-short2)
-      var(--md-motion-easing-standard);
+    transition: all var(--md-motion-duration-short2) var(--md-motion-easing-standard);
     position: relative;
     overflow: hidden;
   }
@@ -418,8 +403,7 @@
     padding: var(--md-space-2) var(--md-space-6);
     font: var(--md-label-large-font);
     cursor: pointer;
-    transition: all var(--md-motion-duration-short2)
-      var(--md-motion-easing-standard);
+    transition: all var(--md-motion-duration-short2) var(--md-motion-easing-standard);
   }
 
   .btn-outlined:hover {
@@ -447,8 +431,7 @@
     padding: var(--md-space-2) var(--md-space-3);
     font: var(--md-label-large-font);
     cursor: pointer;
-    transition: all var(--md-motion-duration-short2)
-      var(--md-motion-easing-standard);
+    transition: all var(--md-motion-duration-short2) var(--md-motion-easing-standard);
   }
 
   .btn-text:hover {
@@ -474,8 +457,7 @@
     border-radius: var(--md-corner-md);
     padding: var(--md-space-6);
     box-shadow: var(--md-elevation-1);
-    transition: box-shadow var(--md-motion-duration-short2)
-      var(--md-motion-easing-standard);
+    transition: box-shadow var(--md-motion-duration-short2) var(--md-motion-easing-standard);
   }
 
   .card-elevated:hover {
@@ -509,8 +491,7 @@
     border-radius: var(--md-corner-xs) var(--md-corner-xs) 0 0;
     padding: var(--md-space-4);
     font: var(--md-body-large-font);
-    transition: all var(--md-motion-duration-short2)
-      var(--md-motion-easing-standard);
+    transition: all var(--md-motion-duration-short2) var(--md-motion-easing-standard);
   }
 
   .input-filled:focus {
@@ -529,8 +510,7 @@
     border-radius: var(--md-corner-xs);
     padding: var(--md-space-4);
     font: var(--md-body-large-font);
-    transition: all var(--md-motion-duration-short2)
-      var(--md-motion-easing-standard);
+    transition: all var(--md-motion-duration-short2) var(--md-motion-easing-standard);
   }
 
   .input-outlined:focus {
@@ -656,8 +636,7 @@
     height: 100%;
     background-color: hsl(var(--primary));
     border-radius: var(--md-corner-sm);
-    transition: width var(--md-motion-duration-medium2)
-      var(--md-motion-easing-emphasized);
+    transition: width var(--md-motion-duration-medium2) var(--md-motion-easing-emphasized);
   }
 
   /* ========================================================================
@@ -739,13 +718,11 @@
      ======================================================================== */
 
   .animate-fade-in {
-    animation: fadeIn var(--md-motion-duration-medium2)
-      var(--md-motion-easing-standard);
+    animation: fadeIn var(--md-motion-duration-medium2) var(--md-motion-easing-standard);
   }
 
   .animate-slide-up {
-    animation: slideUp var(--md-motion-duration-medium3)
-      var(--md-motion-easing-emphasized);
+    animation: slideUp var(--md-motion-duration-medium3) var(--md-motion-easing-emphasized);
   }
 
   .animate-pulse-gentle {
@@ -774,8 +751,7 @@
   .scrollbar-modern::-webkit-scrollbar-thumb {
     background-color: hsl(var(--primary) / 0.3);
     border-radius: var(--md-corner-xs);
-    transition: background-color var(--md-motion-duration-short2)
-      var(--md-motion-easing-standard);
+    transition: background-color var(--md-motion-duration-short2) var(--md-motion-easing-standard);
   }
 
   .scrollbar-modern::-webkit-scrollbar-thumb:hover {
@@ -906,18 +882,13 @@
 
 /* 确保 Slider Range 正确显示 */
 .slider-dark [data-slot="slider-range"] {
-  background: linear-gradient(
-    to right,
-    hsl(var(--md-primary-60)),
-    hsl(var(--md-primary-70))
-  ) !important;
+  background: linear-gradient(to right, hsl(var(--md-primary-60)), hsl(var(--md-primary-70))) !important;
   border-radius: var(--md-corner-full);
   position: absolute;
   top: 0;
   left: 0;
   height: 100%;
-  transition: all var(--md-motion-duration-short2)
-    var(--md-motion-easing-standard);
+  transition: all var(--md-motion-duration-short2) var(--md-motion-easing-standard);
 }
 
 /* Slider Track 样式 */

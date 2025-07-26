@@ -1,10 +1,7 @@
-# syntax=docker/dockerfile:1.4
-# 统一优化的 Clash SpeedTest Backend Dockerfile
-# 集成最佳实践：BuildKit、多阶段构建、安全性、性能优化
-
 ARG GO_VERSION=1.24
 ARG ENABLE_UPX=false
 ARG VERSION=dev
+ARG ALPINE_VERSION=3.19
 
 # ============================================================================
 # Stage 1: 基础构建环境
@@ -54,9 +51,18 @@ RUN if [ "${ENABLE_UPX}" = "true" ]; then \
     fi
 
 # ============================================================================
-# Stage 5: 生产运行时（Distroless安全镜像）
+# Stage 5: 生产运行时
 # ============================================================================
-FROM gcr.io/distroless/static-debian12:nonroot AS runtime
+FROM alpine:${ALPINE_VERSION} AS runtime
+
+# 安装运行时依赖
+RUN apk add --no-cache \
+    ca-certificates \
+    tzdata \
+    iproute2 \
+    procps \
+    curl \
+    && adduser -D -s /bin/sh appuser
 
 # 创建应用目录
 WORKDIR /app
@@ -65,8 +71,12 @@ WORKDIR /app
 ARG ENABLE_UPX
 COPY --from=compressor /build/clash-speedtest ./
 
+# 修复权限
+RUN chown -R appuser:appuser /app && \
+    chmod +x /app/clash-speedtest
+
 # 安全配置
-USER nonroot:nonroot
+USER appuser
 EXPOSE 8080
 
 # 健康检查
@@ -90,10 +100,11 @@ ENTRYPOINT ["/app/clash-speedtest"]
 # docker build --build-arg VERSION=v1.0.0 -t clash-speedtest-backend:v1.0.0 .
 #
 # 镜像特点：
-# - 基于 Distroless 安全镜像（无shell，最小攻击面）
+# - 基于 Alpine 镜像（支持TUN检测，包含系统工具）
 # - 非root用户运行（安全性）
 # - 支持跨平台构建（AMD64/ARM64）
 # - BuildKit缓存优化（快速构建）
 # - 可选UPX压缩（更小体积）
 # - 内置健康检查
+# - TUN模式完整支持（包含 ip, ps 等工具）
 # ============================================================================

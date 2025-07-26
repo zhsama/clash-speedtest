@@ -4,8 +4,6 @@ services:
       context: ./backend
       dockerfile: Dockerfile
       target: runtime
-      args:
-        ENABLE_UPX: "true"
     container_name: clash-speedtest-backend
     restart: unless-stopped
     ports:

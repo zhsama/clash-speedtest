@@ -23,8 +23,7 @@ help:
 	@echo ""
 	@echo "Docker commands:"
 	@echo "  make docker-build     - Build Docker images with BuildKit"
-	@echo "  make docker-up        - Start services in production mode"
-	@echo "  make docker-dev       - Start services in development mode"
+	@echo "  make docker-up        - Start services"
 	@echo "  make docker-down      - Stop all services"
 	@echo "  make docker-logs      - View container logs"
 	@echo "  make docker-push      - Push images to registry"
@@ -76,17 +75,16 @@ docker-build:
 	@echo "Building Docker images with BuildKit..."
 	$(DOCKER_BUILDKIT) $(DOCKER_COMPOSE) build --parallel
 
-# Start services in production mode
+# Start services
 docker-up:
-	@echo "Starting services in production mode..."
-	$(DOCKER_COMPOSE) -f docker-compose.yml -f docker-compose.prod.yml up -d
+	@echo "Starting services..."
+	$(DOCKER_COMPOSE) up -d
 	@echo "Services started! Frontend: http://localhost:3000, Backend: http://localhost:8080"
 
 # Stop all services
 docker-down:
 	@echo "Stopping all services..."
 	$(DOCKER_COMPOSE) down
-	$(DOCKER_COMPOSE) -f docker-compose.yml -f docker-compose.dev.yml down
 
 # View container logs
 docker-logs:
@@ -95,7 +93,7 @@ docker-logs:
 # Push images to registry
 docker-push:
 	@echo "Pushing images to registry..."
-	$(DOCKER_BUILDKIT) $(DOCKER_COMPOSE) -f docker-compose.yml -f docker-compose.prod.yml build --push
+	$(DOCKER_BUILDKIT) $(DOCKER_COMPOSE) build --push
 
 # Clean Docker resources
 docker-clean:
@@ -177,8 +175,3 @@ down: docker-down
 logs: docker-logs
 ps:
 	@docker compose ps
-
-# Environment setup
-env-setup:
-	@cp -n .env.example .env || true
-	@echo "Environment file ready. Edit .env to customize settings."

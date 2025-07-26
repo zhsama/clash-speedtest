@@ -1,61 +1,23 @@
-# 基础配置文件 - 所有环境共享
-version: "3.8"
-
-x-common-variables: &common-variables
-  TZ: ${TZ:-Asia/Shanghai}
-
-x-healthcheck-backend: &healthcheck-backend
-  test: ["CMD", "/app/clash-speedtest", "-h"]
-  interval: 30s
-  timeout: 10s
-  retries: 3
-  start_period: 40s
-
-x-healthcheck-frontend: &healthcheck-frontend
-  test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
-  interval: 30s
-  timeout: 5s
-  retries: 3
-  start_period: 30s
-
 services:
-  # Backend service - Clash Speedtest API
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
       target: runtime
+      args:
+        ENABLE_UPX: "true"
     container_name: clash-speedtest-backend
     restart: unless-stopped
     ports:
-      - "${BACKEND_PORT:-8080}:8080"
+      - "8080:8080"
     volumes:
-      # 配置文件挂载（只读）
-      - ${CONFIG_PATH:-./backend/configs}:/app/configs:ro
-      # 输出目录
-      - ${OUTPUT_PATH:-./backend/output}:/app/output
-      # TUN模式配置（需要时取消注释）
-      # - /dev/net/tun:/dev/net/tun
-      # - /sys/class/net:/sys/class/net:ro
+      - ./backend/configs:/app/configs:ro
+      - ./backend/output:/app/output
     environment:
-      <<: *common-variables
-      LOG_LEVEL: ${LOG_LEVEL:-info}
-      # TUN模式环境变量（需要时取消注释）
-      # TUN_MODE: "enabled"
-      # CLASH_TUN_ENABLE: "true"
+      LOG_LEVEL: info
     networks:
       - clash-speedtest-net
-    healthcheck: *healthcheck-backend
-    # TUN模式权限配置（需要时取消注释）
-    # cap_add:
-    #   - NET_ADMIN
-    #   - SYS_ADMIN
-    # devices:
-    #   - /dev/net/tun:/dev/net/tun
-    # 使用宿主机网络命名空间以访问真实的TUN接口（完整TUN检测）
-    # network_mode: host
 
-  # Frontend service - Web UI
   frontend:
     build:
       context: .
@@ -64,44 +26,17 @@ services:
     container_name: clash-speedtest-frontend
     restart: unless-stopped
     ports:
-      - "${FRONTEND_PORT:-3000}:8080"
+      - "3000:8080"
     environment:
-      <<: *common-variables
-      # API endpoint for backend
-      VITE_API_URL: ${VITE_API_URL:-http://backend:8080}
+      VITE_API_URL: http://backend:8080
     depends_on:
       - backend
     networks:
       - clash-speedtest-net
-    healthcheck: *healthcheck-frontend
-
-  # Optional: Download server as separate service
-  download-server:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-      target: runtime
-    container_name: clash-speedtest-download-server
-    restart: unless-stopped
-    entrypoint: ["/app/download-server"]
-    command: ["-port", "8080"]
-    ports:
-      - "${DOWNLOAD_PORT:-8081}:8080"
-    environment:
-      <<: *common-variables
-    networks:
-      - clash-speedtest-net
-    profiles:
-      - tools
-    healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/download"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
 networks:
   clash-speedtest-net:
     driver: bridge
     ipam:
       config:
-        - subnet: ${NETWORK_SUBNET:-172.20.0.0/24}
+        - subnet: 172.20.0.0/24

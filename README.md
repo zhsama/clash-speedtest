@@ -11,7 +11,7 @@
 
 Professional proxy speed testing tool based on Clash/Mihomo core, providing both command-line interface and modern web UI with real-time progress display and streaming media unlock detection.
 
-<img width="1332" alt="Clash SpeedTest Pro Web Interface" src="https://github.com/user-attachments/assets/fdc47ec5-b626-45a3-a38a-6d88c326c588">
+<img width="1332" alt="Clash SpeedTest Pro Web Interface" src="./image/homepage.png">
 
 ## 🚀 Key Features
 

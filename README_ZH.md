@@ -11,7 +11,7 @@
 
 基于 Clash/Mihomo 核心的专业测速工具，提供命令行和现代化 Web 界面，支持实时进度显示和流媒体解锁检测。
 
-<img width="1332" alt="Clash SpeedTest Pro Web Interface" src="https://github.com/user-attachments/assets/fdc47ec5-b626-45a3-a38a-6d88c326c588">
+<img width="1332" alt="Clash SpeedTest Pro Web Interface" src="./image/homepage.png">
 
 ## 🚀 核心特性
 
